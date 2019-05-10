@@ -14,15 +14,45 @@
  * @author Marc Morera <yuhu@mmoreram.com>
  */
 
-$environment = in_array('--dev', $argv) ? 'dev' : 'prod';
-$appPath = __DIR__.'/..';
-$silent = in_array('--silent', $argv);
-$debug = in_array('--debug', $argv);
+use Apisearch\ReactSymfonyServer\Adapter\KernelAdapter;
+use Apisearch\ReactSymfonyServer\Arguments;
+use Symfony\Component\Debug\Debug;
 
 require dirname(__FILE__).'/../config/bootstrap.php';
 
-use App\Kernel;
-use Symfony\Component\Debug\Debug;
+$arguments = Arguments::build($argv);
+$environment = array_key_exists('--dev', $arguments) ? 'dev' : 'prod';
+$appPath = __DIR__.'/..';
+$silent = $arguments['--silent'] ?? false;
+$debug = $arguments['--debug'] ?? false;
+$adapter = $arguments['--adapter'] ?? 'symfony4';
+$host = $arguments['host'];
+$port = $arguments['port'];
+
+$adapter = [
+    'symfony4' => \Apisearch\ReactSymfonyServer\Adapter\Symfony4KernelAdapter::class
+][$adapter] ?? null;
+
+if (null === $adapter) {
+    throw new \Exception('You must define an existing kernel adapter, or by an alias (symfony4) or my a namespace');
+}
+
+if (!$silent) {
+    echo PHP_EOL;
+    echo '>' . PHP_EOL;
+    echo '>  ReactPHP Client for Symfony Async Kernel' . PHP_EOL;
+    echo '>    by Apisearch' . PHP_EOL;
+    echo '>' . PHP_EOL;
+    echo ">  Host: $host" . PHP_EOL;
+    echo ">  Port: $port" . PHP_EOL;
+    echo ">  Environment: $environment" . PHP_EOL;
+    echo ">  Debug: " . ($debug ? 'enabled' : 'disabled') . PHP_EOL;
+    echo ">  Silent: " . ($debug ? 'enabled' : 'disabled') . PHP_EOL;
+    echo ">  Silent: disabled" . PHP_EOL;
+    echo ">  Adapter: $adapter" . PHP_EOL;
+    echo '>' . PHP_EOL . PHP_EOL;
+}
+
 
 \Apisearch\ReactSymfonyServer\ErrorHandler::handle();
 if ($debug) {
@@ -30,7 +60,10 @@ if ($debug) {
     Debug::enable();
 }
 
-$kernel = new Kernel($environment, $debug);
+/**
+ * @var KernelAdapter
+ */
+$kernel = $adapter::buildKernel($environment, $debug);
 
 /**
  * REACT SERVER.
