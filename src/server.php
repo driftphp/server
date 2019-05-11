@@ -60,7 +60,6 @@ $silent = $arguments['--silent'] ?? false;
 $debug = $arguments['--debug'] ?? false;
 $adapter = $arguments['--adapter'] ?? 'symfony4';
 $bootstrap = $arguments['--bootstrap'] ?? 'symfony4';
-var_dump($bootstrap);
 $host = $arguments['host'];
 $port = $arguments['port'];
 
