@@ -46,7 +46,6 @@ function buildServerArguments(array $originalArguments)
     return $newArguments;
 }
 
-
 use Apisearch\ReactSymfonyServer\Adapter\KernelAdapter;
 use Apisearch\ReactSymfonyServer\Adapter\Symfony4KernelAdapter;
 use Symfony\Component\Debug\Debug;
@@ -79,9 +78,9 @@ require realpath($bootstrapFile);
 
 $adapter = [
     'symfony4' => Symfony4KernelAdapter::class
-][$adapter] ?? null;
+][$adapter] ?? $adapter;
 
-if (!is_a($adapter, Symfony4KernelAdapter::class, true)) {
+if (!is_a($adapter, KernelAdapter::class, true)) {
     throw new \Exception('You must define an existing kernel adapter, or by an alias or my a namespace. This class MUST implement KernelAdapter');
 }
 
