@@ -68,12 +68,12 @@ class RequestHandler
     public function handleAsyncServerRequest(ServerRequestInterface $request): PromiseInterface
     {
         $from = microtime(true);
+        $uriPath = $request->getUri()->getPath();
+        $method = $request->getMethod();
 
         return (new FulfilledPromise($from))
-            ->then(function() use ($request) {
+            ->then(function() use ($request, $method, $uriPath) {
                 $body = $request->getBody()->getContents();
-                $uriPath = $request->getUri()->getPath();
-                $method = $request->getMethod();
                 $headers = $request->getHeaders();
 
                 $symfonyRequest = new Request(
@@ -143,8 +143,14 @@ class RequestHandler
                 $symfonyResponse = null;
 
                 return [$httpResponse, $messages];
-            }, function(\Throwable $exception) {
-                $messages[] = new ConsoleException($exception);
+            }, function(\Throwable $exception) use ($from, $method, $uriPath) {
+                $to = microtime(true);
+                $messages = [new ConsoleException(
+                    $exception,
+                    $uriPath,
+                    $method,
+                    \intval(($to - $from) * 1000)
+                )];
                 $httpResponse = new \React\Http\Response(
                     400,
                     ['Content-Type' => 'text/plain'],

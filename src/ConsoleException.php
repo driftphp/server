@@ -22,6 +22,9 @@ use Throwable;
  */
 class ConsoleException implements Printable
 {
+    protected $url;
+    protected $method;
+
     /**
      * @var Throwable
      *
@@ -30,13 +33,31 @@ class ConsoleException implements Printable
     private $exception;
 
     /**
+     * @var int
+     *
+     * Elapsed time
+     */
+    protected $elapsedTime;
+
+    /**
      * ConsoleException constructor.
      *
      * @param Throwable $exception
+     * @param string $url
+     * @param string $method
+     * @param int $elapsedTime
      */
-    public function __construct(Throwable $exception)
+    public function __construct(
+        Throwable $exception,
+        string $url,
+        string $method,
+        int $elapsedTime
+    )
     {
         $this->exception = $exception;
+        $this->url = $url;
+        $this->method = $method;
+        $this->elapsedTime = $elapsedTime;
     }
 
     /**
@@ -44,8 +65,13 @@ class ConsoleException implements Printable
      */
     public function print()
     {
-        $e = $this->exception;
-
-        echo "[{$e->getFile()}] [{$e->getCode()}] ::: [{$e->getMessage()}]".PHP_EOL;
+        $exception = $this->exception;
+        $color = '31';
+        $method = str_pad($this->method, 6, ' ');
+        echo "\033[01;{$color}m400\033[0m";
+        echo " $method $this->url ";
+        echo "(\e[00;37m".$this->elapsedTime.' ms | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
+        echo " - \e[00;37m".$exception->getMessage()."\e[0m";
+        echo PHP_EOL;
     }
 }
