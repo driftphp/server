@@ -82,10 +82,10 @@ $bootstrapFile = [
     'autoload' => 'vendor/autoload.php',
     'symfony4' => 'config/bootstrap.php',
 ][$bootstrap] ?? $bootstrap;
-var_dump(__DIR__."/../../$bootstrap");
+
 if (
-    !$bootstrap = requireIfExists(__DIR__."/../../$bootstrap") &&
-    !$bootstrap = requireIfExists(__DIR__."/../../../../$bootstrap")
+    !requireIfExists(__DIR__."/../../$bootstrapFile") &&
+    !requireIfExists(__DIR__."/../../../../$bootstrapFile")
 ) {
     die('You must define an existing kernel bootstrap file, or by an alias or my a file path' . PHP_EOL);
 }
