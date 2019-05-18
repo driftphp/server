@@ -1,9 +1,2 @@
 vendor
-/var
-/bin/console
-/bin/server
-/app_deploy.yml
-/.env
-/.ppm
-ppm.json
 .php_cs.cache
