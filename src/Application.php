@@ -166,7 +166,7 @@ class Application
                         if (!$this->silent) {
                             $serverResponseWithMessage->printMessage();
                         }
-echo 'X';
+                        
                         return $resolve($serverResponseWithMessage->getServerResponse());
                     };
 
