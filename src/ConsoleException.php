@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\ReactSymfonyServer;
+namespace Apisearch\SymfonyReactServer;
 
 use Throwable;
 

@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\ReactSymfonyServer;
+namespace Apisearch\SymfonyReactServer;
 
 /*
  * This file is part of the {Package name}.
@@ -33,6 +33,8 @@ use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\AsyncKernel;
+use Symfony\Component\HttpKernel\Kernel;
+use Throwable;
 
 /**
  * Class RequestHandler
@@ -40,19 +42,47 @@ use Symfony\Component\HttpKernel\AsyncKernel;
 class RequestHandler
 {
     /**
-     * @var AsyncKernel
+     * Handle server request and return response.
      *
-     * Kernel
-     */
-    private $kernel;
-    /**
-     * RequestHandler constructor.
+     * Return an array of an instance of ResponseInterface and an array of
+     * Printable instances
      *
-     * @param AsyncKernel $kernel
+     * @param Kernel $kernel
+     * @param ServerRequestInterface $request
+     *
+     * @return ServerResponseWithMessage
      */
-    public function __construct(AsyncKernel $kernel)
+    public function handleServerRequest(
+        Kernel $kernel,
+        ServerRequestInterface $request
+    ): ServerResponseWithMessage
     {
-        $this->kernel = $kernel;
+        $from = microtime(true);
+        $uriPath = $request->getUri()->getPath();
+        $method = $request->getMethod();
+
+        try {
+            $symfonyRequest = $this->toSymfonyRequest(
+                $request,
+                $method,
+                $uriPath
+            );
+
+            $symfonyResponse = $kernel->handle($symfonyRequest);
+
+            return $this->toServerResponse(
+                $symfonyRequest,
+                $symfonyResponse,
+                $from
+            );
+        } catch (Throwable $exception) {
+            return $this->createExceptionServerResponse(
+                $exception,
+                $from,
+                $uriPath,
+                $method
+            );
+        }
     }
 
     /**
@@ -61,11 +91,15 @@ class RequestHandler
      * Return an array of an instance of ResponseInterface and an array of
      * Printable instances
      *
+     * @param AsyncKernel $kernel
      * @param ServerRequestInterface $request
      *
-     * @return PromiseInterface
+     * @return PromiseInterface <ServerResponseWithMessage>
      */
-    public function handleAsyncServerRequest(ServerRequestInterface $request): PromiseInterface
+    public function handleAsyncServerRequest(
+        AsyncKernel $kernel,
+        ServerRequestInterface $request
+    ): PromiseInterface
     {
         $from = microtime(true);
         $uriPath = $request->getUri()->getPath();
@@ -73,94 +107,168 @@ class RequestHandler
 
         return (new FulfilledPromise($from))
             ->then(function() use ($request, $method, $uriPath) {
-                $body = $request->getBody()->getContents();
-                $headers = $request->getHeaders();
-
-                $symfonyRequest = new Request(
-                    $request->getQueryParams(),
-                    $request->getParsedBody() ?? [],
-                    $request->getAttributes(),
-                    $request->getCookieParams(),
-                    $request->getUploadedFiles(),
-                    [], // Server is partially filled a few lines below
-                    $body
+                return $this->toSymfonyRequest(
+                    $request,
+                    $method,
+                    $uriPath
                 );
-
-                $symfonyRequest->setMethod($method);
-                $symfonyRequest->headers->replace($headers);
-                $symfonyRequest->server->set('REQUEST_URI', $uriPath);
-
-                if (isset($headers['Host'])) {
-                    $symfonyRequest->server->set('SERVER_NAME', explode(':', $headers['Host'][0]));
-                }
-
-                return $symfonyRequest;
             })
-            ->then(function(Request $symfonyRequest) {
+            ->then(function(Request $symfonyRequest) use ($kernel) {
 
                 return Promise\all(
                     [
                         new FulfilledPromise($symfonyRequest),
-                        $this
-                            ->kernel
-                            ->handleAsync($symfonyRequest)
+                        $kernel->handleAsync($symfonyRequest)
                     ]
                 );
             })
-            ->then(function(array $parts) {
+            ->then(function(array $parts) use ($kernel) {
 
                 list($symfonyRequest, $symfonyResponse) = $parts;
-                $this
-                    ->kernel
-                    ->terminate($symfonyRequest, $symfonyResponse);
+                $kernel->terminate($symfonyRequest, $symfonyResponse);
 
                 return $parts;
             })
             ->then(function(array $parts) use ($request, $from) {
 
                 list($symfonyRequest, $symfonyResponse) = $parts;
-                $to = microtime(true);
-                $messages[] = new ConsoleMessage(
-                    $request->getUri()->getPath(),
-                    $request->getMethod(),
-                    $symfonyResponse->getStatusCode(),
-                    $symfonyResponse->getContent(),
-                    \intval(($to - $from) * 1000)
-                );
-
-                $this->applyResponseEncoding(
+                return $this->toServerResponse(
                     $symfonyRequest,
-                    $symfonyResponse
+                    $symfonyResponse,
+                    $from
                 );
 
-                $httpResponse = new \React\Http\Response(
+            }, function(\Throwable $exception) use ($from, $method, $uriPath) {
+                return $this->createExceptionServerResponse(
+                    $exception,
+                    $from,
+                    $method,
+                    $uriPath
+                );
+            });
+    }
+
+    /**
+     * Http request to symfony request
+     *
+     * @param ServerRequestInterface $request
+     * @param string $method
+     * @param string $uriPath
+     *
+     * @return Request
+     */
+    private function toSymfonyRequest(
+        ServerRequestInterface $request,
+        string $method,
+        string $uriPath
+    ) : Request
+    {
+        $body = $request->getBody()->getContents();
+        $headers = $request->getHeaders();
+
+        $symfonyRequest = new Request(
+            $request->getQueryParams(),
+            $request->getParsedBody() ?? [],
+            $request->getAttributes(),
+            $request->getCookieParams(),
+            $request->getUploadedFiles(),
+            [], // Server is partially filled a few lines below
+            $body
+        );
+
+        $symfonyRequest->setMethod($method);
+        $symfonyRequest->headers->replace($headers);
+        $symfonyRequest->server->set('REQUEST_URI', $uriPath);
+
+        if (isset($headers['Host'])) {
+            $symfonyRequest->server->set('SERVER_NAME', explode(':', $headers['Host'][0]));
+        }
+
+        return $symfonyRequest;
+    }
+
+    /**
+     * Symfony Response to http response
+     *
+     * @param Request $symfonyRequest
+     * @param Response $symfonyResponse
+     * @param float $from
+     *
+     * @return ServerResponseWithMessage
+     */
+    private function toServerResponse(
+        Request $symfonyRequest,
+        Response $symfonyResponse,
+        float $from
+    ) : ServerResponseWithMessage
+    {
+        $to = microtime(true);
+
+        $this->applyResponseEncoding(
+            $symfonyRequest,
+            $symfonyResponse
+        );
+
+        $serverResponse =
+            new ServerResponseWithMessage(
+                new \React\Http\Response(
                     $symfonyResponse->getStatusCode(),
                     $symfonyResponse->headers->all(),
                     $symfonyResponse->getContent()
-                );
+                ),
+                new ConsoleMessage(
+                    $symfonyRequest->getBaseUrl(),
+                    $symfonyRequest->getMethod(),
+                    $symfonyResponse->getStatusCode(),
+                    $symfonyResponse->getContent(),
+                    \intval(($to - $from) * 1000)
+                )
+            );
 
-                $symfonyRequest = null;
-                $symfonyResponse = null;
+        $symfonyRequest = null;
+        $symfonyResponse = null;
 
-                return [$httpResponse, $messages];
-            }, function(\Throwable $exception) use ($from, $method, $uriPath) {
-                $to = microtime(true);
-                $messages = [new ConsoleException(
+        return $serverResponse;
+    }
+
+    /**
+     * Create exception Server response
+     *
+     * @param Throwable $exception
+     * @param float $from
+     * @param string $method
+     * @param string $uriPath
+     *
+     * @return ServerResponseWithMessage
+     */
+    private function createExceptionServerResponse(
+        Throwable $exception,
+        float $from,
+        string $method,
+        string $uriPath
+    ) : ServerResponseWithMessage {
+        $to = microtime(true);
+
+        $serverResponse =
+            new ServerResponseWithMessage(
+                new \React\Http\Response(
+                    400,
+                    ['Content-Type' => 'text/plain'],
+                    $exception->getMessage()
+                ),
+                new ConsoleException(
                     $exception,
                     $uriPath,
                     $method,
                     \intval(($to - $from) * 1000)
-                )];
-                $httpResponse = new \React\Http\Response(
-                    400,
-                    ['Content-Type' => 'text/plain'],
-                    $exception->getMessage()
-                );
+                )
+            );
 
-                return [$httpResponse, $messages];
-            });
+        $symfonyRequest = null;
+        $symfonyResponse = null;
+
+        return $serverResponse;
     }
-
 
     /**
      * Apply response encoding

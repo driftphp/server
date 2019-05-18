@@ -13,9 +13,9 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\ReactSymfonyServer\Adapter;
+namespace Apisearch\SymfonyReactServer\Adapter;
 
-use Symfony\Component\HttpKernel\AsyncKernel;
+use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Class KernelAdapter
@@ -28,10 +28,10 @@ interface KernelAdapter
      * @param string $environment
      * @param bool   $debug
      *
-     * @return AsyncKernel
+     * @return Kernel
      */
     public static function buildKernel(
         string $environment,
         bool $debug
-    ) : AsyncKernel;
+    ) : Kernel;
 }
