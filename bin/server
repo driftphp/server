@@ -46,6 +46,22 @@ function buildServerArguments(array $originalArguments)
     return $newArguments;
 }
 
+/**
+ * Include the bootstrap file if its found
+ *
+ * @param string $file
+ *
+ * @return mixed
+ */
+function requireIfExists(string $file)
+{
+    if (file_exists($file)) {
+        return require $file;
+    }
+
+    return null;
+}
+
 use Apisearch\SymfonyReactServer\Adapter\KernelAdapter;
 use Apisearch\SymfonyReactServer\Adapter\Symfony4KernelAdapter;
 
@@ -54,7 +70,6 @@ use Apisearch\SymfonyReactServer\Adapter\Symfony4KernelAdapter;
  */
 $arguments = buildServerArguments($argv);
 $environment = array_key_exists('--dev', $arguments) ? 'dev' : 'prod';
-$appPath = dirname(__FILE__).'/..';
 $silent = $arguments['--silent'] ?? false;
 $debug = $arguments['--debug'] ?? false;
 $nonBlocking = $arguments['--non-blocking'] ?? false;
@@ -64,23 +79,23 @@ $host = $arguments['host'];
 $port = $arguments['port'];
 
 $bootstrapFile = [
-    'autoload' => $appPath.'/vendor/autoload.php',
-    'symfony4' => $appPath.'/config/bootstrap.php',
+    'autoload' => 'vendor/autoload.php',
+    'symfony4' => 'config/bootstrap.php',
 ][$bootstrap] ?? $bootstrap;
-
-$bootstrapFile = realpath($bootstrapFile);
-if (!is_file($bootstrapFile)) {
-    throw new \Exception('You must define an existing kernel bootstrap file, or by an alias or my a file path');
+var_dump(__DIR__."/../../$bootstrap");
+if (
+    !$bootstrap = requireIfExists(__DIR__."/../../$bootstrap") &&
+    !$bootstrap = requireIfExists(__DIR__."/../../../../$bootstrap")
+) {
+    die('You must define an existing kernel bootstrap file, or by an alias or my a file path' . PHP_EOL);
 }
-
-require realpath($bootstrapFile);
 
 $adapter = [
     'symfony4' => Symfony4KernelAdapter::class,
 ][$adapter] ?? $adapter;
 
 if (!is_a($adapter, KernelAdapter::class, true)) {
-    throw new \Exception('You must define an existing kernel adapter, or by an alias or my a namespace. This class MUST implement KernelAdapter');
+    die('You must define an existing kernel adapter, or by an alias or my a namespace. This class MUST implement KernelAdapter' . PHP_EOL);
 }
 
 $application = new \Apisearch\SymfonyReactServer\Application(
