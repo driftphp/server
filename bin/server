@@ -69,8 +69,11 @@ use Apisearch\SymfonyReactServer\Adapter\Symfony4KernelAdapter;
  * Server.
  */
 $arguments = buildServerArguments($argv);
+$rootPath = getcwd();
 $environment = array_key_exists('--dev', $arguments) ? 'dev' : 'prod';
 $silent = $arguments['--silent'] ?? false;
+$staticFolder = $arguments['--static-folder'] ?? '';
+$staticFolder = isset($arguments['--no-static-folder']) ? null : $staticFolder;
 $debug = $arguments['--debug'] ?? false;
 $nonBlocking = $arguments['--non-blocking'] ?? false;
 $adapter = $arguments['--adapter'] ?? 'symfony4';
@@ -84,6 +87,7 @@ $bootstrapFile = [
 ][$bootstrap] ?? $bootstrap;
 
 if (
+    !requireIfExists(__DIR__."/../$bootstrapFile") &&
     !requireIfExists(__DIR__."/../../$bootstrapFile") &&
     !requireIfExists(__DIR__."/../../../../$bootstrapFile")
 ) {
@@ -99,6 +103,7 @@ if (!is_a($adapter, KernelAdapter::class, true)) {
 }
 
 $application = new \Apisearch\SymfonyReactServer\Application(
+    $rootPath,
     $host,
     $port,
     $environment,
@@ -106,7 +111,8 @@ $application = new \Apisearch\SymfonyReactServer\Application(
     $silent,
     $nonBlocking,
     $adapter,
-    $bootstrapFile
+    $bootstrapFile,
+    $staticFolder
 );
 
 $application->run();

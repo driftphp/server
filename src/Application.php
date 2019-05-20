@@ -19,6 +19,7 @@ use Apisearch\SymfonyReactServer\Adapter\KernelAdapter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory as EventLoopFactory;
+use React\Filesystem\Filesystem;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Socket\Server as SocketServer;
@@ -31,6 +32,11 @@ use Symfony\Component\HttpKernel\Kernel;
  */
 class Application
 {
+    /**
+     * @var string
+     */
+    private $rootPath;
+
     /**
      * @var string
      */
@@ -72,6 +78,13 @@ class Application
     private $bootstrapFile;
 
     /**
+     * @var string
+     *
+     * Static folder
+     */
+    private $staticFolder;
+
+    /**
      * @var Kernel
      *
      * Kernel
@@ -81,6 +94,7 @@ class Application
     /**
      * Application constructor.
      *
+     * @param string $rootPath
      * @param string $host
      * @param int    $port
      * @param string $environment
@@ -89,10 +103,12 @@ class Application
      * @param bool   $nonBlocking
      * @param string $adapter
      * @param string $bootstrapFile
+     * @param string|null $staticFolder
      *
      * @throws Exception
      */
     public function __construct(
+        string $rootPath,
         string $host,
         int $port,
         string $environment,
@@ -100,9 +116,11 @@ class Application
         bool $silent,
         bool $nonBlocking,
         string $adapter,
-        string $bootstrapFile
+        string $bootstrapFile,
+        ?string $staticFolder
     )
     {
+        $this->rootPath = $rootPath;
         $this->host = $host;
         $this->port = $port;
         $this->environment = $environment;
@@ -131,8 +149,14 @@ class Application
                 'You have configured the server to work as a non-blocking application, but you\'re using a synchronous Kernel'
             );
         }
-    }
 
+        if (!is_null($staticFolder)) {
+            $this->staticFolder = empty($staticFolder)
+                ? $adapter::getStaticFolder($this->kernel)
+                : $staticFolder;
+            $this->staticFolder = '/' . trim($this->staticFolder, '/') . '/';
+        }
+    }
 
     /**
      * Run
@@ -144,7 +168,8 @@ class Application
          */
         $loop = EventLoopFactory::create();
         $socket = new SocketServer($this->host . ':' . $this->port, $loop);
-        $requestHandler = new RequestHandler($this->kernel);
+        $filesystem = Filesystem::create($loop);
+        $requestHandler = new RequestHandler();
         $this->kernel->boot();
 
         if ($this->nonBlocking) {
@@ -159,16 +184,35 @@ class Application
         }
 
         $http = new HttpServer(
-            function (ServerRequestInterface $request) use ($requestHandler) {
-                return new Promise(function (Callable $resolve) use ($request, $requestHandler) {
+            function (ServerRequestInterface $request) use ($requestHandler, $filesystem) {
+                return new Promise(function (Callable $resolve) use ($request, $requestHandler, $filesystem) {
 
                     $resolveResponseCallback = function(ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {
                         if (!$this->silent) {
                             $serverResponseWithMessage->printMessage();
                         }
-                        
+
                         return $resolve($serverResponseWithMessage->getServerResponse());
                     };
+
+                    $uriPath = $request->getUri()->getPath();
+                    $uriPath = '/' . ltrim($uriPath, '/');
+
+                    if (strpos(
+                        $uriPath,
+                        $this->staticFolder
+                    ) === 0) {
+                        $requestHandler->handleStaticResource(
+                            $filesystem,
+                            $this->rootPath,
+                            $uriPath
+                        )
+                        ->then(function(ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback){
+                            $resolveResponseCallback($serverResponseWithMessage);
+                        });
+
+                        return;
+                    }
 
                     $this->nonBlocking
                         ? $requestHandler
@@ -208,6 +252,7 @@ class Application
             echo ">  Debug: " . ($this->debug ? 'enabled' : 'disabled') . PHP_EOL;
             echo ">  Silent: disabled" . PHP_EOL;
             echo ">  Non Blocking: " . ($this->nonBlocking ? 'enabled' : 'disabled') . PHP_EOL;
+            echo ">  Static Folder: " . (empty($this->staticFolder) ? 'disabled' : $this->staticFolder) . PHP_EOL;
             echo ">  Adapter: $this->adapter" . PHP_EOL;
             echo ">  Bootstrap: $this->bootstrapFile" . PHP_EOL;
             echo '>' . PHP_EOL . PHP_EOL;

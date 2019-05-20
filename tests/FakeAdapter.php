@@ -13,18 +13,18 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer\Adapter;
+namespace Apisearch\SymfonyReactServer\Tests;
 
-use App\Kernel as ApplicationKernel;
+use Apisearch\SymfonyReactServer\Adapter\KernelAdapter;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
- * Class Symfony4KernelAdapter
+ * Class FakeAdapter.
  */
-class Symfony4KernelAdapter implements KernelAdapter
+class FakeAdapter implements KernelAdapter
 {
     /**
-     * Build kernel
+     * Build kernel.
      *
      * @param string $environment
      * @param bool   $debug
@@ -34,20 +34,19 @@ class Symfony4KernelAdapter implements KernelAdapter
     public static function buildKernel(
         string $environment,
         bool $debug
-    ) : Kernel
-    {
-        return new ApplicationKernel($environment, $debug);
+    ): Kernel {
+        return new FakeKernel($environment, $debug);
     }
 
     /**
-     * Get static folder by kernel
+     * Get static folder by kernel.
      *
      * @param Kernel $kernel
      *
      * @return string|null
      */
-    public static function getStaticFolder(Kernel $kernel) : ? string
+    public static function getStaticFolder(Kernel $kernel): ? string
     {
-        return '/public';
+        return '/tests/public';
     }
 }
