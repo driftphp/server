@@ -34,4 +34,13 @@ interface KernelAdapter
         string $environment,
         bool $debug
     ) : Kernel;
+
+    /**
+     * Get static folder by kernel
+     *
+     * @param Kernel $kernel
+     *
+     * @return string|null
+     */
+    public static function getStaticFolder(Kernel $kernel) : ? string;
 }

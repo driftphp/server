@@ -27,6 +27,7 @@ namespace Apisearch\SymfonyReactServer;
  */
 
 use Psr\Http\Message\ServerRequestInterface;
+use React\Filesystem\FilesystemInterface;
 use React\Promise;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
@@ -144,6 +145,60 @@ class RequestHandler
                     $from,
                     $method,
                     $uriPath
+                );
+            });
+    }
+
+    /**
+     * Handle static resource
+     *
+     * @param FilesystemInterface $filesystem
+     * @param string     $rootPath
+     * @param string     $resourcePath
+     *
+     * @return PromiseInterface
+     */
+    public function handleStaticResource(
+        FilesystemInterface $filesystem,
+        string $rootPath,
+        string $resourcePath
+    ) : PromiseInterface
+    {
+        $from = microtime(true);
+
+        return $filesystem
+            ->getContents($rootPath . $resourcePath)
+            ->then(function(string $contents) use ($rootPath, $resourcePath, $from) {
+                $to = microtime(true);
+
+                return new ServerResponseWithMessage(
+                    new \React\Http\Response(
+                        200,
+                        [
+                            'Content-Type' => mime_content_type($rootPath . $resourcePath)
+                        ],
+                        $contents
+                    ),
+                    new ConsoleStaticMessage(
+                        $resourcePath,
+                        \intval(($to - $from) * 1000)
+                    )
+                );
+            }, function(Throwable $exception) use ($rootPath, $resourcePath, $from) {
+                $to = microtime(true);
+
+                return new ServerResponseWithMessage(
+                    new \React\Http\Response(
+                        404,
+                        [],
+                        ''
+                    ),
+                    new ConsoleException(
+                        $exception,
+                        $resourcePath,
+                        'GET',
+                        \intval(($to - $from) * 1000)
+                    )
                 );
             });
     }
