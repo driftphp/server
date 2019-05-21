@@ -37,7 +37,7 @@ Once updated your dependencies, you will find a brand new server bin inside the
 This is a PHP file. This means that the way of starting this server is by, just,
 executing it.
 
-```php
+```console
 php vendor/bin/server 0.0.0.0:8100
 ```
 
@@ -49,7 +49,7 @@ configure how the server starts and what adapters use.
   overridden with option `--adapter` and the value must be a valid class
   namespace of an instance of `KernelAdapter`
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --adapter=symfony4
 php vendor/bin/server 0.0.0.0:8100 --adapter=My\Own\Adapter
 ```
@@ -60,7 +60,7 @@ php vendor/bin/server 0.0.0.0:8100 --adapter=My\Own\Adapter
   `Symfony4` and `autoload`. Can be overridden with the option `--bootstrap` and
   the value must be a valid path of a file, starting from the project root.
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --bootstrap=symfony4
 php vendor/bin/server 0.0.0.0:8100 --bootstrap=autoload
 php vendor/bin/server 0.0.0.0:8100 --bootstrap=config/myfile.php
@@ -69,7 +69,7 @@ php vendor/bin/server 0.0.0.0:8100 --bootstrap=config/myfile.php
 - Environment: Kernel environment. By default `prod`, but turns `dev` if the
   option `--dev` is found.
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --dev
 ```
 
@@ -77,14 +77,14 @@ php vendor/bin/server 0.0.0.0:8100 --dev
   enabled if the option `--debug` is found. Makes sense on development
   environment, but is not exclusive.
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --dev --debug
 ```
 
 - Silent: No information nor any kind of report will be printed in the standard
   output. By default disabled, but can be enabled with `--silent`.
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --silent
 ```
 
@@ -103,7 +103,7 @@ your kernel uses the AsyncKernel implementation.
 To turn on the asynchronous feature, just add this flag
 
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --non-blocking
 ```
 
@@ -116,7 +116,7 @@ You can override the static folder with the command option `--static-folder`.
 All files inside this defined folder will be served statically in a non-blocking
 way
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --static-folder=public
 ```
 
@@ -125,6 +125,6 @@ useful when working with the adapter value and want to disable the default
 value, for example, for an API.
 
 
-```bash
+```console
 php vendor/bin/server 0.0.0.0:8100 --no-static-folder
 ```
