@@ -154,7 +154,10 @@ class Application
             $this->staticFolder = empty($staticFolder)
                 ? $adapter::getStaticFolder($this->kernel)
                 : $staticFolder;
-            $this->staticFolder = '/' . trim($this->staticFolder, '/') . '/';
+
+            if (is_string($this->staticFolder)) {
+                $this->staticFolder = '/' . trim($this->staticFolder, '/') . '/';
+            }
         }
     }
 
