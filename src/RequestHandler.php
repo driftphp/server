@@ -27,6 +27,7 @@ namespace Apisearch\SymfonyReactServer;
  */
 
 use Psr\Http\Message\ServerRequestInterface;
+use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
 use React\Promise;
 use React\Promise\FulfilledPromise;
@@ -152,6 +153,7 @@ class RequestHandler
     /**
      * Handle static resource
      *
+     * @param LoopInterface $loop
      * @param FilesystemInterface $filesystem
      * @param string     $rootPath
      * @param string     $resourcePath
@@ -159,6 +161,7 @@ class RequestHandler
      * @return PromiseInterface
      */
     public function handleStaticResource(
+        LoopInterface $loop,
         FilesystemInterface $filesystem,
         string $rootPath,
         string $resourcePath
@@ -166,25 +169,25 @@ class RequestHandler
     {
         $from = microtime(true);
 
-        return $filesystem
-            ->getContents($rootPath . $resourcePath)
-            ->then(function(string $contents) use ($rootPath, $resourcePath, $from) {
+        $contents = $filesystem->getContents($rootPath . $resourcePath);
+        $mimeType = \Mmoreram\React\mime_content_type($rootPath . $resourcePath, $loop);
+
+        return Promise\all([$contents, $mimeType])
+            ->then(function ($results) use ($resourcePath, $from) {
                 $to = microtime(true);
 
                 return new ServerResponseWithMessage(
                     new \React\Http\Response(
                         200,
-                        [
-                            'Content-Type' => mime_content_type($rootPath . $resourcePath)
-                        ],
-                        $contents
+                        ['Content-Type' => $results[1]],
+                        $results[0]
                     ),
                     new ConsoleStaticMessage(
                         $resourcePath,
                         \intval(($to - $from) * 1000)
                     )
                 );
-            }, function(Throwable $exception) use ($rootPath, $resourcePath, $from) {
+            }, function(Throwable $exception) use ($resourcePath, $from) {
                 $to = microtime(true);
 
                 return new ServerResponseWithMessage(
