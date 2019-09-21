@@ -17,7 +17,8 @@
         "react/event-loop": "^1",
         "react/socket": "^1",
         "react/promise": "^2",
-        "react/filesystem": "*"
+        "react/filesystem": "*",
+        "mmoreram/react-functions": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.0.0",
@@ -26,7 +27,8 @@
         "apisearch-io/symfony-async-http-kernel": "dev-master",
         "symfony/framework-bundle": "^4.2",
         "symfony/process": "^4.2",
-        "symfony/config": "^4.2"
+        "symfony/config": "^4.2",
+        "ext-fileinfo": "*"
     },
     "suggest": {
         "apisearch-io/symfony-async-http-kernel": "To enable --non-blocking flag and work with Async Kernel"

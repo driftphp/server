@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Apisearch\SymfonyReactServer\Tests;
 
+use finfo;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -47,11 +48,7 @@ class ApplicationStaticFolderTest extends TestCase
             ) > 0
         );
 
-        $content = file_get_contents('http://localhost:9999/tests/public/app.js');
-        $this->assertEquals(
-            '// Some app',
-            $content
-        );
+        $this->assertFileWasReceived('http://localhost:9999/tests/public/app.js', '// Some app', 'text/plain');
         usleep(100000);
 
         $this->assertNotFalse(
@@ -93,5 +90,14 @@ class ApplicationStaticFolderTest extends TestCase
         $this->assertFalse($content);
 
         $process->stop();
+    }
+
+    private function assertFileWasReceived(string $file, string $expectedContent, string $expectedMimeType): void
+    {
+        $content = file_get_contents($file);
+        $this->assertEquals($expectedContent, $content);
+
+        $fileInfo = new Finfo(FILEINFO_MIME_TYPE);
+        $this->assertEquals($expectedMimeType, $fileInfo->buffer($content));
     }
 }
