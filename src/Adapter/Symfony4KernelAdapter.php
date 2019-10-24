@@ -19,12 +19,12 @@ use App\Kernel as ApplicationKernel;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
- * Class Symfony4KernelAdapter
+ * Class Symfony4KernelAdapter.
  */
 class Symfony4KernelAdapter implements KernelAdapter
 {
     /**
-     * Build kernel
+     * Build kernel.
      *
      * @param string $environment
      * @param bool   $debug
@@ -34,19 +34,18 @@ class Symfony4KernelAdapter implements KernelAdapter
     public static function buildKernel(
         string $environment,
         bool $debug
-    ) : Kernel
-    {
+    ): Kernel {
         return new ApplicationKernel($environment, $debug);
     }
 
     /**
-     * Get static folder by kernel
+     * Get static folder by kernel.
      *
      * @param Kernel $kernel
      *
      * @return string|null
      */
-    public static function getStaticFolder(Kernel $kernel) : ? string
+    public static function getStaticFolder(Kernel $kernel): ? string
     {
         return '/public';
     }

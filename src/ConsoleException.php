@@ -43,17 +43,16 @@ class ConsoleException implements Printable
      * ConsoleException constructor.
      *
      * @param Throwable $exception
-     * @param string $url
-     * @param string $method
-     * @param int $elapsedTime
+     * @param string    $url
+     * @param string    $method
+     * @param int       $elapsedTime
      */
     public function __construct(
         Throwable $exception,
         string $url,
         string $method,
         int $elapsedTime
-    )
-    {
+    ) {
         $this->exception = $exception;
         $this->url = $url;
         $this->method = $method;

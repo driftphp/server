@@ -13,6 +13,7 @@
         "php": ">=7.1",
 
         "symfony/http-kernel": "^4.2",
+        "symfony/console": "^4.2",
         "react/http": "^0.8",
         "react/event-loop": "^1",
         "react/socket": "^1",

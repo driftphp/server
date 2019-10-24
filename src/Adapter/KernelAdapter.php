@@ -18,12 +18,12 @@ namespace Apisearch\SymfonyReactServer\Adapter;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
- * Class KernelAdapter
+ * Class KernelAdapter.
  */
 interface KernelAdapter
 {
     /**
-     * Build kernel
+     * Build kernel.
      *
      * @param string $environment
      * @param bool   $debug
@@ -33,14 +33,14 @@ interface KernelAdapter
     public static function buildKernel(
         string $environment,
         bool $debug
-    ) : Kernel;
+    ): Kernel;
 
     /**
-     * Get static folder by kernel
+     * Get static folder by kernel.
      *
      * @param Kernel $kernel
      *
      * @return string|null
      */
-    public static function getStaticFolder(Kernel $kernel) : ? string;
+    public static function getStaticFolder(Kernel $kernel): ? string;
 }

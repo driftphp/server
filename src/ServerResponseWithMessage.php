@@ -18,7 +18,7 @@ namespace Apisearch\SymfonyReactServer;
 use React\Http\Response;
 
 /**
- * Class ServerResponseWithMessage
+ * Class ServerResponseWithMessage.
  */
 class ServerResponseWithMessage
 {
@@ -45,14 +45,13 @@ class ServerResponseWithMessage
     public function __construct(
         Response $serverResponse,
         Printable $message
-    )
-    {
+    ) {
         $this->serverResponse = $serverResponse;
         $this->message = $message;
     }
 
     /**
-     * Get ServerResponse
+     * Get ServerResponse.
      *
      * @return Response
      */
@@ -62,7 +61,7 @@ class ServerResponseWithMessage
     }
 
     /**
-     * Print message
+     * Print message.
      */
     public function printMessage()
     {

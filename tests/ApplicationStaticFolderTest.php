@@ -27,13 +27,13 @@ class ApplicationStaticFolderTest extends TestCase
     /**
      * Test default adapter static folder.
      */
-    public function testBlockingServer()
+    public function testRegular()
     {
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
+            'run',
             '0.0.0.0:9999',
-            '--bootstrap=autoload',
             '--adapter='.FakeAdapter::class,
             '--dev',
         ]);
@@ -69,8 +69,8 @@ class ApplicationStaticFolderTest extends TestCase
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
+            'run',
             '0.0.0.0:9999',
-            '--bootstrap=autoload',
             '--adapter='.FakeAdapter::class,
             '--no-static-folder',
             '--dev',

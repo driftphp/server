@@ -39,7 +39,7 @@ use Symfony\Component\HttpKernel\Kernel;
 use Throwable;
 
 /**
- * Class RequestHandler
+ * Class RequestHandler.
  */
 class RequestHandler
 {
@@ -49,51 +49,7 @@ class RequestHandler
      * Return an array of an instance of ResponseInterface and an array of
      * Printable instances
      *
-     * @param Kernel $kernel
-     * @param ServerRequestInterface $request
-     *
-     * @return ServerResponseWithMessage
-     */
-    public function handleServerRequest(
-        Kernel $kernel,
-        ServerRequestInterface $request
-    ): ServerResponseWithMessage
-    {
-        $from = microtime(true);
-        $uriPath = $request->getUri()->getPath();
-        $method = $request->getMethod();
-
-        try {
-            $symfonyRequest = $this->toSymfonyRequest(
-                $request,
-                $method,
-                $uriPath
-            );
-
-            $symfonyResponse = $kernel->handle($symfonyRequest);
-
-            return $this->toServerResponse(
-                $symfonyRequest,
-                $symfonyResponse,
-                $from
-            );
-        } catch (Throwable $exception) {
-            return $this->createExceptionServerResponse(
-                $exception,
-                $from,
-                $uriPath,
-                $method
-            );
-        }
-    }
-
-    /**
-     * Handle server request and return response.
-     *
-     * Return an array of an instance of ResponseInterface and an array of
-     * Printable instances
-     *
-     * @param AsyncKernel $kernel
+     * @param AsyncKernel            $kernel
      * @param ServerRequestInterface $request
      *
      * @return PromiseInterface <ServerResponseWithMessage>
@@ -101,46 +57,42 @@ class RequestHandler
     public function handleAsyncServerRequest(
         AsyncKernel $kernel,
         ServerRequestInterface $request
-    ): PromiseInterface
-    {
+    ): PromiseInterface {
         $from = microtime(true);
         $uriPath = $request->getUri()->getPath();
         $method = $request->getMethod();
 
         return (new FulfilledPromise($from))
-            ->then(function() use ($request, $method, $uriPath) {
+            ->then(function () use ($request, $method, $uriPath) {
                 return $this->toSymfonyRequest(
                     $request,
                     $method,
                     $uriPath
                 );
             })
-            ->then(function(Request $symfonyRequest) use ($kernel) {
-
+            ->then(function (Request $symfonyRequest) use ($kernel) {
                 return Promise\all(
                     [
                         new FulfilledPromise($symfonyRequest),
-                        $kernel->handleAsync($symfonyRequest)
+                        $kernel->handleAsync($symfonyRequest),
                     ]
                 );
             })
-            ->then(function(array $parts) use ($kernel) {
-
+            ->then(function (array $parts) use ($kernel) {
                 list($symfonyRequest, $symfonyResponse) = $parts;
                 $kernel->terminate($symfonyRequest, $symfonyResponse);
 
                 return $parts;
             })
-            ->then(function(array $parts) use ($request, $from) {
-
+            ->then(function (array $parts) use ($request, $from) {
                 list($symfonyRequest, $symfonyResponse) = $parts;
+
                 return $this->toServerResponse(
                     $symfonyRequest,
                     $symfonyResponse,
                     $from
                 );
-
-            }, function(\Throwable $exception) use ($from, $method, $uriPath) {
+            }, function (\Throwable $exception) use ($from, $method, $uriPath) {
                 return $this->createExceptionServerResponse(
                     $exception,
                     $from,
@@ -151,12 +103,12 @@ class RequestHandler
     }
 
     /**
-     * Handle static resource
+     * Handle static resource.
      *
-     * @param LoopInterface $loop
+     * @param LoopInterface       $loop
      * @param FilesystemInterface $filesystem
-     * @param string     $rootPath
-     * @param string     $resourcePath
+     * @param string              $rootPath
+     * @param string              $resourcePath
      *
      * @return PromiseInterface
      */
@@ -165,12 +117,11 @@ class RequestHandler
         FilesystemInterface $filesystem,
         string $rootPath,
         string $resourcePath
-    ) : PromiseInterface
-    {
+    ): PromiseInterface {
         $from = microtime(true);
 
-        $contents = $filesystem->getContents($rootPath . $resourcePath);
-        $mimeType = \Mmoreram\React\mime_content_type($rootPath . $resourcePath, $loop);
+        $contents = $filesystem->getContents($rootPath.$resourcePath);
+        $mimeType = \Mmoreram\React\mime_content_type($rootPath.$resourcePath, $loop);
 
         return Promise\all([$contents, $mimeType])
             ->then(function ($results) use ($resourcePath, $from) {
@@ -187,7 +138,7 @@ class RequestHandler
                         \intval(($to - $from) * 1000)
                     )
                 );
-            }, function(Throwable $exception) use ($resourcePath, $from) {
+            }, function (Throwable $exception) use ($resourcePath, $from) {
                 $to = microtime(true);
 
                 return new ServerResponseWithMessage(
@@ -207,11 +158,11 @@ class RequestHandler
     }
 
     /**
-     * Http request to symfony request
+     * Http request to symfony request.
      *
      * @param ServerRequestInterface $request
-     * @param string $method
-     * @param string $uriPath
+     * @param string                 $method
+     * @param string                 $uriPath
      *
      * @return Request
      */
@@ -219,8 +170,7 @@ class RequestHandler
         ServerRequestInterface $request,
         string $method,
         string $uriPath
-    ) : Request
-    {
+    ): Request {
         $body = $request->getBody()->getContents();
         $headers = $request->getHeaders();
 
@@ -246,11 +196,11 @@ class RequestHandler
     }
 
     /**
-     * Symfony Response to http response
+     * Symfony Response to http response.
      *
-     * @param Request $symfonyRequest
+     * @param Request  $symfonyRequest
      * @param Response $symfonyResponse
-     * @param float $from
+     * @param float    $from
      *
      * @return ServerResponseWithMessage
      */
@@ -258,8 +208,7 @@ class RequestHandler
         Request $symfonyRequest,
         Response $symfonyResponse,
         float $from
-    ) : ServerResponseWithMessage
-    {
+    ): ServerResponseWithMessage {
         $to = microtime(true);
 
         $this->applyResponseEncoding(
@@ -290,12 +239,12 @@ class RequestHandler
     }
 
     /**
-     * Create exception Server response
+     * Create exception Server response.
      *
      * @param Throwable $exception
-     * @param float $from
-     * @param string $method
-     * @param string $uriPath
+     * @param float     $from
+     * @param string    $method
+     * @param string    $uriPath
      *
      * @return ServerResponseWithMessage
      */
@@ -304,7 +253,7 @@ class RequestHandler
         float $from,
         string $method,
         string $uriPath
-    ) : ServerResponseWithMessage {
+    ): ServerResponseWithMessage {
         $to = microtime(true);
 
         $serverResponse =
@@ -329,16 +278,15 @@ class RequestHandler
     }
 
     /**
-     * Apply response encoding
+     * Apply response encoding.
      *
-     * @param Request $request
+     * @param Request  $request
      * @param Response $response
      */
     private function applyResponseEncoding(
         Request $request,
         Response $response
-    )
-    {
+    ) {
         $allowedCompressionAsString = $request
             ->headers
             ->get('Accept-Encoding');
@@ -352,6 +300,7 @@ class RequestHandler
             $response
                 ->headers
                 ->set('Content-Encoding', 'gzip');
+
             return;
         }
         if (in_array('deflate', $allowedCompression)) {
@@ -359,6 +308,7 @@ class RequestHandler
             $response
                 ->headers
                 ->set('Content-Encoding', 'deflate');
+
             return;
         }
     }
