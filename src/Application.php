@@ -19,6 +19,7 @@ use Drift\HttpKernel\AsyncKernel;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory as EventLoopFactory;
+use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
@@ -86,6 +87,21 @@ class Application
     private $kernel;
 
     /**
+     * @var HttpServer
+     */
+    private $http;
+
+    /**
+     * @var SocketServer
+     */
+    private $socket;
+
+    /**
+     * @var LoopInterface
+     */
+    private $loop;
+
+    /**
      * Application constructor.
      *
      * @param string      $rootPath
@@ -97,6 +113,7 @@ class Application
      * @param string      $adapter
      * @param string      $bootstrapPath
      * @param string|null $staticFolder
+     * @param LoopInterface $loop
      *
      * @throws Exception
      */
@@ -109,7 +126,8 @@ class Application
         bool $silent,
         string $adapter,
         string $bootstrapPath,
-        ?string $staticFolder
+        ?string $staticFolder,
+        LoopInterface $loop
     ) {
         $this->rootPath = $rootPath;
         $this->host = $host;
@@ -118,6 +136,7 @@ class Application
         $this->debug = $debug;
         $this->silent = $silent;
         $this->adapter = $adapter;
+        $this->loop = $loop;
         $this->bootstrapPath = $bootstrapPath;
 
         ErrorHandler::handle();
@@ -157,24 +176,23 @@ class Application
         /**
          * REACT SERVER.
          */
-        $loop = EventLoopFactory::create();
-        $socket = new SocketServer($this->host.':'.$this->port, $loop);
-        $filesystem = Filesystem::create($loop);
+        $this->socket = new SocketServer($this->host.':'.$this->port, $this->loop);
+        $filesystem = Filesystem::create($this->loop);
         $requestHandler = new RequestHandler();
         $this->kernel->boot();
 
         $this
             ->kernel
             ->getContainer()
-            ->set('reactphp.event_loop', $loop);
+            ->set('reactphp.event_loop', $this->loop);
 
         if (!$this->silent) {
             $this->print();
         }
 
-        $http = new HttpServer(
-            function (ServerRequestInterface $request) use ($requestHandler, $filesystem, $loop) {
-                return new Promise(function (callable $resolve) use ($request, $requestHandler, $filesystem, $loop) {
+        $this->http = new HttpServer(
+            function (ServerRequestInterface $request) use ($requestHandler, $filesystem) {
+                return new Promise(function (callable $resolve) use ($request, $requestHandler, $filesystem) {
                     $resolveResponseCallback = function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {
                         if (!$this->silent) {
                             $serverResponseWithMessage->printMessage();
@@ -191,7 +209,7 @@ class Application
                         $this->staticFolder
                     )) {
                         $requestHandler->handleStaticResource(
-                            $loop,
+                            $this->loop,
                             $filesystem,
                             $this->rootPath,
                             $uriPath
@@ -212,12 +230,24 @@ class Application
             }
         );
 
-        $http->on('error', function (\Throwable $e) {
+        $this->http->on('error', function (\Throwable $e) {
             (new ConsoleException($e, '/', 'EXC', 0))->print();
         });
 
-        $http->listen($socket);
-        $loop->run();
+        $this->http->listen($this->socket);
+    }
+
+    /**
+     * Stop.
+     *
+     * Shutdowns the kernel and removes all event listeners.
+     */
+    public function stop()
+    {
+        $this->kernel->shutdown();
+        $this->http->removeAllListeners();
+        $this->socket->removeAllListeners();
+        $this->socket->close();
     }
 
     /**

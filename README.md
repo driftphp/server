@@ -65,6 +65,16 @@ php vendor/bin/server run 0.0.0.0:8100 --env=test
 php vendor/bin/server run 0.0.0.0:8100 --dev --debug
 ```
 
+- Watch: the server starts watching its source code. By default false,
+  enabled if the option `--watch` is found. Makes sense on development
+  environment. The server automatically restarts once the changes are detected.
+  By default watches changes in `src` folder in `php` files. See 
+  [docs](https://github.com/seregazhuk/php-watcher) for customization.
+
+```console
+php vendor/bin/server run 0.0.0.0:8100 --dev --watch
+```
+
 ## Serving static files
 
 Kernel Adapters have already defined the static folder related to the kernel.

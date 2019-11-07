@@ -17,12 +17,15 @@ namespace Drift\Server\Console;
 
 use Drift\Server\Adapter\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
+use Drift\Server\ChangesWatcher;
 use Exception;
+use React\EventLoop\Factory as EventLoopFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Class RunServerCommand.
@@ -61,6 +64,7 @@ class RunServerCommand extends Command
             ->addOption('static-folder', null, InputOption::VALUE_OPTIONAL, 'Static folder path', '')
             ->addOption('no-static-folder', null, InputOption::VALUE_NONE, 'Disable static folder')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
+            ->addOption('watch', null, InputOption::VALUE_NONE, 'Watches the source code and restarts the server on changes')
             ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
     }
 
@@ -84,6 +88,7 @@ class RunServerCommand extends Command
         $staticFolder = $input->getOption('static-folder');
         $staticFolder = $input->getOption('no-static-folder') ? null : $staticFolder;
         $debug = $input->getOption('debug');
+        $isWatching = $input->getOption('watch');
 
         $adapter = $input->getOption('adapter');
         $adapter = [
@@ -102,6 +107,8 @@ class RunServerCommand extends Command
 
         list($host, $port) = $serverArgs;
 
+        $loop = EventLoopFactory::create();
+
         $application = new \Drift\Server\Application(
             $rootPath,
             $host,
@@ -111,9 +118,16 @@ class RunServerCommand extends Command
             $silent,
             $adapter,
             $this->bootstrapPath,
-            $staticFolder
+            $staticFolder,
+            $loop
         );
 
         $application->run();
+
+        if ($isWatching && ChangesWatcher::isAvailable()) {
+            (new ChangesWatcher($loop, new SymfonyStyle($input, $output)))->watch($application);
+        }
+
+        $loop->run();
     }
 }

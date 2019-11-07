@@ -19,7 +19,8 @@
         "react/socket": "^1",
         "react/promise": "^2",
         "react/filesystem": "*",
-        "mmoreram/react-functions": "dev-master"
+        "mmoreram/react-functions": "dev-master",
+        "seregazhuk/php-watcher": "dev-master"
     },
     "require-dev": {
         "drift/http-kernel": "dev-master",
