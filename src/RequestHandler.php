@@ -27,6 +27,7 @@ namespace Drift\Server;
  */
 
 use Drift\HttpKernel\AsyncKernel;
+use Drift\Server\Output\OutputPrinter;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
@@ -42,6 +43,21 @@ use Throwable;
  */
 class RequestHandler
 {
+    /**
+     * @var OutputPrinter
+     */
+    private $outputPrinter;
+
+    /**
+     * RequestHandler constructor.
+     *
+     * @param OutputPrinter $outputPrinter
+     */
+    public function __construct(OutputPrinter $outputPrinter)
+    {
+        $this->outputPrinter = $outputPrinter;
+    }
+
     /**
      * Handle server request and return response.
      *
@@ -132,6 +148,7 @@ class RequestHandler
                         ['Content-Type' => $results[1]],
                         $results[0]
                     ),
+                    $this->outputPrinter,
                     new ConsoleStaticMessage(
                         $resourcePath,
                         TimeFormatter::formatTime($to - $from)
@@ -146,6 +163,7 @@ class RequestHandler
                         [],
                         ''
                     ),
+                    $this->outputPrinter,
                     new ConsoleException(
                         $exception,
                         $resourcePath,
@@ -223,6 +241,7 @@ class RequestHandler
                     $symfonyResponse->headers->all(),
                     $symfonyResponse->getContent()
                 ),
+                $this->outputPrinter,
                 new ConsoleMessage(
                     $symfonyRequest->getBaseUrl(),
                     $symfonyRequest->getMethod(),
@@ -263,6 +282,7 @@ class RequestHandler
                     ['Content-Type' => 'text/plain'],
                     $exception->getMessage()
                 ),
+                $this->outputPrinter,
                 new ConsoleException(
                     $exception,
                     $uriPath,

@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Server\Output\OutputPrinter;
 use Throwable;
 
 /**
@@ -49,8 +50,10 @@ final class ConsoleException implements Printable
 
     /**
      * Print.
+     *
+     * @param OutputPrinter $outputPrinter
      */
-    public function print()
+    public function print(OutputPrinter $outputPrinter)
     {
         $exception = $this->exception;
         $color = '31';

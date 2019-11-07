@@ -23,7 +23,6 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
@@ -86,7 +85,7 @@ class FakeKernel extends AsyncKernel
     {
         $code = \intval($request->query->get('code'));
         if (400 === $code) {
-            throw new \Exception('Bad Request');
+            throw new \Exception('Bad Request LOLAZO');
         }
 
         return new JsonResponse([

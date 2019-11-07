@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Server\Output\OutputPrinter;
+
 /**
  * Class ConsoleMessage.
  */
@@ -51,8 +53,10 @@ final class ConsoleMessage implements Printable
 
     /**
      * Print.
+     *
+     * @param OutputPrinter $outputPrinter
      */
-    public function print()
+    public function print(OutputPrinter $outputPrinter)
     {
         $method = str_pad($this->method, 6, ' ');
         $color = '32';

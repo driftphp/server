@@ -40,10 +40,11 @@ class ApplicationStaticFolderTest extends TestCase
 
         $process->start();
         usleep(300000);
+
         $this->assertTrue(
             strpos(
                 $process->getOutput(),
-                'Static Folder: /tests/public'
+                'Static Folder: /tests/public/'
             ) > 0
         );
 

@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Server\Output\OutputPrinter;
 use React\Http\Response;
 
 /**
@@ -30,6 +31,11 @@ class ServerResponseWithMessage
     private $serverResponse;
 
     /**
+     * @var OutputPrinter
+     */
+    private $outputPrinter;
+
+    /**
      * @var Printable
      *
      * Message
@@ -39,14 +45,17 @@ class ServerResponseWithMessage
     /**
      * ServerResponseWithMessage constructor.
      *
-     * @param Response  $serverResponse
-     * @param Printable $message
+     * @param Response      $serverResponse
+     * @param OutputPrinter $outputPrinter
+     * @param Printable     $message
      */
     public function __construct(
         Response $serverResponse,
+        OutputPrinter $outputPrinter,
         Printable $message
     ) {
         $this->serverResponse = $serverResponse;
+        $this->outputPrinter = $outputPrinter;
         $this->message = $message;
     }
 
@@ -67,6 +76,6 @@ class ServerResponseWithMessage
     {
         $this
             ->message
-            ->print();
+            ->print($this->outputPrinter);
     }
 }
