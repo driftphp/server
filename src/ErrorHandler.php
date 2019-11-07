@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer;
+namespace Drift\Server;
 
 /**
  * Class ErrorHandler.

@@ -47,5 +47,5 @@ if (!$found) {
 }
 
 $application = new \Symfony\Component\Console\Application();
-$application->add(new \Apisearch\SymfonyReactServer\Console\RunServerCommand('run'));
+$application->add(new \Drift\Server\Console\RunServerCommand('run'));
 $application->run();

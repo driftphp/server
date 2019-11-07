@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer\Tests;
+namespace Drift\Server\Tests;
 
 use finfo;
 use PHPUnit\Framework\TestCase;
@@ -40,7 +40,6 @@ class ApplicationStaticFolderTest extends TestCase
 
         $process->start();
         usleep(300000);
-
         $this->assertTrue(
             strpos(
                 $process->getOutput(),

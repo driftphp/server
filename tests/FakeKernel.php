@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer\Tests;
+namespace Drift\Server\Tests;
 
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;

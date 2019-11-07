@@ -1,6 +1,6 @@
 {
-    "name": "apisearch-io/symfony-react-server",
-    "description": "ReactPHP based server for Symfony Kernel",
+    "name": "drift/server",
+    "description": "ReactPHP based server for DriftPHP",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -31,17 +31,14 @@
         "symfony/config": "^4.2",
         "ext-fileinfo": "*"
     },
-    "suggest": {
-        "apisearch-io/symfony-async-http-kernel": "To enable --non-blocking flag and work with Async Kernel"
-    },
     "autoload": {
         "psr-4": {
-            "Apisearch\\SymfonyReactServer\\": "src"
+            "Drift\\Server\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Apisearch\\SymfonyReactServer\\Tests\\": "tests"
+            "Drift\\Server\\Tests\\": "tests"
         }
     },
     "bin": [

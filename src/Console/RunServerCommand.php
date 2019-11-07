@@ -13,10 +13,10 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer\Console;
+namespace Drift\Server\Console;
 
-use Apisearch\SymfonyReactServer\Adapter\KernelAdapter;
-use Apisearch\SymfonyReactServer\Adapter\Symfony4KernelAdapter;
+use Drift\Server\Adapter\KernelAdapter;
+use Drift\Server\Adapter\Symfony4KernelAdapter;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -83,7 +83,7 @@ class RunServerCommand extends Command
 
         list($host, $port) = $serverArgs;
 
-        $application = new \Apisearch\SymfonyReactServer\Application(
+        $application = new \Drift\Server\Application(
             $rootPath,
             $host,
             \intval($port),

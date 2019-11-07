@@ -13,9 +13,9 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer;
+namespace Drift\Server;
 
-use Apisearch\SymfonyReactServer\Adapter\KernelAdapter;
+use Drift\Server\Adapter\KernelAdapter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory as EventLoopFactory;
