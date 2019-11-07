@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer\Adapter;
+namespace Drift\Server\Adapter;
 
 use App\Kernel as ApplicationKernel;
 use Symfony\Component\HttpKernel\Kernel;

@@ -13,9 +13,9 @@
 
 declare(strict_types=1);
 
-namespace Apisearch\SymfonyReactServer\Tests;
+namespace Drift\Server\Tests;
 
-use Apisearch\SymfonyReactServer\Adapter\KernelAdapter;
+use Drift\Server\Adapter\KernelAdapter;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
