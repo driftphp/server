@@ -24,7 +24,7 @@ class ConsoleStaticMessage implements Printable
     protected $elapsedTime;
 
     /**
-     * Message constructor.
+     * ConsoleStaticMessage constructor.
      *
      * @param string $url
      * @param int    $elapsedTime

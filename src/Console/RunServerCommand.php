@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Server\Adapter\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Adapter\Symfony4KernelAdapter;
 use Exception;
@@ -42,7 +43,7 @@ class RunServerCommand extends Command
             ->addOption('static-folder', null, InputOption::VALUE_OPTIONAL, 'Static folder path', '')
             ->addOption('no-static-folder', null, InputOption::VALUE_NONE, 'Disable static folder')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
-            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'symfony4');
+            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
     }
 
     /**
@@ -69,6 +70,7 @@ class RunServerCommand extends Command
         $adapter = $input->getOption('adapter');
         $adapter = [
                 'symfony4' => Symfony4KernelAdapter::class,
+                'drift' => DriftKernelAdapter::class,
             ][$adapter] ?? $adapter;
 
         if (!is_a($adapter, KernelAdapter::class, true)) {

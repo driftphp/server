@@ -128,9 +128,7 @@ class Application
         );
 
         if (!$this->kernel instanceof AsyncKernel) {
-            throw new Exception(
-                'You have configured the server to work as a non-blocking application, but you\'re using a synchronous Kernel'
-            );
+            throw new Exception('You have configured the server to work as a non-blocking application, but you\'re using a synchronous Kernel');
         }
 
         if (!is_null($staticFolder)) {
