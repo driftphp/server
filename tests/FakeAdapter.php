@@ -15,8 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
+use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Adapter\KernelAdapter;
-use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Class FakeAdapter.
@@ -29,23 +29,23 @@ class FakeAdapter implements KernelAdapter
      * @param string $environment
      * @param bool   $debug
      *
-     * @return Kernel
+     * @return AsyncKernel
      */
     public static function buildKernel(
         string $environment,
         bool $debug
-    ): Kernel {
+    ): AsyncKernel {
         return new FakeKernel($environment, $debug);
     }
 
     /**
      * Get static folder by kernel.
      *
-     * @param Kernel $kernel
+     * @param AsyncKernel $kernel
      *
      * @return string|null
      */
-    public static function getStaticFolder(Kernel $kernel): ? string
+    public static function getStaticFolder(AsyncKernel $kernel): ? string
     {
         return '/tests/public';
     }

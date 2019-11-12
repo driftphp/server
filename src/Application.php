@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Adapter\KernelAdapter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,7 +25,6 @@ use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Socket\Server as SocketServer;
 use Symfony\Component\Debug\Debug;
-use Symfony\Component\HttpKernel\AsyncKernel;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
@@ -128,7 +128,7 @@ class Application
         );
 
         if (!$this->kernel instanceof AsyncKernel) {
-            throw new Exception('You have configured the server to work as a non-blocking application, but you\'re using a synchronous Kernel');
+            throw new Exception(sprintf('Your kernel MUST implement %s', AsyncKernel::class));
         }
 
         if (!is_null($staticFolder)) {

@@ -26,6 +26,7 @@ namespace Drift\Server;
  * @author Marc Morera <yuhu@mmoreram.com>
  */
 
+use Drift\HttpKernel\AsyncKernel;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
@@ -34,8 +35,6 @@ use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\AsyncKernel;
-use Symfony\Component\HttpKernel\Kernel;
 use Throwable;
 
 /**

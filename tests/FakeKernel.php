@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
+use Drift\HttpKernel\AsyncKernel;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -22,7 +23,6 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\AsyncKernel;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
@@ -67,19 +67,11 @@ class FakeKernel extends AsyncKernel
      * and do its best to convert them to a Response instance.
      *
      * @param Request $request A Request instance
-     * @param int     $type    The type of the request
-     *                         (one of HttpKernelInterface::MASTER_REQUEST or HttpKernelInterface::SUB_REQUEST)
-     * @param bool    $catch   Whether to catch exceptions or not
      *
      * @return PromiseInterface
-     *
-     * @throws \Exception When an Exception occurs during processing
      */
-    public function handleAsync(
-        Request $request,
-        $type = self::MASTER_REQUEST,
-        $catch = true
-    ): PromiseInterface {
+    public function handleAsync(Request $request): PromiseInterface
+    {
         return (new FulfilledPromise($request))
             ->then(function (Request $request) {
                 return $this->handle($request);

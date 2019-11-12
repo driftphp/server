@@ -15,8 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server\Adapter;
 
+use Drift\HttpKernel\AsyncKernel;
 use Drift\Kernel as ApplicationKernel;
-use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Class DriftKernelAdapter.
@@ -24,19 +24,23 @@ use Symfony\Component\HttpKernel\Kernel;
 class DriftKernelAdapter implements KernelAdapter
 {
     /**
-     * Build kernel.
+     * Build AsyncKernel.
      */
     public static function buildKernel(
         string $environment,
         bool $debug
-    ): Kernel {
+    ): AsyncKernel {
         return new ApplicationKernel($environment, $debug);
     }
 
     /**
      * Get static folder by kernel.
+     *
+     * @param AsyncKernel $kernel
+     *
+     * @return string|null
      */
-    public static function getStaticFolder(Kernel $kernel): ? string
+    public static function getStaticFolder(AsyncKernel $kernel): ? string
     {
         return '/public';
     }

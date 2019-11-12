@@ -69,7 +69,6 @@ class RunServerCommand extends Command
 
         $adapter = $input->getOption('adapter');
         $adapter = [
-                'symfony4' => Symfony4KernelAdapter::class,
                 'drift' => DriftKernelAdapter::class,
             ][$adapter] ?? $adapter;
 
