@@ -17,7 +17,6 @@ namespace Drift\Server\Console;
 
 use Drift\Server\Adapter\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
-use Drift\Server\Adapter\Symfony4KernelAdapter;
 use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -30,6 +29,26 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class RunServerCommand extends Command
 {
+    /**
+     * @var string
+     */
+    private $bootstrapPath;
+
+    /**
+     * Construct
+     *
+     * @param string|null $name
+     * @param string $bootstrapPath
+     */
+    public function __construct(
+        string $bootstrapPath,
+        string $name
+    )
+    {
+        parent::__construct($name);
+        $this->bootstrapPath = $bootstrapPath;
+    }
+
     /**
      * Configures the current command.
      */
@@ -92,6 +111,7 @@ class RunServerCommand extends Command
             $debug,
             $silent,
             $adapter,
+            $this->bootstrapPath,
             $staticFolder
         );
 

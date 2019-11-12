@@ -69,6 +69,11 @@ class Application
 
     /**
      * @var string
+     */
+    private $bootstrapPath;
+
+    /**
+     * @var string
      *
      * Static folder
      */
@@ -91,6 +96,7 @@ class Application
      * @param bool        $debug
      * @param bool        $silent
      * @param string      $adapter
+     * @param string $bootstrapPath
      * @param string|null $staticFolder
      *
      * @throws Exception
@@ -103,6 +109,7 @@ class Application
         bool $debug,
         bool $silent,
         string $adapter,
+        string $bootstrapPath,
         ?string $staticFolder
     ) {
         $this->rootPath = $rootPath;
@@ -112,6 +119,7 @@ class Application
         $this->debug = $debug;
         $this->silent = $silent;
         $this->adapter = $adapter;
+        $this->bootstrapPath = $bootstrapPath;
 
         ErrorHandler::handle();
         if ($this->debug) {
@@ -230,6 +238,7 @@ class Application
             echo '>  Debug: '.($this->debug ? 'enabled' : 'disabled').PHP_EOL;
             echo '>  Static Folder: '.(empty($this->staticFolder) ? 'disabled' : $this->staticFolder).PHP_EOL;
             echo ">  Adapter: $this->adapter".PHP_EOL;
+            echo ">  Loaded bootstrap file: " . realpath($this->bootstrapPath) . PHP_EOL;
             echo '>'.PHP_EOL.PHP_EOL;
         }
     }
