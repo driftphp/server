@@ -75,5 +75,7 @@ class ApplicationTest extends TestCase
             '',
             $process->getOutput()
         );
+
+        $process->stop();
     }
 }

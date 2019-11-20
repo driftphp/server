@@ -134,7 +134,7 @@ class RequestHandler
                     ),
                     new ConsoleStaticMessage(
                         $resourcePath,
-                        \intval(($to - $from) * 1000)
+                        TimeFormatter::formatTime($to - $from)
                     )
                 );
             }, function (Throwable $exception) use ($resourcePath, $from) {
@@ -150,7 +150,7 @@ class RequestHandler
                         $exception,
                         $resourcePath,
                         'GET',
-                        \intval(($to - $from) * 1000)
+                        TimeFormatter::formatTime($to - $from)
                     )
                 );
             });
@@ -210,6 +210,7 @@ class RequestHandler
     ): ServerResponseWithMessage {
         $to = microtime(true);
 
+        $nonEncodedContent = $symfonyResponse->getContent();
         $this->applyResponseEncoding(
             $symfonyRequest,
             $symfonyResponse
@@ -226,8 +227,8 @@ class RequestHandler
                     $symfonyRequest->getBaseUrl(),
                     $symfonyRequest->getMethod(),
                     $symfonyResponse->getStatusCode(),
-                    $symfonyResponse->getContent(),
-                    \intval(($to - $from) * 1000)
+                    $nonEncodedContent,
+                    TimeFormatter::formatTime($to - $from)
                 )
             );
 
@@ -266,7 +267,7 @@ class RequestHandler
                     $exception,
                     $uriPath,
                     $method,
-                    \intval(($to - $from) * 1000)
+                    TimeFormatter::formatTime($to - $from)
                 )
             );
 
@@ -289,6 +290,7 @@ class RequestHandler
         $allowedCompressionAsString = $request
             ->headers
             ->get('Accept-Encoding');
+
         if (!$allowedCompressionAsString) {
             return;
         }

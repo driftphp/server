@@ -35,16 +35,15 @@ class RunServerCommand extends Command
     private $bootstrapPath;
 
     /**
-     * Construct
+     * Construct.
      *
      * @param string|null $name
-     * @param string $bootstrapPath
+     * @param string      $bootstrapPath
      */
     public function __construct(
         string $bootstrapPath,
         string $name
-    )
-    {
+    ) {
         parent::__construct($name);
         $this->bootstrapPath = $bootstrapPath;
     }

@@ -18,13 +18,13 @@ namespace Drift\Server;
 /**
  * Class ConsoleMessage.
  */
-class ConsoleMessage implements Printable
+final class ConsoleMessage implements Printable
 {
-    protected $url;
-    protected $method;
-    protected $code;
-    protected $message;
-    protected $elapsedTime;
+    private $url;
+    private $method;
+    private $code;
+    private $message;
+    private $elapsedTime;
 
     /**
      * Message constructor.
@@ -33,14 +33,14 @@ class ConsoleMessage implements Printable
      * @param string $method
      * @param int    $code
      * @param string $message
-     * @param int    $elapsedTime
+     * @param string $elapsedTime
      */
     public function __construct(
         string $url,
         string $method,
         int $code,
         string $message,
-        int $elapsedTime
+        string $elapsedTime
     ) {
         $this->url = $url;
         $this->method = $method;
@@ -64,7 +64,7 @@ class ConsoleMessage implements Printable
 
         echo "\033[01;{$color}m".$this->code."\033[0m";
         echo " $method $this->url ";
-        echo "(\e[00;37m".$this->elapsedTime.' ms | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
+        echo "(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
         if ($this->code >= 300) {
             echo " - \e[00;37m".$this->messageInMessage($this->message)."\e[0m";
         }

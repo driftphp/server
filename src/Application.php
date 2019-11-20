@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace Drift\Server;
 
 use Drift\HttpKernel\AsyncKernel;
-use Drift\Server\Adapter\KernelAdapter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory as EventLoopFactory;
@@ -96,7 +95,7 @@ class Application
      * @param bool        $debug
      * @param bool        $silent
      * @param string      $adapter
-     * @param string $bootstrapPath
+     * @param string      $bootstrapPath
      * @param string|null $staticFolder
      *
      * @throws Exception
@@ -238,7 +237,7 @@ class Application
             echo '>  Debug: '.($this->debug ? 'enabled' : 'disabled').PHP_EOL;
             echo '>  Static Folder: '.(empty($this->staticFolder) ? 'disabled' : $this->staticFolder).PHP_EOL;
             echo ">  Adapter: $this->adapter".PHP_EOL;
-            echo ">  Loaded bootstrap file: " . realpath($this->bootstrapPath) . PHP_EOL;
+            echo '>  Loaded bootstrap file: '.realpath($this->bootstrapPath).PHP_EOL;
             echo '>'.PHP_EOL.PHP_EOL;
         }
     }
