@@ -46,7 +46,7 @@ final class ChangesWatcher
     {
         $configFilePath = $this->configBuilder->findConfigFile();
         if ($configFilePath === null) {
-            return new WatchList(['src'], ['php']);
+            return new WatchList(['src', 'tests'], ['php']);
         }
 
         return $this->configBuilder->fromConfigFile($configFilePath)->watchList();

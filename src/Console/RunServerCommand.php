@@ -18,8 +18,10 @@ namespace Drift\Server\Console;
 use Drift\Server\Adapter\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\ChangesWatcher;
+use Drift\Server\RequestHandler;
 use Exception;
 use React\EventLoop\Factory as EventLoopFactory;
+use React\Filesystem\Filesystem;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -108,8 +110,13 @@ class RunServerCommand extends Command
         list($host, $port) = $serverArgs;
 
         $loop = EventLoopFactory::create();
+        $requestHandler = new RequestHandler();
+        $filesystem = Filesystem::create($loop);
 
         $application = new \Drift\Server\Application(
+            $loop,
+            $requestHandler,
+            $filesystem,
             $rootPath,
             $host,
             \intval($port),
@@ -118,10 +125,11 @@ class RunServerCommand extends Command
             $silent,
             $adapter,
             $this->bootstrapPath,
-            $staticFolder,
-            $loop
+            $staticFolder
         );
 
+        $application->printHeader();
+        $application->connectSocket();
         $application->run();
 
         if ($isWatching && ChangesWatcher::isAvailable()) {
