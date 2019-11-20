@@ -21,6 +21,7 @@ use React\Promise\PromiseInterface;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -83,8 +84,13 @@ class FakeKernel extends AsyncKernel
      */
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
-        return new Response(json_encode([
+        $code = \intval($request->query->get('code'));
+        if (400 === $code) {
+            throw new \Exception('Bad Request');
+        }
+
+        return new JsonResponse([
             'query' => $request->query,
-        ]), \intval($request->query->get('code')));
+        ], $code);
     }
 }

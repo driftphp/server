@@ -18,20 +18,20 @@ namespace Drift\Server;
 /**
  * Class ConsoleStaticMessage.
  */
-class ConsoleStaticMessage implements Printable
+final class ConsoleStaticMessage implements Printable
 {
-    protected $url;
-    protected $elapsedTime;
+    private $url;
+    private $elapsedTime;
 
     /**
      * ConsoleStaticMessage constructor.
      *
      * @param string $url
-     * @param int    $elapsedTime
+     * @param string $elapsedTime
      */
     public function __construct(
         string $url,
-        int $elapsedTime
+        string $elapsedTime
     ) {
         $this->url = $url;
         $this->elapsedTime = $elapsedTime;
@@ -47,7 +47,7 @@ class ConsoleStaticMessage implements Printable
 
         echo "\033[01;{$color}m200\033[0m";
         echo " $method $this->url ";
-        echo "(\e[00;37m".$this->elapsedTime.' ms | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
+        echo "(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
         echo PHP_EOL;
     }
 }
