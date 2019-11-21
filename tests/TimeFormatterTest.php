@@ -28,7 +28,7 @@ class TimeFormatterTest extends TestCase
      */
     public function testFormatTime()
     {
-        $this->assertEquals('10 ms', TimeFormatter::formatTime(10000));
-        $this->assertEquals('10 μs', TimeFormatter::formatTime(10));
+        $this->assertEquals('10 ms', TimeFormatter::formatTime(0.010));
+        $this->assertEquals('300 μs', TimeFormatter::formatTime(0.000300));
     }
 }
