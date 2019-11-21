@@ -36,11 +36,9 @@ interface KernelAdapter
     ): AsyncKernel;
 
     /**
-     * Get static folder by kernel.
-     *
-     * @param AsyncKernel $kernel
+     * Get static folder.
      *
      * @return string|null
      */
-    public static function getStaticFolder(AsyncKernel $kernel): ? string;
+    public static function getStaticFolder(): ? string;
 }

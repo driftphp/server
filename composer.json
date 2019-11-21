@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=7.1",
+        "ext-pcntl": "*",
 
         "symfony/http-kernel": "^4.3 || ^5.0",
         "symfony/console": "^4.3 || ^5.0",
@@ -19,7 +20,8 @@
         "react/socket": "^1",
         "react/promise": "^2",
         "react/filesystem": "*",
-        "mmoreram/react-functions": "dev-master"
+        "mmoreram/react-functions": "dev-master",
+        "seregazhuk/php-watcher": "dev-master"
     },
     "require-dev": {
         "drift/http-kernel": "dev-master",

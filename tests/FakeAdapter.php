@@ -41,11 +41,9 @@ class FakeAdapter implements KernelAdapter
     /**
      * Get static folder by kernel.
      *
-     * @param AsyncKernel $kernel
-     *
      * @return string|null
      */
-    public static function getStaticFolder(AsyncKernel $kernel): ? string
+    public static function getStaticFolder(): ? string
     {
         return '/tests/public';
     }

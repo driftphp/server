@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Server\Output\OutputPrinter;
+
 /**
  * Interface Printable.
  */
@@ -22,6 +24,8 @@ interface Printable
 {
     /**
      * Print.
+     *
+     * @param OutputPrinter $outputPrinter
      */
-    public function print();
+    public function print(OutputPrinter $outputPrinter);
 }

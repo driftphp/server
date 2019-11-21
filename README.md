@@ -65,6 +65,21 @@ php vendor/bin/server run 0.0.0.0:8100 --env=test
 php vendor/bin/server run 0.0.0.0:8100 --dev --debug
 ```
 
+## Watcher
+
+The server uses a watcher for dynamic content changes. This watches will check
+for changes on every file you want, and will reload the server properly.
+
+- Go to [PHP Watcher documentation](https://github.com/seregazhuk/php-watcher)
+
+In order to start the server in a watching mode, use the `watch` command instead
+of the `run` command. All the documented options under the `run` command will be
+valid in this new command.
+
+```console
+php vendor/bin/server watch 0.0.0.0:8100
+```
+
 ## Serving static files
 
 Kernel Adapters have already defined the static folder related to the kernel.

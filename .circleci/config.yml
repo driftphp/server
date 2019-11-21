@@ -9,6 +9,11 @@ jobs:
       - checkout
 
       - run:
+          name: Install PHP dependencies
+          command: |
+            sudo docker-php-ext-install pcntl
+
+      - run:
           name: Install PHPUnit
           command: |
             composer require phpunit/phpunit:7.*
