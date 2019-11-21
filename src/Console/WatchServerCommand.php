@@ -52,6 +52,8 @@ final class WatchServerCommand extends ServerCommand
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param OutputPrinter $outputPrinter
+     *
+     * @throws \Exception Watcher not found
      */
     protected function executeServerCommand(
         LoopInterface $loop,
@@ -60,11 +62,32 @@ final class WatchServerCommand extends ServerCommand
     ) {
         $argv = $this->argv;
         $argv[] = '--no-header';
-        $path = dirname(__DIR__).'/../vendor/bin/php-watcher';
-        $path = realpath($path);
+
+        $dirname = dirname(__DIR__);
+        $found = false;
+        $paths = [
+            '../../../../vendor/bin/php-watcher',
+            '../../../../bin/php-watcher',
+            '../vendor/bin/php-watcher',
+        ];
+
+        $completePath = null;
+        foreach ($paths as $path) {
+            $completePath = "$dirname/$path";
+            if (is_file($completePath)) {
+                $found = true;
+                break;
+            }
+        }
+
+        if (!$found) {
+            throw new \Exception('The executable php-watcher was not found. Check dependencies');
+        }
+
+        $completePath = realpath($completePath);
         $script = '"'.addslashes(addslashes(implode(' ', array_values($argv)))).'"';
         $script = str_replace('/server watch ', '/server run ', $script);
-        $command = sprintf('%s %s --exec %s %s', PHP_BINARY, $path, PHP_BINARY, $script);
+        $command = sprintf('%s %s --exec %s %s', PHP_BINARY, $completePath, PHP_BINARY, $script);
 
         $process = new Process($command);
         $process->start($loop);

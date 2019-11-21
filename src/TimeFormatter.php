@@ -23,17 +23,18 @@ class TimeFormatter
     /**
      * Format time in milliseconds.
      *
-     * @param float $timeInMicroseconds
+     * @param float $timeInSeconds
      *
      * @return string
      */
-    public static function formatTime(float $timeInMicroseconds): string
-    {
-        $timeInMicroseconds = \intval($timeInMicroseconds);
-        if ($timeInMicroseconds >= 1000) {
-            return \intval($timeInMicroseconds / 1000).' ms';
-        }
+        public static function formatTime(float $timeInSeconds): string
+        {
+            $timeInMicroseconds = \intval($timeInSeconds * 1000000);
 
-        return $timeInMicroseconds.' μs';
-    }
+            if ($timeInMicroseconds >= 1000) {
+                return \intval($timeInMicroseconds / 1000) . " ms";
+            }
+
+            return "$timeInMicroseconds μs";
+        }
 }
