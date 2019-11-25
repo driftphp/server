@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/php:7.2-cli
+      - image: circleci/php:7.3-cli
 
     working_directory: ~/project
     steps:
@@ -16,16 +16,18 @@ jobs:
       - run:
           name: Install PHPUnit
           command: |
-            composer require phpunit/phpunit:7.*
+            composer require phpunit/phpunit:7.5.17 --no-update
 
       - run:
           name: Run tests / Symfony 5^0
           command: |
+            rm -Rf var/*
             composer update -n --prefer-dist --no-suggest
             php vendor/bin/phpunit
 
       - run:
           name: Run tests / Symfony 4^3
           command: |
-            composer update -n --prefer-dist --prefer-stable --no-suggest
+            rm -Rf var/*
+            composer update -n --prefer-dist --prefer-lowest --no-suggest
             php vendor/bin/phpunit

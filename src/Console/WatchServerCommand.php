@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,8 +15,10 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Server\Application;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Output\OutputPrinter;
+use Drift\Server\Watcher\ObservableKernel;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
 
@@ -60,6 +62,16 @@ final class WatchServerCommand extends ServerCommand
         ServerContext $serverContext,
         OutputPrinter $outputPrinter
     ) {
+
+        $rootPath = getcwd();
+        $application = new Application(
+            $loop,
+            $serverContext,
+            $outputPrinter,
+            $rootPath,
+            $this->bootstrapPath
+        );
+
         $argv = $this->argv;
         $argv[] = '--no-header';
 
@@ -84,15 +96,52 @@ final class WatchServerCommand extends ServerCommand
             throw new \Exception('The executable php-watcher was not found. Check dependencies');
         }
 
+        $kernelAdapter = $application->getKernelAdapter();
+        $extra = [];
+        if (is_subclass_of($kernelAdapter, ObservableKernel::class)) {
+            $folders = $this->fixFolderPath($kernelAdapter::getObservableFolders(), $rootPath);
+            $extensions = $kernelAdapter::getObservableExtensions();
+            $ignoredFolders = $kernelAdapter::getIgnorableFolders();
+
+            $extra[] = sprintf(
+                '--watch=%s --ext=%s --ignore=%s',
+                implode(',', $folders),
+                implode(',', $extensions),
+                implode(',', $ignoredFolders)
+            );
+        }
+
         $completePath = realpath($completePath);
         $script = '"'.addslashes(addslashes(implode(' ', array_values($argv)))).'"';
         $script = str_replace('/server watch ', '/server run ', $script);
-        $command = sprintf('%s %s --exec %s %s', PHP_BINARY, $completePath, PHP_BINARY, $script);
+        $command = sprintf('%s %s --exec %s %s %s', PHP_BINARY, $completePath, PHP_BINARY, $script, implode(' ', $extra));
 
         $process = new Process($command);
         $process->start($loop);
         $process->stdout->on('data', function (string $data) use ($outputPrinter) {
             $outputPrinter->print($data);
         });
+    }
+
+    /**
+     * Fix folder array
+     *
+     * @param string[] $folders
+     * @param string $rootPath
+     */
+    private function fixFolderPath(
+        array $folders,
+        string $rootPath
+    ) : array
+    {
+        $folders = array_map(function(string $path) use ($rootPath) {
+            $path =  sprintf("%s/%s/", $rootPath, trim($path, '/'));
+            return is_dir($path)
+                ? $path
+                : false;
+        }, $folders);
+        $folders = array_filter($folders);
+
+        return $folders;
     }
 }

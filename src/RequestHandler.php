@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,7 +36,10 @@ use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Throwable;
+use Drift\React as Functions;
+use Clue\React\Block;
 
 /**
  * Class RequestHandler.
@@ -136,7 +139,7 @@ class RequestHandler
         $from = microtime(true);
 
         $contents = $filesystem->getContents($rootPath.$resourcePath);
-        $mimeType = \Mmoreram\React\mime_content_type($rootPath.$resourcePath, $loop);
+        $mimeType = Functions\mime_content_type($rootPath.$resourcePath, $loop);
 
         return Promise\all([$contents, $mimeType])
             ->then(function ($results) use ($resourcePath, $from) {
@@ -164,10 +167,11 @@ class RequestHandler
                         ''
                     ),
                     $this->outputPrinter,
-                    new ConsoleException(
-                        $exception,
+                    new ConsoleMessage(
                         $resourcePath,
                         'GET',
+                        404,
+                        $message = sprintf('Resource %s not found', $resourcePath),
                         TimeFormatter::formatTime($to - $from)
                     )
                 );
@@ -274,19 +278,27 @@ class RequestHandler
         string $uriPath
     ): ServerResponseWithMessage {
         $to = microtime(true);
+        $code = 400;
+        $message = $exception->getMessage();
+
+        if ($exception instanceof RouteNotFoundException) {
+            $code = 404;
+            $message = sprintf('Route %s not found', $uriPath);
+        }
 
         $serverResponse =
             new ServerResponseWithMessage(
                 new \React\Http\Response(
-                    400,
+                    $code,
                     ['Content-Type' => 'text/plain'],
                     $exception->getMessage()
                 ),
                 $this->outputPrinter,
-                new ConsoleException(
-                    $exception,
+                new ConsoleMessage(
                     $uriPath,
                     $method,
+                    $code,
+                    $message,
                     TimeFormatter::formatTime($to - $from)
                 )
             );

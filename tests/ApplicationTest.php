@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -28,18 +28,19 @@ class ApplicationTest extends TestCase
      */
     public function testRegular()
     {
+        $port = rand(2000, 9999);
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
             'run',
-            '0.0.0.0:9999',
+            "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
         ]);
 
         $process->start();
         usleep(300000);
-        file_get_contents('http://localhost:9999?code=200');
+        Utils::curl("http://127.0.0.1:$port?code=200");
         usleep(100000);
         $this->assertNotFalse(
             strpos(
@@ -56,11 +57,12 @@ class ApplicationTest extends TestCase
      */
     public function testSilentServer()
     {
+        $port = rand(2000, 9999);
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
             'run',
-            '0.0.0.0:9999',
+            "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--quiet',
             '--dev',
@@ -68,12 +70,42 @@ class ApplicationTest extends TestCase
 
         $process->start();
         usleep(300000);
-        file_get_contents('http://localhost:9999?code=200');
+        Utils::curl("http://127.0.0.1:$port?code=200");
         usleep(100000);
 
         $this->assertEquals(
             '',
             $process->getOutput()
+        );
+
+        $process->stop();
+    }
+
+    /**
+     * Test route not found.
+     */
+    public function testRouteNotFound()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--dev',
+        ]);
+
+        $process->start();
+        usleep(300000);
+        Utils::curl("http://127.0.0.1:$port/another/route?code=200");
+        usleep(300000);
+
+        $this->assertNotFalse(
+            strpos(
+                $process->getOutput(),
+                '[01;31m404[0m GET'
+            )
         );
 
         $process->stop();

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -18,6 +18,7 @@ namespace Drift\Server;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Context\ServerContext;
+use Drift\Server\Exception\SyncKernelException;
 use Drift\Server\Output\OutputPrinter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
@@ -40,11 +41,6 @@ class Application
     private $loop;
 
     /**
-     * @var RequestHandler
-     */
-    private $requestHandler;
-
-    /**
      * @var ServerContext
      */
     private $serverContext;
@@ -60,21 +56,9 @@ class Application
     private $bootstrapPath;
 
     /**
-     * @var Kernel
-     *
-     * Kernel
+     * @var string
      */
-    private $kernel;
-
-    /**
-     * @var SocketServer
-     */
-    private $socket;
-
-    /**
-     * @var FilesystemInterface
-     */
-    private $filesystem;
+    private $kernelAdapter;
 
     /**
      * @var OutputPrinter
@@ -85,8 +69,6 @@ class Application
      * Application constructor.
      *
      * @param LoopInterface       $loop
-     * @param RequestHandler      $requestHandler
-     * @param FilesystemInterface $filesystem
      * @param ServerContext       $serverContext
      * @param string              $rootPath
      * @param string              $bootstrapPath
@@ -95,16 +77,12 @@ class Application
      */
     public function __construct(
         LoopInterface $loop,
-        RequestHandler $requestHandler,
-        FilesystemInterface $filesystem,
         ServerContext $serverContext,
         OutputPrinter $outputPrinter,
         string $rootPath,
         string $bootstrapPath
     ) {
         $this->loop = $loop;
-        $this->requestHandler = $requestHandler;
-        $this->filesystem = $filesystem;
         $this->serverContext = $serverContext;
         $this->outputPrinter = $outputPrinter;
         $this->rootPath = $rootPath;
@@ -119,42 +97,65 @@ class Application
         /**
          * @var KernelAdapter
          */
-        $adapter = $serverContext->getAdapter();
-        $this->kernel = $adapter::buildKernel(
-            $serverContext->getEnvironment(),
-            $serverContext->isDebug()
+        $this->kernelAdapter = $serverContext->getAdapter();
+    }
+
+    /**
+     * @return string
+     */
+    public function getKernelAdapter(): string
+    {
+        return $this->kernelAdapter;
+    }
+
+    /**
+     * Build a kernel
+     *
+     * @return AsyncKernel
+     *
+     * @throws SyncKernelException
+     */
+    public function buildAKernel():AsyncKernel
+    {
+        $kernel = $this->kernelAdapter::buildKernel(
+            $this->serverContext->getEnvironment(),
+            $this->serverContext->isDebug()
         );
 
-        if (!$this->kernel instanceof AsyncKernel) {
-            throw new Exception(sprintf('Your kernel MUST implement %s', AsyncKernel::class));
+        if (!$kernel instanceof AsyncKernel) {
+            throw SyncKernelException::build();
         }
+
+        $kernel->boot();
+        $kernel
+            ->getContainer()
+            ->set('reactphp.event_loop', $this->loop);
+
+        return $kernel;
     }
 
     /**
      * Run.
+     *
+     * @param AsyncKernel $kernel
+     * @param RequestHandler $requestHandler
+     * @param FilesystemInterface $filesystem
      */
-    public function run()
+    public function run(
+        AsyncKernel $kernel,
+        RequestHandler $requestHandler,
+        FilesystemInterface $filesystem
+    )
     {
-        /*
-         * REACT SERVER.
-         */
-        $this->kernel->boot();
-        $this
-            ->kernel
-            ->getContainer()
-            ->set('reactphp.event_loop', $this->loop);
-
-        if (!$this->socket instanceof SocketServer) {
-            $this->socket = new SocketServer(
-                $this->serverContext->getHost().':'.
-                $this->serverContext->getPort(),
-                $this->loop
-            );
-        }
+        $socket = new SocketServer(
+            $this->serverContext->getHost().':'.
+            $this->serverContext->getPort(),
+            $this->loop
+        );
 
         $http = new HttpServer(
-            function (ServerRequestInterface $request) {
-                return new Promise(function (callable $resolve) use ($request) {
+            function (ServerRequestInterface $request) use ($kernel, $requestHandler, $filesystem) {
+                return new Promise(function (callable $resolve) use ($request, $kernel, $requestHandler, $filesystem) {
                     $resolveResponseCallback = function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {
                         if (!$this->serverContext->isSilent()) {
                             $serverResponseWithMessage->printMessage();
@@ -170,20 +171,18 @@ class Application
                         $uriPath,
                         $this->serverContext->getStaticFolder()
                     ))
-                        ? $this
-                            ->requestHandler
+                        ? $requestHandler
                             ->handleStaticResource(
                                 $this->loop,
-                                $this->filesystem,
+                                $filesystem,
                                 $this->rootPath,
                                 $uriPath
                             )
                             ->then(function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback) {
                                 $resolveResponseCallback($serverResponseWithMessage);
                             })
-                        : $this
-                            ->requestHandler
-                            ->handleAsyncServerRequest($this->kernel, $request)
+                        : $requestHandler
+                            ->handleAsyncServerRequest($kernel, $request)
                             ->then(function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback) {
                                 $resolveResponseCallback($serverResponseWithMessage);
                             });
@@ -192,9 +191,9 @@ class Application
         );
 
         $http->on('error', function (\Throwable $e) {
-            (new ConsoleException($e, '/', 'EXC', '0'))->print($this->outputPrinter);
+            (new ConsoleMessage('/', 'EXC', 500, $e->getMessage()))->print($this->outputPrinter);
         });
 
-        $http->listen($this->socket);
+        $http->listen($socket);
     }
 }
