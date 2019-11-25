@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -136,7 +136,7 @@ class RequestHandler
         $from = microtime(true);
 
         $contents = $filesystem->getContents($rootPath.$resourcePath);
-        $mimeType = \Mmoreram\React\mime_content_type($rootPath.$resourcePath, $loop);
+        $mimeType = \Drift\React\mime_content_type($rootPath.$resourcePath, $loop);
 
         return Promise\all([$contents, $mimeType])
             ->then(function ($results) use ($resourcePath, $from) {

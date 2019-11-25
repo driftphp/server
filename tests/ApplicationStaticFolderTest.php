@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -92,6 +92,11 @@ class ApplicationStaticFolderTest extends TestCase
         $process->stop();
     }
 
+    /**
+     * @param string $file
+     * @param string $expectedContent
+     * @param string $expectedMimeType
+     */
     private function assertFileWasReceived(string $file, string $expectedContent, string $expectedMimeType): void
     {
         $content = file_get_contents($file);
