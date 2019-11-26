@@ -59,6 +59,13 @@ class ApplicationStaticFolderTest extends TestCase
             )
         );
 
+        $this->assertNotFalse(
+            strpos(
+                $process->getOutput(),
+                'tests/public/app.js'
+            )
+        );
+
         $process->stop();
     }
 
