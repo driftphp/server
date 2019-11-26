@@ -21,7 +21,7 @@
         "react/socket": "^1.0",
         "react/promise": "^2.7",
         "react/filesystem": "^0.1",
-        "drift/react-functions": "dev-master",
+        "drift/react-functions": "^0.1",
         "seregazhuk/php-watcher": "^0.5.1"
     },
     "require-dev": {
