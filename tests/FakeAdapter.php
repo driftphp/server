@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,11 +17,12 @@ namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Adapter\KernelAdapter;
+use Drift\Server\Watcher\ObservableKernel;
 
 /**
  * Class FakeAdapter.
  */
-class FakeAdapter implements KernelAdapter
+class FakeAdapter implements KernelAdapter, ObservableKernel
 {
     /**
      * Build kernel.
@@ -46,5 +47,35 @@ class FakeAdapter implements KernelAdapter
     public static function getStaticFolder(): ? string
     {
         return '/tests/public';
+    }
+
+    /**
+     * Get watcher folders
+     *
+     * @return string[]
+     */
+    public static function getObservableFolders(): array
+    {
+        return ['tests/sandbox'];
+    }
+
+    /**
+     * Get watcher folders
+     *
+     * @return string[]
+     */
+    public static function getObservableExtensions(): array
+    {
+        return ['file1'];
+    }
+
+    /**
+     * Get watcher ignoring folders
+     *
+     * @return string[]
+     */
+    public static function getIgnorableFolders(): array
+    {
+        return ['ignore'];
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,11 +29,12 @@ class ApplicationStaticFolderTest extends TestCase
      */
     public function testRegular()
     {
+        $port = rand(2000, 9999);
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
             'run',
-            '0.0.0.0:9999',
+            "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
         ]);
@@ -48,7 +49,7 @@ class ApplicationStaticFolderTest extends TestCase
             ) > 0
         );
 
-        $this->assertFileWasReceived('http://localhost:9999/tests/public/app.js', '// Some app', 'text/plain');
+        $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.js", '// Some app', 'text/plain');
         usleep(100000);
 
         $this->assertNotFalse(
@@ -66,11 +67,12 @@ class ApplicationStaticFolderTest extends TestCase
      */
     public function testDisabledStaticFolder()
     {
+        $port = rand(2000, 9999);
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
             'run',
-            '0.0.0.0:9999',
+            "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--no-static-folder',
             '--dev',
@@ -85,16 +87,20 @@ class ApplicationStaticFolderTest extends TestCase
                 'Static Folder: disabled'
             ) > 0
         );
-
-        $content = @file_get_contents('http://localhost:9999/tests/public/app.js');
-        $this->assertFalse($content);
+        $content = Utils::curl("http://127.0.0.1:$port/tests/public/app.js");
+        $this->assertEmpty($content);
 
         $process->stop();
     }
 
+    /**
+     * @param string $file
+     * @param string $expectedContent
+     * @param string $expectedMimeType
+     */
     private function assertFileWasReceived(string $file, string $expectedContent, string $expectedMimeType): void
     {
-        $content = file_get_contents($file);
+        $content = Utils::curl($file);
         $this->assertEquals($expectedContent, $content);
 
         $fileInfo = new Finfo(FILEINFO_MIME_TYPE);

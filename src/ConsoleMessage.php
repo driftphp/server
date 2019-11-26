@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -66,13 +66,13 @@ final class ConsoleMessage implements Printable
             $color = '31';
         }
 
-        echo "\033[01;{$color}m".$this->code."\033[0m";
-        echo " $method $this->url ";
-        echo "(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
+        $outputPrinter->print("\033[01;{$color}m".$this->code."\033[0m");
+        $outputPrinter->print(" $method $this->url ");
+        $outputPrinter->print("(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)");
         if ($this->code >= 300) {
-            echo " - \e[00;37m".$this->messageInMessage($this->message)."\e[0m";
+            $outputPrinter->print(" - \e[00;37m".$this->messageInMessage($this->message)."\e[0m");
         }
-        echo PHP_EOL;
+        $outputPrinter->printLine();
     }
 
     /**

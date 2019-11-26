@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Server\Application;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Output\OutputPrinter;
 use Drift\Server\RequestHandler;
@@ -42,16 +43,19 @@ final class RunServerCommand extends ServerCommand
         $requestHandler = new RequestHandler($outputPrinter);
         $filesystem = Filesystem::create($loop);
 
-        $application = new \Drift\Server\Application(
+        $application = new Application(
             $loop,
-            $requestHandler,
-            $filesystem,
             $serverContext,
             $outputPrinter,
             $rootPath,
             $this->bootstrapPath
         );
 
-        $application->run();
+        $kernel = $application->buildAKernel();
+        $application->run(
+            $kernel,
+            $requestHandler,
+            $filesystem
+        );
     }
 }

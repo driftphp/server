@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -39,26 +39,20 @@ class CompressionTest extends TestCase
      */
     private function assertEncodingType(string $encodingType)
     {
+        $port = rand(2000, 9999);
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
             'run',
-            '0.0.0.0:9999',
+            "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
         ]);
 
         $process->start();
         usleep(300000);
-
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => "Accept-Encoding: $encodingType\r\n",
-            ],
-        ];
-
-        $context = stream_context_create($opts);
-        @file_get_contents('http://localhost:9999?code=400', false, $context);
+        Utils::curl("http://127.0.0.1:$port?code=400", [
+            "Accept-Encoding: $encodingType"
+        ]);
         usleep(300000);
         $this->assertNotFalse(
             strpos(

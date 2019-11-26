@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the React Symfony Server package.
+ * This file is part of the Drift Server
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Class FakeKernel.
@@ -83,9 +84,13 @@ class FakeKernel extends AsyncKernel
      */
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
-        $code = \intval($request->query->get('code'));
+        $code = \intval($request->query->get('code', 200));
         if (400 === $code) {
-            throw new \Exception('Bad Request LOLAZO');
+            throw new \Exception('Bad Request');
+        }
+
+        if ($request->getPathInfo() !== '/') {
+            throw new RouteNotFoundException();
         }
 
         return new JsonResponse([
