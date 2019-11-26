@@ -99,15 +99,15 @@ final class WatchServerCommand extends ServerCommand
         $kernelAdapter = $application->getKernelAdapter();
         $extra = [];
         if (is_subclass_of($kernelAdapter, ObservableKernel::class)) {
-            $folders = $this->fixFolderPath($kernelAdapter::getObservableFolders(), $rootPath);
+            $folders = $this->formatFolders($kernelAdapter::getObservableFolders(), $rootPath);
             $extensions = $kernelAdapter::getObservableExtensions();
-            $ignoredFolders = $kernelAdapter::getIgnorableFolders();
+            $ignoredFolders = $this->formatIgnoreFolders($kernelAdapter::getIgnorableFolders());
 
             $extra[] = sprintf(
-                '--watch=%s --ext=%s --ignore=%s',
-                implode(',', $folders),
+                '%s --ext=%s %s',
+                implode(' ', $folders),
                 implode(',', $extensions),
-                implode(',', $ignoredFolders)
+                implode(' ', $ignoredFolders)
             );
         }
 
@@ -124,24 +124,39 @@ final class WatchServerCommand extends ServerCommand
     }
 
     /**
-     * Fix folder array
+     * Format folder array
      *
      * @param string[] $folders
      * @param string $rootPath
      */
-    private function fixFolderPath(
+    private function formatFolders(
         array $folders,
         string $rootPath
     ) : array
     {
         $folders = array_map(function(string $path) use ($rootPath) {
             $path =  sprintf("%s/%s/", $rootPath, trim($path, '/'));
-            return is_dir($path)
+            return is_file($path) || is_dir($path)
                 ? $path
                 : false;
         }, $folders);
         $folders = array_filter($folders);
+        $folders = array_map(function(string $folder) {
+            return "--watch $folder";
+        }, $folders);
 
         return $folders;
+    }
+
+    /**
+     * Format ignore array
+     *
+     * @param string[] $ignoreFolders
+     */
+    private function formatIgnoreFolders(array $ignoreFolders) : array
+    {
+        return array_map(function(string $folder) {
+            return "--ignore $folder";
+        }, $ignoreFolders);
     }
 }
