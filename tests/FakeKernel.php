@@ -89,7 +89,10 @@ class FakeKernel extends AsyncKernel
             throw new \Exception('Bad Request');
         }
 
-        if ($request->getPathInfo() !== '/') {
+        if (
+            $request->getPathInfo() !== '/' &&
+            $request->getPathInfo() !== '/valid/query'
+        ) {
             throw new RouteNotFoundException();
         }
 

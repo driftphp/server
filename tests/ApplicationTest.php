@@ -40,12 +40,19 @@ class ApplicationTest extends TestCase
 
         $process->start();
         usleep(300000);
-        Utils::curl("http://127.0.0.1:$port?code=200");
+        Utils::curl("http://127.0.0.1:$port/valid/query?code=200");
         usleep(100000);
         $this->assertNotFalse(
             strpos(
                 $process->getOutput(),
                 '[01;32m200[0m GET'
+            )
+        );
+
+        $this->assertNotFalse(
+            strpos(
+                $process->getOutput(),
+                '/valid/query'
             )
         );
 

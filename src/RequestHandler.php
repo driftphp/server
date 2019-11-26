@@ -171,7 +171,7 @@ class RequestHandler
                         $resourcePath,
                         'GET',
                         404,
-                        $message = sprintf('Resource %s not found', $resourcePath),
+                        sprintf('Resource %s not found', $resourcePath),
                         TimeFormatter::formatTime($to - $from)
                     )
                 );
@@ -238,6 +238,13 @@ class RequestHandler
             $symfonyResponse
         );
 
+        if ($symfonyResponse->getStatusCode() >= 400) {
+            $nonEncodedContent = 'Error returned';
+            if ($symfonyResponse->getStatusCode() == 404) {
+                $nonEncodedContent = 'Route not found';
+            }
+        }
+
         $serverResponse =
             new ServerResponseWithMessage(
                 new \React\Http\Response(
@@ -247,7 +254,7 @@ class RequestHandler
                 ),
                 $this->outputPrinter,
                 new ConsoleMessage(
-                    $symfonyRequest->getBaseUrl(),
+                    $symfonyRequest->getPathInfo(),
                     $symfonyRequest->getMethod(),
                     $symfonyResponse->getStatusCode(),
                     $nonEncodedContent,
