@@ -56,7 +56,7 @@ class FakeAdapter implements KernelAdapter, ObservableKernel
      */
     public static function getObservableFolders(): array
     {
-        return ['tests/sandbox'];
+        return ['tests/sandbox', 'tests/sandbox2', 'tests/non-existing'];
     }
 
     /**
@@ -76,6 +76,6 @@ class FakeAdapter implements KernelAdapter, ObservableKernel
      */
     public static function getIgnorableFolders(): array
     {
-        return ['ignore'];
+        return ['ignore', 'ignore2'];
     }
 }
