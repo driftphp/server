@@ -134,11 +134,11 @@ final class WatchServerCommand extends ServerCommand
         string $rootPath
     ) : array
     {
-        $folders = array_map(function(string $path) use ($rootPath) {
+        $folders = array_map(function(string $path) use ($rootPath): ?string {
             $path =  sprintf("%s/%s/", $rootPath, trim($path, '/'));
             return is_file($path) || is_dir($path)
                 ? $path
-                : false;
+                : null;
         }, $folders);
         $folders = array_filter($folders);
         $folders = array_map(function(string $folder) {
