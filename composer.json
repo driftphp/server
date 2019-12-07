@@ -13,22 +13,23 @@
         "php": ">=7.1",
         "ext-pcntl": "*",
 
-        "symfony/http-kernel": "^4.3 || ^5.0",
-        "symfony/console": "^4.3 || ^5.0",
-        "symfony/finder": "^4.3 || ^5.0",
+        "symfony/http-kernel": "^5.0",
+        "symfony/console": "^5.0",
+        "symfony/finder": "^4.4 || ^5.0",
         "react/http": "^0.8",
         "react/event-loop": "^1.0",
         "react/socket": "^1.0",
         "react/promise": "^2.7",
         "react/filesystem": "^0.1",
         "drift/react-functions": "^0.1",
-        "seregazhuk/php-watcher": "^0.5.1"
+        "drift/http-kernel": "^0.1.2",
+        "seregazhuk/php-watcher": "^0.5.2",
+        "phpunit/phpunit": "7.5.17"
     },
     "require-dev": {
-        "drift/http-kernel": "dev-master",
-        "symfony/framework-bundle": "^4.3 || ^5.0",
-        "symfony/process": "^4.3 || ^5.0",
-        "symfony/config": "^4.3 || ^5.0",
+        "symfony/framework-bundle": "^5.0",
+        "symfony/process": "^5.0",
+        "symfony/config": "^5.0",
         "ext-fileinfo": "*"
     },
     "autoload": {

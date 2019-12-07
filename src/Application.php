@@ -28,7 +28,6 @@ use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Socket\Server as SocketServer;
 use Symfony\Component\Debug\Debug;
-use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Class Application.
@@ -130,6 +129,8 @@ class Application
         $kernel
             ->getContainer()
             ->set('reactphp.event_loop', $this->loop);
+
+        $kernel->preload();
 
         return $kernel;
     }
