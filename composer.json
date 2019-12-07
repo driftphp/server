@@ -23,8 +23,7 @@
         "react/filesystem": "^0.1",
         "drift/react-functions": "^0.1",
         "drift/http-kernel": "^0.1.2",
-        "seregazhuk/php-watcher": "^0.5.2",
-        "phpunit/phpunit": "7.5.17"
+        "seregazhuk/php-watcher": "^0.5.2"
     },
     "require-dev": {
         "symfony/framework-bundle": "^5.0",
