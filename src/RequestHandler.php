@@ -27,6 +27,7 @@ namespace Drift\Server;
  */
 
 use Drift\HttpKernel\AsyncKernel;
+use Drift\React as Functions;
 use Drift\Server\Output\OutputPrinter;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
@@ -38,8 +39,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Throwable;
-use Drift\React as Functions;
-use Clue\React\Block;
 
 /**
  * Class RequestHandler.
@@ -167,7 +166,7 @@ class RequestHandler
                         ''
                     ),
                     $this->outputPrinter,
-                    new ConsoleMessage(
+                    new ConsoleRequestMessage(
                         $resourcePath,
                         'GET',
                         404,
@@ -240,7 +239,7 @@ class RequestHandler
 
         if ($symfonyResponse->getStatusCode() >= 400) {
             $nonEncodedContent = 'Error returned';
-            if ($symfonyResponse->getStatusCode() == 404) {
+            if (404 == $symfonyResponse->getStatusCode()) {
                 $nonEncodedContent = 'Route not found';
             }
         }
@@ -253,7 +252,7 @@ class RequestHandler
                     $symfonyResponse->getContent()
                 ),
                 $this->outputPrinter,
-                new ConsoleMessage(
+                new ConsoleRequestMessage(
                     $symfonyRequest->getPathInfo(),
                     $symfonyRequest->getMethod(),
                     $symfonyResponse->getStatusCode(),
@@ -301,7 +300,7 @@ class RequestHandler
                     $exception->getMessage()
                 ),
                 $this->outputPrinter,
-                new ConsoleMessage(
+                new ConsoleRequestMessage(
                     $uriPath,
                     $method,
                     $code,

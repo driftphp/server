@@ -15,12 +15,15 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Application;
+use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Output\OutputPrinter;
 use Drift\Server\RequestHandler;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
+use Throwable;
 
 /**
  * Class RunServerCommand.
@@ -51,11 +54,21 @@ final class RunServerCommand extends ServerCommand
             $this->bootstrapPath
         );
 
-        $kernel = $application->buildAKernel();
-        $application->run(
-            $kernel,
-            $requestHandler,
-            $filesystem
-        );
+        $application
+            ->buildAKernel()
+            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter) {
+                (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);
+                (new ConsoleServerMessage('Kernel preloaded.', '~', true))->print($outputPrinter);
+                (new ConsoleServerMessage('Kernel ready to accept requests.', '~', true))->print($outputPrinter);
+                $application->run(
+                    $kernel,
+                    $requestHandler,
+                    $filesystem
+                );
+            }, function (Throwable $e) use ($outputPrinter) {
+                (new ConsoleServerMessage($e->getMessage(), '~', false))->print($outputPrinter);
+                (new ConsoleServerMessage('The server will shut down.', '~', false))->print($outputPrinter);
+                (new ConsoleServerMessage('Bye!', '~', false))->print($outputPrinter);
+            });
     }
 }

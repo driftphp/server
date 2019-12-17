@@ -96,6 +96,8 @@ abstract class ServerCommand extends Command
         );
 
         $loop->run();
+
+        return 0;
     }
 
     /**

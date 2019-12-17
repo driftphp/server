@@ -90,8 +90,8 @@ class FakeKernel extends AsyncKernel
         }
 
         if (
-            $request->getPathInfo() !== '/' &&
-            $request->getPathInfo() !== '/valid/query'
+            '/' !== $request->getPathInfo() &&
+            '/valid/query' !== $request->getPathInfo()
         ) {
             throw new RouteNotFoundException();
         }

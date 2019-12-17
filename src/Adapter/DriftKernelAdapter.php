@@ -45,7 +45,7 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
     }
 
     /**
-     * Get watcher folders
+     * Get watcher folders.
      *
      * @return string[]
      */
@@ -55,7 +55,7 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
     }
 
     /**
-     * Get watcher folders
+     * Get watcher folders.
      *
      * @return string[]
      */
@@ -65,7 +65,7 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
     }
 
     /**
-     * Get watcher ignoring folders
+     * Get watcher ignoring folders.
      *
      * @return string[]
      */

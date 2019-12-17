@@ -51,7 +51,7 @@ class CompressionTest extends TestCase
         $process->start();
         usleep(300000);
         Utils::curl("http://127.0.0.1:$port?code=400", [
-            "Accept-Encoding: $encodingType"
+            "Accept-Encoding: $encodingType",
         ]);
         usleep(300000);
         $this->assertNotFalse(
