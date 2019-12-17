@@ -36,9 +36,12 @@ class ApplicationTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
+            '--debug',
         ]);
 
         $process->start();
+        $this->assertTrue($process->isRunning());
+
         usleep(300000);
         Utils::curl("http://127.0.0.1:$port/valid/query?code=200");
         usleep(100000);
