@@ -62,7 +62,6 @@ final class WatchServerCommand extends ServerCommand
         ServerContext $serverContext,
         OutputPrinter $outputPrinter
     ) {
-
         $rootPath = getcwd();
         $application = new Application(
             $loop,
@@ -124,24 +123,24 @@ final class WatchServerCommand extends ServerCommand
     }
 
     /**
-     * Format folder array
+     * Format folder array.
      *
      * @param string[] $folders
-     * @param string $rootPath
+     * @param string   $rootPath
      */
     private function formatFolders(
         array $folders,
         string $rootPath
-    ) : array
-    {
-        $folders = array_map(function(string $path) use ($rootPath) {
-            $path =  sprintf("%s/%s/", $rootPath, trim($path, '/'));
+    ): array {
+        $folders = array_map(function (string $path) use ($rootPath) {
+            $path = sprintf('%s/%s/', $rootPath, trim($path, '/'));
+
             return is_file($path) || is_dir($path)
                 ? $path
                 : false;
         }, $folders);
         $folders = array_filter($folders);
-        $folders = array_map(function(string $folder) {
+        $folders = array_map(function (string $folder) {
             return "--watch $folder";
         }, $folders);
 
@@ -149,13 +148,13 @@ final class WatchServerCommand extends ServerCommand
     }
 
     /**
-     * Format ignore array
+     * Format ignore array.
      *
      * @param string[] $ignoreFolders
      */
-    private function formatIgnoreFolders(array $ignoreFolders) : array
+    private function formatIgnoreFolders(array $ignoreFolders): array
     {
-        return array_map(function(string $folder) {
+        return array_map(function (string $folder) {
             return "--ignore $folder";
         }, $ignoreFolders);
     }

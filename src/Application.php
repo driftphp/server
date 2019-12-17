@@ -26,6 +26,7 @@ use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
+use React\Promise\PromiseInterface;
 use React\Socket\Server as SocketServer;
 use Symfony\Component\Debug\Debug;
 
@@ -67,10 +68,10 @@ class Application
     /**
      * Application constructor.
      *
-     * @param LoopInterface       $loop
-     * @param ServerContext       $serverContext
-     * @param string              $rootPath
-     * @param string              $bootstrapPath
+     * @param LoopInterface $loop
+     * @param ServerContext $serverContext
+     * @param string        $rootPath
+     * @param string        $bootstrapPath
      *
      * @throws Exception
      */
@@ -93,7 +94,7 @@ class Application
             Debug::enable();
         }
 
-        /**
+        /*
          * @var KernelAdapter
          */
         $this->kernelAdapter = $serverContext->getAdapter();
@@ -108,13 +109,13 @@ class Application
     }
 
     /**
-     * Build a kernel
+     * Build a kernel.
      *
-     * @return AsyncKernel
+     * @return PromiseInterface
      *
      * @throws SyncKernelException
      */
-    public function buildAKernel():AsyncKernel
+    public function buildAKernel(): PromiseInterface
     {
         $kernel = $this->kernelAdapter::buildKernel(
             $this->serverContext->getEnvironment(),
@@ -130,24 +131,25 @@ class Application
             ->getContainer()
             ->set('reactphp.event_loop', $this->loop);
 
-        $kernel->preload();
-
-        return $kernel;
+        return $kernel
+            ->preload()
+            ->then(function () use ($kernel) {
+                return $kernel;
+            });
     }
 
     /**
      * Run.
      *
-     * @param AsyncKernel $kernel
-     * @param RequestHandler $requestHandler
+     * @param AsyncKernel         $kernel
+     * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
      */
     public function run(
         AsyncKernel $kernel,
         RequestHandler $requestHandler,
         FilesystemInterface $filesystem
-    )
-    {
+    ) {
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
             $this->serverContext->getPort(),
@@ -192,7 +194,7 @@ class Application
         );
 
         $http->on('error', function (\Throwable $e) {
-            (new ConsoleMessage('/', 'EXC', 500, $e->getMessage()))->print($this->outputPrinter);
+            (new ConsoleRequestMessage('/', 'EXC', 500, $e->getMessage(), ''))->print($this->outputPrinter);
         });
 
         $http->listen($socket);

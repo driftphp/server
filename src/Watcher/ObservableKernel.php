@@ -1,31 +1,30 @@
 <?php
 
-
 namespace Drift\Server\Watcher;
 
 /**
- * Interface ObservableKernel
+ * Interface ObservableKernel.
  */
 interface ObservableKernel
 {
     /**
-     * Get watcher folders
+     * Get watcher folders.
      *
      * @return string[]
      */
-    public static function getObservableFolders() : array;
+    public static function getObservableFolders(): array;
 
     /**
-     * Get watcher folders
+     * Get watcher folders.
      *
      * @return string[]
      */
-    public static function getObservableExtensions() : array;
+    public static function getObservableExtensions(): array;
 
     /**
-     * Get watcher ignoring folders
+     * Get watcher ignoring folders.
      *
      * @return string[]
      */
-    public static function getIgnorableFolders() : array;
+    public static function getIgnorableFolders(): array;
 }

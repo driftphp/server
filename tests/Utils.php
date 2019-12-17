@@ -1,26 +1,24 @@
 <?php
 
-
 namespace Drift\Server\Tests;
 
 /**
- * Class Utils
+ * Class Utils.
  */
 class Utils
 {
     /**
-     * Make curl
+     * Make curl.
      *
      * @param string $url
-     * @param array $headers
+     * @param array  $headers
      *
      * @return string
      */
     public static function curl(
         string $url,
         array $headers = []
-    ) : string
-    {
+    ): string {
         $curl_handle = curl_init();
         curl_setopt($curl_handle, CURLOPT_URL, $url);
         curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 2);

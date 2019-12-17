@@ -18,9 +18,9 @@ namespace Drift\Server;
 use Drift\Server\Output\OutputPrinter;
 
 /**
- * Class ConsoleMessage.
+ * Class ConsoleRequestMessage.
  */
-final class ConsoleMessage implements Printable
+final class ConsoleRequestMessage implements Printable
 {
     private $url;
     private $method;
