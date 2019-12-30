@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the Drift Server
+ * This file is part of the DriftPHP Project
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Output\OutputPrinter;
 use Exception;
@@ -95,7 +96,10 @@ abstract class ServerCommand extends Command
             $outputPrinter
         );
 
-        $loop->run();
+        while (true) {
+            $loop->run();
+            (new ConsoleServerMessage('Event Loop stopped. Rerunning once again.', '~', true))->print($outputPrinter);
+        }
 
         return 0;
     }
