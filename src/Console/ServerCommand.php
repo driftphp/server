@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the Drift Server
+ * This file is part of the DriftPHP Project
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Output\OutputPrinter;
 use Exception;
@@ -95,7 +96,13 @@ abstract class ServerCommand extends Command
             $outputPrinter
         );
 
+        (new ConsoleServerMessage('Event Loop started running.', '~', true))->print($outputPrinter);
+
         $loop->run();
+
+        (new ConsoleServerMessage('Event Loop stopped.', '~', true))->print($outputPrinter);
+        (new ConsoleServerMessage('The server will shut down.', '~', false))->print($outputPrinter);
+        (new ConsoleServerMessage('Bye!', '~', false))->print($outputPrinter);
 
         return 0;
     }

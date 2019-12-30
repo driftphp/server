@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of the Drift Server
+ * This file is part of the DriftPHP Project
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -65,10 +65,9 @@ final class RunServerCommand extends ServerCommand
                     $requestHandler,
                     $filesystem
                 );
-            }, function (Throwable $e) use ($outputPrinter) {
+            }, function (Throwable $e) use ($outputPrinter, $loop) {
                 (new ConsoleServerMessage($e->getMessage(), '~', false))->print($outputPrinter);
-                (new ConsoleServerMessage('The server will shut down.', '~', false))->print($outputPrinter);
-                (new ConsoleServerMessage('Bye!', '~', false))->print($outputPrinter);
+                $loop->stop();
             });
     }
 }
