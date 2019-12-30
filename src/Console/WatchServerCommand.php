@@ -15,9 +15,9 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Console\Output\OutputPrinter;
 use Drift\Server\Application;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\Output\OutputPrinter;
 use Drift\Server\Watcher\ObservableKernel;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;

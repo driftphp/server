@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Exception;
+
 /**
  * Class ErrorHandler.
  */
@@ -30,9 +32,11 @@ class ErrorHandler
 
     /**
      * Errors to Exceptions.
+     *
+     * @throws Exception
      */
     public static function errorToException($code, $message, $file, $line, $context)
     {
-        throw new \Exception($message, $code);
+        throw new Exception($message, $code);
     }
 }

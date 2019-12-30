@@ -15,9 +15,10 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
-use Drift\Server\ConsoleServerMessage;
+use Drift\Console\ConsoleServerMessage;
+use Drift\Console\Output\OutputPrinter;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\Output\OutputPrinter;
+use Drift\Server\ServerPrinter;
 use Exception;
 use React\EventLoop\Factory as EventLoopFactory;
 use React\EventLoop\LoopInterface;
@@ -84,8 +85,9 @@ abstract class ServerCommand extends Command
         $outputPrinter = new OutputPrinter($output);
         $loop = EventLoopFactory::create();
         if ($serverContext->printHeader()) {
-            $outputPrinter->printServerHeader(
+            ServerPrinter::printServerHeader(
                 $serverContext,
+                $outputPrinter,
                 $this->bootstrapPath
             );
         }

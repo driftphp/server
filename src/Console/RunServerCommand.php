@@ -15,11 +15,11 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Console\ConsoleServerMessage;
+use Drift\Console\Output\OutputPrinter;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Application;
-use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\Output\OutputPrinter;
 use Drift\Server\RequestHandler;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
