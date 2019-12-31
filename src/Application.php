@@ -15,11 +15,10 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Console\OutputPrinter;
 use Drift\HttpKernel\AsyncKernel;
-use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\SyncKernelException;
-use Drift\Server\Output\OutputPrinter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
@@ -89,7 +88,10 @@ class Application
         $this->bootstrapPath = $bootstrapPath;
 
         ErrorHandler::handle();
-        if ($serverContext->isDebug()) {
+        if (
+            $serverContext->isDebug() &&
+            class_exists('Symfony\Component\Debug\Debug')
+        ) {
             umask(0000);
             Debug::enable();
         }

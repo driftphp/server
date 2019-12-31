@@ -26,9 +26,10 @@ namespace Drift\Server;
  * @author Marc Morera <yuhu@mmoreram.com>
  */
 
+use Drift\Console\OutputPrinter;
+use Drift\Console\TimeFormatter;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\React as Functions;
-use Drift\Server\Output\OutputPrinter;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;

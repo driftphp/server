@@ -23,6 +23,7 @@
         "react/filesystem": "^0.1",
         "drift/react-functions": "0.1.*",
         "drift/http-kernel": "0.1.*, >=0.1.3",
+        "drift/console-bridge": "0.1.*",
         "seregazhuk/php-watcher": "^0.5.2"
     },
     "require-dev": {
