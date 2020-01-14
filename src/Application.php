@@ -172,10 +172,9 @@ class Application
                     $uriPath = $request->getUri()->getPath();
                     $uriPath = '/'.ltrim($uriPath, '/');
 
-                    return (0 === strpos(
-                        $uriPath,
-                        $this->serverContext->getStaticFolder()
-                    ))
+                    $staticFolder = $this->serverContext->getStaticFolder();
+
+                    return $staticFolder && (0 === strpos($uriPath, $staticFolder))
                         ? $requestHandler
                             ->handleStaticResource(
                                 $this->loop,
