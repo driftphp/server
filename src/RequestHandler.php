@@ -32,12 +32,17 @@ use Drift\HttpKernel\AsyncKernel;
 use Drift\React as Functions;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
+use React\Filesystem\Filesystem;
 use React\Filesystem\FilesystemInterface;
+use React\Filesystem\Stream\ReadableStream;
 use React\Promise;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
+use function React\Promise\Stream\unwrapReadable;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Throwable;
 
@@ -52,13 +57,20 @@ class RequestHandler
     private $outputPrinter;
 
     /**
+     * @var LoopInterface
+     */
+    private $loop;
+
+    /**
      * RequestHandler constructor.
      *
      * @param OutputPrinter $outputPrinter
+     * @param LoopInterface $loop
      */
-    public function __construct(OutputPrinter $outputPrinter)
+    public function __construct(OutputPrinter $outputPrinter, LoopInterface $loop)
     {
         $this->outputPrinter = $outputPrinter;
+        $this->loop = $loop;
     }
 
     /**
@@ -192,8 +204,12 @@ class RequestHandler
         string $method,
         string $uriPath
     ): Request {
-        $body = $request->getBody()->getContents();
         $headers = $request->getHeaders();
+
+        $content = $request->getBody()->detach();
+        if ($content === null) {
+            $content = $request->getBody()->getContents();
+        }
 
         $symfonyRequest = new Request(
             $request->getQueryParams(),
@@ -202,7 +218,7 @@ class RequestHandler
             $request->getCookieParams(),
             $request->getUploadedFiles(),
             [], // Server is partially filled a few lines below
-            $body
+            $content
         );
 
         $symfonyRequest->setMethod($method);
@@ -245,12 +261,26 @@ class RequestHandler
             }
         }
 
+        if ($symfonyResponse instanceof BinaryFileResponse) {
+            $stream = unwrapReadable(
+                Filesystem::create($this->loop)
+                    ->file($symfonyResponse->getFile()->getPathname())->open('r')
+            );
+        } elseif ($symfonyResponse instanceof StreamedResponse) {
+            $stream = new SymfonyResponseStream(
+                $symfonyResponse,
+                $this->loop
+            );
+        } else {
+            $stream = $symfonyResponse->getContent();
+        }
+
         $serverResponse =
             new ServerResponseWithMessage(
                 new \React\Http\Response(
                     $symfonyResponse->getStatusCode(),
                     $symfonyResponse->headers->all(),
-                    $symfonyResponse->getContent()
+                    $stream
                 ),
                 $this->outputPrinter,
                 new ConsoleRequestMessage(

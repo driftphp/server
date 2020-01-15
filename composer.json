@@ -17,6 +17,7 @@
         "symfony/console": "^5.0",
         "symfony/finder": "^4.4 || ^5.0",
         "react/http": "^0.8",
+        "react/promise-stream": "^1.0",
         "react/event-loop": "^1.0",
         "react/socket": "^1.0",
         "react/promise": "^2.7",

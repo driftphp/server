@@ -43,7 +43,7 @@ final class RunServerCommand extends ServerCommand
         OutputPrinter $outputPrinter
     ) {
         $rootPath = getcwd();
-        $requestHandler = new RequestHandler($outputPrinter);
+        $requestHandler = new RequestHandler($outputPrinter, $loop);
         $filesystem = Filesystem::create($loop);
 
         $application = new Application(
