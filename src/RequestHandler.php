@@ -102,7 +102,7 @@ class RequestHandler
 
                 return $parts;
             })
-            ->then(function (array $parts) use ($request, $from) {
+            ->then(function (array $parts) use ($from) {
                 list($symfonyRequest, $symfonyResponse) = $parts;
 
                 return $this->toServerResponse(
