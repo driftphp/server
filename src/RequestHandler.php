@@ -147,7 +147,7 @@ class RequestHandler
 
                 return new ServerResponseWithMessage(
                     new \React\Http\Response(
-                        200,
+                        Response::HTTP_OK,
                         ['Content-Type' => $results[1]],
                         $results[0]
                     ),
@@ -162,7 +162,7 @@ class RequestHandler
 
                 return new ServerResponseWithMessage(
                     new \React\Http\Response(
-                        404,
+                        Response::HTTP_NOT_FOUND,
                         [],
                         ''
                     ),
