@@ -50,6 +50,10 @@ class ServerHeaderPrinter
         $outputPrinter->printHeaderLine('Debug: '.($serverContext->isDebug() ? 'enabled' : 'disabled'));
         $outputPrinter->printHeaderLine('Static Folder: '.($serverContext->getStaticFolder() ?: 'disabled'));
         $outputPrinter->printHeaderLine("Adapter: {$serverContext->getAdapter()}");
+        $outputPrinter->printHeaderLine('Exchanges subscribed: '.($serverContext->hasExchanges()
+            ? implode(', ', $serverContext->getPlainExchanges())
+            : 'disabled'
+        ));
         $outputPrinter->printHeaderLine('Loaded bootstrap file: '.realpath($bootstrapPath));
         $outputPrinter->printHeaderLine();
         $outputPrinter->printLine();
