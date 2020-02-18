@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Drift\Server\Console;
 
 use Drift\Console\OutputPrinter;
+use Drift\EventBus\Bus\EventBus;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
 use Exception;
@@ -66,6 +67,18 @@ abstract class ServerCommand extends Command
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
             ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disabled the header')
             ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
+
+        /*
+         * If we have the EventBus loaded, we can add listeners as well
+         */
+        if (class_exists(EventBus::class)) {
+            $this->addOption(
+                'exchange',
+                null,
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Exchanges to listen'
+            );
+        }
     }
 
     /**
