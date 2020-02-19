@@ -56,10 +56,15 @@ final class RunServerCommand extends ServerCommand
 
         $application
             ->buildAKernel()
-            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter) {
+            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter, $serverContext) {
                 (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);
                 (new ConsoleServerMessage('Kernel preloaded.', '~', true))->print($outputPrinter);
                 (new ConsoleServerMessage('Kernel ready to accept requests.', '~', true))->print($outputPrinter);
+
+                if ($serverContext->hasExchanges()) {
+                    (new ConsoleServerMessage('Kernel connected to exchanges.', '~', true))->print($outputPrinter);
+                }
+
                 $application->run(
                     $kernel,
                     $requestHandler,

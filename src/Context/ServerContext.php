@@ -33,6 +33,7 @@ final class ServerContext
     private $adapter;
     private $host;
     private $port;
+    private $exchanges;
 
     /**
      * Build by Input.
@@ -87,6 +88,7 @@ final class ServerContext
         list($host, $port) = $serverArgs;
         $serverContext->host = $host;
         $serverContext->port = \intval($port);
+        $serverContext->exchanges = self::buildQueueArray($input);
 
         return $serverContext;
     }
@@ -155,5 +157,56 @@ final class ServerContext
     public function getPort(): int
     {
         return $this->port;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExchanges(): array
+    {
+        return $this->exchanges;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPlainExchanges(): array
+    {
+        $array = [];
+        foreach ($this->exchanges as $exchange => $queue) {
+            $array[] = trim("$exchange:$queue", ':');
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasExchanges(): bool
+    {
+        return !empty($this->exchanges);
+    }
+
+    /**
+     * Build queue architecture from array of strings.
+     *
+     * @param InputInterface $input
+     *
+     * @return array
+     */
+    private static function buildQueueArray(InputInterface $input): array
+    {
+        if (!$input->hasOption('exchange')) {
+            return [];
+        }
+
+        $exchanges = [];
+        foreach ($input->getOption('exchange') as $exchange) {
+            $exchangeParts = explode(':', $exchange, 2);
+            $exchanges[$exchangeParts[0]] = $exchangeParts[1] ?? '';
+        }
+
+        return $exchanges;
     }
 }

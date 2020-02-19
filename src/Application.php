@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Drift\Server;
 
 use Drift\Console\OutputPrinter;
+use Drift\EventBus\Subscriber\EventBusSubscriber;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\SyncKernelException;
@@ -152,6 +153,39 @@ class Application
         RequestHandler $requestHandler,
         FilesystemInterface $filesystem
     ) {
+        $this->runServer(
+            $kernel,
+            $requestHandler,
+            $filesystem
+        );
+
+        $container = $kernel->getContainer();
+        $serverContext = $this->serverContext;
+
+        if (
+            $serverContext->hasExchanges() &&
+            $container->has(EventBusSubscriber::class)
+        ) {
+            $eventBusSubscriber = $container->get(EventBusSubscriber::class);
+            $eventBusSubscriber->subscribeToExchanges(
+                $serverContext->getExchanges(),
+                $this->outputPrinter
+            );
+        }
+    }
+
+    /**
+     * Run server.
+     *
+     * @param AsyncKernel         $kernel
+     * @param RequestHandler      $requestHandler
+     * @param FilesystemInterface $filesystem
+     */
+    public function runServer(
+        AsyncKernel $kernel,
+        RequestHandler $requestHandler,
+        FilesystemInterface $filesystem
+    ) {
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
             $this->serverContext->getPort(),
@@ -175,6 +209,7 @@ class Application
                     $staticFolder = $this->serverContext->getStaticFolder();
 
                     return $staticFolder && (0 === strpos($uriPath, $staticFolder))
+
                         ? $requestHandler
                             ->handleStaticResource(
                                 $this->loop,

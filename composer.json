@@ -27,6 +27,7 @@
         "seregazhuk/php-watcher": "^0.5.2"
     },
     "require-dev": {
+        "drift/event-bus-bundle": "0.1.*, >=0.1.2",
         "symfony/framework-bundle": "^5.0",
         "symfony/process": "^5.0",
         "symfony/config": "^5.0",
