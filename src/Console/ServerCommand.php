@@ -17,6 +17,7 @@ namespace Drift\Server\Console;
 
 use Drift\Console\OutputPrinter;
 use Drift\EventBus\Bus\EventBus;
+use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
 use Exception;
@@ -110,7 +111,12 @@ abstract class ServerCommand extends Command
             $outputPrinter
         );
 
-        $loop->run();
+        (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
+        while (true) {
+
+            $loop->run();
+            (new ConsoleServerMessage('EventLoop stopped. Running it again', '~', false))->print($outputPrinter);
+        }
 
         return 0;
     }
