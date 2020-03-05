@@ -94,6 +94,7 @@ class ApplicationStaticFolderTest extends TestCase
                 'Static Folder: disabled'
             ) > 0
         );
+        usleep(500000);
         $content = Utils::curl("http://127.0.0.1:$port/tests/public/app.js");
         $this->assertEmpty($content);
 
