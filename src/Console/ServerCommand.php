@@ -112,11 +112,10 @@ abstract class ServerCommand extends Command
         );
 
         (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
-        while (true) {
-
-            $loop->run();
-            (new ConsoleServerMessage('EventLoop stopped. Running it again', '~', false))->print($outputPrinter);
-        }
+        $loop->run();
+        (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
+        (new ConsoleServerMessage('Closing the server.', '~', false))->print($outputPrinter);
+        (new ConsoleServerMessage('Bye bye!.', '~', false))->print($outputPrinter);
 
         return 0;
     }
