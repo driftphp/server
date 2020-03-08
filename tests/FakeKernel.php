@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
-use React\Promise\FulfilledPromise;
+use function React\Promise\resolve;
 use React\Promise\PromiseInterface;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -73,7 +73,7 @@ class FakeKernel extends AsyncKernel
      */
     public function handleAsync(Request $request): PromiseInterface
     {
-        return (new FulfilledPromise($request))
+        return (resolve($request))
             ->then(function (Request $request) {
                 return $this->handle($request);
             });
