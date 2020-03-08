@@ -30,11 +30,11 @@ use Drift\Console\OutputPrinter;
 use Drift\Console\TimeFormatter;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\React as Functions;
+use function React\Promise\all;
+use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
-use React\Promise;
-use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -80,22 +80,16 @@ class RequestHandler
         $uriPath = $request->getUri()->getPath();
         $method = $request->getMethod();
 
-        return (new FulfilledPromise($from))
-            ->then(function () use ($request, $method, $uriPath) {
-                return $this->toSymfonyRequest(
-                    $request,
-                    $method,
-                    $uriPath
-                );
-            })
-            ->then(function (Request $symfonyRequest) use ($kernel) {
-                return Promise\all(
-                    [
-                        new FulfilledPromise($symfonyRequest),
-                        $kernel->handleAsync($symfonyRequest),
-                    ]
-                );
-            })
+        $symfonyRequest = $this->toSymfonyRequest(
+            $request,
+            $method,
+            $uriPath
+        );
+
+        return all([
+                resolve($symfonyRequest),
+                $kernel->handleAsync($symfonyRequest),
+            ])
             ->then(function (array $parts) use ($kernel) {
                 list($symfonyRequest, $symfonyResponse) = $parts;
                 $kernel->terminate($symfonyRequest, $symfonyResponse);
@@ -141,7 +135,7 @@ class RequestHandler
         $contents = $filesystem->getContents($rootPath.$resourcePath);
         $mimeType = Functions\mime_content_type($rootPath.$resourcePath, $loop);
 
-        return Promise\all([$contents, $mimeType])
+        return all([$contents, $mimeType])
             ->then(function ($results) use ($resourcePath, $from) {
                 $to = microtime(true);
 
