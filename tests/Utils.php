@@ -26,21 +26,35 @@ class Utils
      * @param string $url
      * @param array  $headers
      *
-     * @return string
+     * @return [string, string]
      */
     public static function curl(
         string $url,
         array $headers = []
-    ): string {
-        $curl_handle = curl_init();
-        curl_setopt($curl_handle, CURLOPT_URL, $url);
-        curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl_handle, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($curl_handle, CURLOPT_USERAGENT, 'Your application name');
-        $result = curl_exec($curl_handle);
-        curl_close($curl_handle);
+    ): array {
+        $curlHandle = curl_init();
+        curl_setopt($curlHandle, CURLOPT_URL, $url);
+        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curlHandle, CURLOPT_USERAGENT, 'Your application name');
+        curl_setopt($curlHandle, CURLOPT_HEADER, 1);
+        $response = curl_exec($curlHandle);
+        $headerSize = curl_getinfo($curlHandle, CURLINFO_HEADER_SIZE);
+        $headers = substr($response, 0, $headerSize);
+        $headersArray = explode("\r\n", $headers);
+        $headersClean = [];
+        array_shift($headersArray);
+        foreach ($headersArray as $headerElement) {
+            $parts = explode(':', $headerElement);
+            if (2 === count($parts)) {
+                $headersClean[trim($parts[0])] = trim($parts[1]);
+            }
+        }
 
-        return $result;
+        $body = substr($response, $headerSize);
+        curl_close($curlHandle);
+
+        return [$body, $headersClean];
     }
 }

@@ -77,10 +77,10 @@ final class WatchServerCommand extends ServerCommand
         $dirname = dirname(__DIR__);
         $found = false;
         $paths = [
-            $dirname . '../../../../vendor/bin/php-watcher',
-            $dirname . '../../../../bin/php-watcher',
-            $dirname . '../vendor/bin/php-watcher',
-            getcwd() . '/vendor/bin/php-watcher',
+            $dirname.'../../../../vendor/bin/php-watcher',
+            $dirname.'../../../../bin/php-watcher',
+            $dirname.'../vendor/bin/php-watcher',
+            getcwd().'/vendor/bin/php-watcher',
         ];
 
         $completePath = null;

@@ -29,11 +29,11 @@ namespace Drift\Server;
 use Drift\Console\OutputPrinter;
 use Drift\Console\TimeFormatter;
 use Drift\HttpKernel\AsyncKernel;
-use Drift\React as Functions;
+use Drift\Server\Mime\MimeTypeChecker;
 use function React\Promise\all;
 use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
-use React\EventLoop\LoopInterface;
+use Ratchet\Wamp\Exception;
 use React\Filesystem\FilesystemInterface;
 use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -52,13 +52,22 @@ class RequestHandler
     private $outputPrinter;
 
     /**
+     * @var MimeTypeChecker
+     */
+    private $mimetypeChecker;
+
+    /**
      * RequestHandler constructor.
      *
-     * @param OutputPrinter $outputPrinter
+     * @param OutputPrinter   $outputPrinter
+     * @param MimeTypeChecker $mimetypeChecker
      */
-    public function __construct(OutputPrinter $outputPrinter)
-    {
+    public function __construct(
+        OutputPrinter $outputPrinter,
+        MimeTypeChecker $mimetypeChecker
+    ) {
         $this->outputPrinter = $outputPrinter;
+        $this->mimetypeChecker = $mimetypeChecker;
     }
 
     /**
@@ -117,7 +126,6 @@ class RequestHandler
     /**
      * Handle static resource.
      *
-     * @param LoopInterface       $loop
      * @param FilesystemInterface $filesystem
      * @param string              $rootPath
      * @param string              $resourcePath
@@ -125,25 +133,25 @@ class RequestHandler
      * @return PromiseInterface
      */
     public function handleStaticResource(
-        LoopInterface $loop,
         FilesystemInterface $filesystem,
         string $rootPath,
         string $resourcePath
     ): PromiseInterface {
         $from = microtime(true);
 
-        $contents = $filesystem->getContents($rootPath.$resourcePath);
-        $mimeType = Functions\mime_content_type($rootPath.$resourcePath, $loop);
-
-        return all([$contents, $mimeType])
-            ->then(function ($results) use ($resourcePath, $from) {
+        return $filesystem
+            ->getContents($rootPath.$resourcePath)
+            ->then(function ($content) use ($rootPath, $resourcePath, $from) {
                 $to = microtime(true);
+                $mimeType = $this
+                    ->mimetypeChecker
+                    ->getMimeType($rootPath.$resourcePath);
 
                 return new ServerResponseWithMessage(
                     new \React\Http\Response(
                         Response::HTTP_OK,
-                        ['Content-Type' => $results[1]],
-                        $results[0]
+                        ['Content-Type' => $mimeType],
+                        $content
                     ),
                     $this->outputPrinter,
                     new ConsoleStaticMessage(

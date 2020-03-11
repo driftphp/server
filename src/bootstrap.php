@@ -31,7 +31,7 @@ foreach ([
              'config/bootstrap.php',
              'vendor/autoload.php',
          ] as $path) {
-    requireIfExists($bootstrapPath, getcwd() . "/$path") ||
+    requireIfExists($bootstrapPath, getcwd()."/$path") ||
     requireIfExists($bootstrapPath, __DIR__."/../$path") ||
     requireIfExists($bootstrapPath, __DIR__."/../../$path") ||
     requireIfExists($bootstrapPath, __DIR__."/../../../../$path");
