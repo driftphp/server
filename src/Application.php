@@ -212,7 +212,6 @@ class Application
 
                         ? $requestHandler
                             ->handleStaticResource(
-                                $this->loop,
                                 $filesystem,
                                 $this->rootPath,
                                 $uriPath
