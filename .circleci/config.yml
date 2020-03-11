@@ -14,11 +14,6 @@ jobs:
             sudo docker-php-ext-install pcntl
 
       - run:
-          name: Install PHPUnit
-          command: |
-            composer require phpunit/phpunit:7.5.17 --no-update
-
-      - run:
           name: Run tests / Symfony 5^0
           command: |
             rm -Rf var/*
@@ -44,11 +39,6 @@ jobs:
           name: Install PHP dependencies
           command: |
             sudo docker-php-ext-install pcntl
-
-      - run:
-          name: Install PHPUnit
-          command: |
-            composer require phpunit/phpunit:7.5.17 --no-update
 
       - run:
           name: Run tests / Symfony 5^0

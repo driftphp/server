@@ -1,1 +1,1 @@
-// Some app
+$('lol');
