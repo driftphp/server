@@ -17,6 +17,7 @@ namespace Drift\Server\Console;
 
 use Drift\Console\OutputPrinter;
 use Drift\EventBus\Bus\EventBus;
+use Drift\EventLoop\EventLoopUtils;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
@@ -112,7 +113,12 @@ abstract class ServerCommand extends Command
         );
 
         (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
-        $loop->run();
+        EventLoopUtils::runLoop($loop, 2, function(int $timesMissing) use ($outputPrinter) {
+            (new ConsoleServerMessage(
+                sprintf('Rerunning EventLoop. %d times missing', $timesMissing)
+                , '~', false)
+            )->print($outputPrinter);
+        });
         (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
         (new ConsoleServerMessage('Closing the server.', '~', false))->print($outputPrinter);
         (new ConsoleServerMessage('Bye bye!.', '~', false))->print($outputPrinter);
