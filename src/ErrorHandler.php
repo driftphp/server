@@ -31,8 +31,10 @@ class ErrorHandler
     /**
      * Errors to Exceptions.
      */
-    public static function errorToException($code, $message, $file, $line, $context)
+    public static function errorToException($code, $message)
     {
-        throw new \Exception($message, $code);
+        if (0 !== error_reporting()) {
+            throw new \Exception($message, $code);
+        }
     }
 }
