@@ -62,9 +62,9 @@ class WatcherTest extends TestCase
     {
         $port = rand(2000, 9999);
         $changesMessage = 'restarting due to changes';
-        file_put_contents(__DIR__ . '/sandbox/a.file1', '');
-        file_put_contents(__DIR__ . '/sandbox2/ignore/b.file1', '');
-        file_put_contents(__DIR__ . '/sandbox/a.file2', '');
+        file_put_contents(__DIR__.'/sandbox/a.file1', '');
+        file_put_contents(__DIR__.'/sandbox2/ignore/b.file1', '');
+        file_put_contents(__DIR__.'/sandbox/a.file2', '');
         $process = new Process([
             'php',
             dirname(__FILE__).'/../bin/server',
@@ -83,7 +83,7 @@ class WatcherTest extends TestCase
             )
         );
 
-        file_put_contents(__DIR__ . '/sandbox/a.file2', 'content');
+        file_put_contents(__DIR__.'/sandbox/a.file2', 'content');
         sleep(2);
         $output = $process->getOutput();
         $this->assertFalse(
@@ -93,7 +93,7 @@ class WatcherTest extends TestCase
             )
         );
 
-        file_put_contents(__DIR__ . '/sandbox2/ignore/b.file1', 'content');
+        file_put_contents(__DIR__.'/sandbox2/ignore/b.file1', 'content');
         sleep(2);
         $output = $process->getOutput();
         $this->assertFalse(
@@ -103,7 +103,7 @@ class WatcherTest extends TestCase
             )
         );
 
-        file_put_contents(__DIR__ . '/sandbox/a.file1', 'content');
+        file_put_contents(__DIR__.'/sandbox/a.file1', 'content');
         sleep(2);
         $output = $process->getOutput();
         $this->assertNotFalse(
@@ -112,9 +112,9 @@ class WatcherTest extends TestCase
                 $changesMessage
             )
         );
-        file_put_contents(__DIR__ . '/sandbox/a.file1', '');
-        file_put_contents(__DIR__ . '/sandbox2/ignore/b.file1', '');
-        file_put_contents(__DIR__ . '/sandbox/a.file2', '');
+        file_put_contents(__DIR__.'/sandbox/a.file1', '');
+        file_put_contents(__DIR__.'/sandbox2/ignore/b.file1', '');
+        file_put_contents(__DIR__.'/sandbox/a.file2', '');
         $process->stop();
 
         $processKill = new Process(['pkill', '-f', "0.0.0.0:$port", '-c']);

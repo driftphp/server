@@ -15,20 +15,20 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Console\OutputPrinter;
+use Drift\EventBus\Subscriber\EventBusSubscriber;
 use Drift\HttpKernel\AsyncKernel;
-use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\SyncKernelException;
-use Drift\Server\Output\OutputPrinter;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
+use React\Promise\PromiseInterface;
 use React\Socket\Server as SocketServer;
 use Symfony\Component\Debug\Debug;
-use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Class Application.
@@ -68,10 +68,10 @@ class Application
     /**
      * Application constructor.
      *
-     * @param LoopInterface       $loop
-     * @param ServerContext       $serverContext
-     * @param string              $rootPath
-     * @param string              $bootstrapPath
+     * @param LoopInterface $loop
+     * @param ServerContext $serverContext
+     * @param string        $rootPath
+     * @param string        $bootstrapPath
      *
      * @throws Exception
      */
@@ -89,12 +89,15 @@ class Application
         $this->bootstrapPath = $bootstrapPath;
 
         ErrorHandler::handle();
-        if ($serverContext->isDebug()) {
+        if (
+            $serverContext->isDebug() &&
+            class_exists('Symfony\Component\Debug\Debug')
+        ) {
             umask(0000);
             Debug::enable();
         }
 
-        /**
+        /*
          * @var KernelAdapter
          */
         $this->kernelAdapter = $serverContext->getAdapter();
@@ -109,13 +112,13 @@ class Application
     }
 
     /**
-     * Build a kernel
+     * Build a kernel.
      *
-     * @return AsyncKernel
+     * @return PromiseInterface
      *
      * @throws SyncKernelException
      */
-    public function buildAKernel():AsyncKernel
+    public function buildAKernel(): PromiseInterface
     {
         $kernel = $this->kernelAdapter::buildKernel(
             $this->serverContext->getEnvironment(),
@@ -131,22 +134,58 @@ class Application
             ->getContainer()
             ->set('reactphp.event_loop', $this->loop);
 
-        return $kernel;
+        return $kernel
+            ->preload()
+            ->then(function () use ($kernel) {
+                return $kernel;
+            });
     }
 
     /**
      * Run.
      *
-     * @param AsyncKernel $kernel
-     * @param RequestHandler $requestHandler
+     * @param AsyncKernel         $kernel
+     * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
      */
     public function run(
         AsyncKernel $kernel,
         RequestHandler $requestHandler,
         FilesystemInterface $filesystem
-    )
-    {
+    ) {
+        $this->runServer(
+            $kernel,
+            $requestHandler,
+            $filesystem
+        );
+
+        $container = $kernel->getContainer();
+        $serverContext = $this->serverContext;
+
+        if (
+            $serverContext->hasExchanges() &&
+            $container->has(EventBusSubscriber::class)
+        ) {
+            $eventBusSubscriber = $container->get(EventBusSubscriber::class);
+            $eventBusSubscriber->subscribeToExchanges(
+                $serverContext->getExchanges(),
+                $this->outputPrinter
+            );
+        }
+    }
+
+    /**
+     * Run server.
+     *
+     * @param AsyncKernel         $kernel
+     * @param RequestHandler      $requestHandler
+     * @param FilesystemInterface $filesystem
+     */
+    public function runServer(
+        AsyncKernel $kernel,
+        RequestHandler $requestHandler,
+        FilesystemInterface $filesystem
+    ) {
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
             $this->serverContext->getPort(),
@@ -167,13 +206,12 @@ class Application
                     $uriPath = $request->getUri()->getPath();
                     $uriPath = '/'.ltrim($uriPath, '/');
 
-                    return (0 === strpos(
-                        $uriPath,
-                        $this->serverContext->getStaticFolder()
-                    ))
+                    $staticFolder = $this->serverContext->getStaticFolder();
+
+                    return $staticFolder && (0 === strpos($uriPath, $staticFolder))
+
                         ? $requestHandler
                             ->handleStaticResource(
-                                $this->loop,
                                 $filesystem,
                                 $this->rootPath,
                                 $uriPath
@@ -191,7 +229,7 @@ class Application
         );
 
         $http->on('error', function (\Throwable $e) {
-            (new ConsoleMessage('/', 'EXC', 500, $e->getMessage()))->print($this->outputPrinter);
+            (new ConsoleRequestMessage('/', 'EXC', 500, $e->getMessage(), ''))->print($this->outputPrinter);
         });
 
         $http->listen($socket);

@@ -15,9 +15,9 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Console\OutputPrinter;
 use Drift\Server\Application;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\Output\OutputPrinter;
 use Drift\Server\Watcher\ObservableKernel;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
@@ -62,7 +62,6 @@ final class WatchServerCommand extends ServerCommand
         ServerContext $serverContext,
         OutputPrinter $outputPrinter
     ) {
-
         $rootPath = getcwd();
         $application = new Application(
             $loop,
@@ -78,14 +77,14 @@ final class WatchServerCommand extends ServerCommand
         $dirname = dirname(__DIR__);
         $found = false;
         $paths = [
-            '../../../../vendor/bin/php-watcher',
-            '../../../../bin/php-watcher',
-            '../vendor/bin/php-watcher',
+            $dirname.'../../../../vendor/bin/php-watcher',
+            $dirname.'../../../../bin/php-watcher',
+            $dirname.'../vendor/bin/php-watcher',
+            getcwd().'/vendor/bin/php-watcher',
         ];
 
         $completePath = null;
-        foreach ($paths as $path) {
-            $completePath = "$dirname/$path";
+        foreach ($paths as $completePath) {
             if (is_file($completePath)) {
                 $found = true;
                 break;
@@ -124,10 +123,10 @@ final class WatchServerCommand extends ServerCommand
     }
 
     /**
-     * Format folder array
+     * Format folder array.
      *
      * @param string[] $folders
-     * @param string $rootPath
+     * @param string   $rootPath
      */
     private function formatFolders(
         array $folders,
@@ -135,13 +134,13 @@ final class WatchServerCommand extends ServerCommand
     ) : array
     {
         $folders = array_map(function(string $path) use ($rootPath): ?string {
-            $path =  sprintf("%s/%s/", $rootPath, trim($path, '/'));
+            $path = sprintf("%s/%s/", $rootPath, trim($path, '/'));
             return is_file($path) || is_dir($path)
                 ? $path
                 : null;
         }, $folders);
         $folders = array_filter($folders);
-        $folders = array_map(function(string $folder) {
+        $folders = array_map(function (string $folder) {
             return "--watch $folder";
         }, $folders);
 
@@ -149,13 +148,13 @@ final class WatchServerCommand extends ServerCommand
     }
 
     /**
-     * Format ignore array
+     * Format ignore array.
      *
      * @param string[] $ignoreFolders
      */
-    private function formatIgnoreFolders(array $ignoreFolders) : array
+    private function formatIgnoreFolders(array $ignoreFolders): array
     {
-        return array_map(function(string $folder) {
+        return array_map(function (string $folder) {
             return "--ignore $folder";
         }, $ignoreFolders);
     }

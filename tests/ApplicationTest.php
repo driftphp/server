@@ -39,9 +39,9 @@ class ApplicationTest extends TestCase
         ]);
 
         $process->start();
-        usleep(300000);
+        usleep(500000);
         Utils::curl("http://127.0.0.1:$port/valid/query?code=200");
-        usleep(100000);
+        usleep(500000);
         $this->assertNotFalse(
             strpos(
                 $process->getOutput(),
@@ -76,9 +76,9 @@ class ApplicationTest extends TestCase
         ]);
 
         $process->start();
-        usleep(300000);
+        usleep(500000);
         Utils::curl("http://127.0.0.1:$port?code=200");
-        usleep(100000);
+        usleep(500000);
 
         $this->assertEquals(
             '',
@@ -104,9 +104,9 @@ class ApplicationTest extends TestCase
         ]);
 
         $process->start();
-        usleep(300000);
+        usleep(500000);
         Utils::curl("http://127.0.0.1:$port/another/route?code=200");
-        usleep(300000);
+        usleep(500000);
 
         $this->assertNotFalse(
             strpos(

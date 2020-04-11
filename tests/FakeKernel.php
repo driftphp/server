@@ -16,11 +16,12 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
-use React\Promise\FulfilledPromise;
+use function React\Promise\resolve;
 use React\Promise\PromiseInterface;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -73,7 +74,7 @@ class FakeKernel extends AsyncKernel
      */
     public function handleAsync(Request $request): PromiseInterface
     {
-        return (new FulfilledPromise($request))
+        return (resolve($request))
             ->then(function (Request $request) {
                 return $this->handle($request);
             });
@@ -90,8 +91,23 @@ class FakeKernel extends AsyncKernel
         }
 
         if (
-            $request->getPathInfo() !== '/' &&
-            $request->getPathInfo() !== '/valid/query'
+            '/file' === $request->getPathInfo()
+        ) {
+            $files = $request->files->all();
+
+            return new JsonResponse([
+                'files' => array_map(function (UploadedFile $file) {
+                    return [
+                        $file->getPath().'/'.$file->getFilename(),
+                        file_get_contents($file->getPath().'/'.$file->getFilename()),
+                    ];
+                }, $files),
+            ], $code);
+        }
+
+        if (
+            '/' !== $request->getPathInfo() &&
+            '/valid/query' !== $request->getPathInfo()
         ) {
             throw new RouteNotFoundException();
         }

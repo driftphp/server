@@ -19,25 +19,14 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
 /**
- * Class CompressionTest.
+ * Class ExchangesTest.
  */
-class CompressionTest extends TestCase
+class ExchangesTest extends TestCase
 {
     /**
      * Test default adapter static folder.
      */
     public function testRegular()
-    {
-        $this->assertEncodingType('gzip');
-        $this->assertEncodingType('deflate');
-    }
-
-    /**
-     * Assert encoding.
-     *
-     * @param string $encodingType
-     */
-    private function assertEncodingType(string $encodingType)
     {
         $port = rand(2000, 9999);
         $process = new Process([
@@ -45,22 +34,26 @@ class CompressionTest extends TestCase
             dirname(__FILE__).'/../bin/server',
             'run',
             "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
+            '--adapter='.FakeExchangesAdapter::class,
+            '--exchange=exchange1',
+            '--exchange=exchange2:queue2',
         ]);
 
         $process->start();
-        usleep(500000);
-        Utils::curl("http://127.0.0.1:$port?code=400", [
-            "Accept-Encoding: $encodingType",
-        ]);
-        usleep(500000);
-        $this->assertNotFalse(
-            strpos(
-                $process->getOutput(),
-                'Bad Request'
-            )
-        );
-
+        sleep(1);
+        $output = $process->getOutput();
         $process->stop();
+        $this->assertContains(
+            'Exchanges subscribed: exchange1, exchange2:queue2',
+            $output
+        );
+        $this->assertContains(
+            'Subscribed to exchange exchange1 and temporary queue',
+            $output
+        );
+        $this->assertContains(
+            'Subscribed to exchange exchange2 and queue queue2',
+            $output
+        );
     }
 }

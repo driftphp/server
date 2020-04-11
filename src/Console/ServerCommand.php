@@ -15,8 +15,12 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Console\OutputPrinter;
+use Drift\EventBus\Bus\EventBus;
+use Drift\EventLoop\EventLoopUtils;
+use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\Output\OutputPrinter;
+use Drift\Server\ServerHeaderPrinter;
 use Exception;
 use React\EventLoop\Factory as EventLoopFactory;
 use React\EventLoop\LoopInterface;
@@ -65,6 +69,18 @@ abstract class ServerCommand extends Command
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
             ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disabled the header')
             ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
+
+        /*
+         * If we have the EventBus loaded, we can add listeners as well
+         */
+        if (class_exists(EventBus::class)) {
+            $this->addOption(
+                'exchange',
+                null,
+                InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+                'Exchanges to listen'
+            );
+        }
     }
 
     /**
@@ -83,8 +99,9 @@ abstract class ServerCommand extends Command
         $outputPrinter = new OutputPrinter($output);
         $loop = EventLoopFactory::create();
         if ($serverContext->printHeader()) {
-            $outputPrinter->printServerHeader(
+            ServerHeaderPrinter::print(
                 $serverContext,
+                $outputPrinter,
                 $this->bootstrapPath
             );
         }
@@ -95,7 +112,17 @@ abstract class ServerCommand extends Command
             $outputPrinter
         );
 
-        $loop->run();
+        (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
+        EventLoopUtils::runLoop($loop, 2, function (int $timesMissing) use ($outputPrinter) {
+            (new ConsoleServerMessage(
+                sprintf('Rerunning EventLoop. %d times missing', $timesMissing), '~', false)
+            )->print($outputPrinter);
+        });
+        (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
+        (new ConsoleServerMessage('Closing the server.', '~', false))->print($outputPrinter);
+        (new ConsoleServerMessage('Bye bye!.', '~', false))->print($outputPrinter);
+
+        return 0;
     }
 
     /**

@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use finfo;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -49,7 +48,9 @@ class ApplicationStaticFolderTest extends TestCase
             ) > 0
         );
 
-        $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.js", '// Some app', 'text/plain');
+        $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.js", '$(\'lol\');', 'application/javascript');
+        $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.css", '.lol {}', 'text/css');
+        $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.txt", 'LOL', 'text/plain');
         usleep(100000);
 
         $this->assertNotFalse(
@@ -94,7 +95,8 @@ class ApplicationStaticFolderTest extends TestCase
                 'Static Folder: disabled'
             ) > 0
         );
-        $content = Utils::curl("http://127.0.0.1:$port/tests/public/app.js");
+        usleep(500000);
+        list($content, $_) = Utils::curl("http://127.0.0.1:$port/tests/public/app.js");
         $this->assertEmpty($content);
 
         $process->stop();
@@ -107,10 +109,8 @@ class ApplicationStaticFolderTest extends TestCase
      */
     private function assertFileWasReceived(string $file, string $expectedContent, string $expectedMimeType): void
     {
-        $content = Utils::curl($file);
+        list($content, $headers) = Utils::curl($file);
         $this->assertEquals($expectedContent, $content);
-
-        $fileInfo = new Finfo(FILEINFO_MIME_TYPE);
-        $this->assertEquals($expectedMimeType, $fileInfo->buffer($content));
+        $this->assertEquals($expectedMimeType, $headers['Content-Type']);
     }
 }

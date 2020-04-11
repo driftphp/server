@@ -15,12 +15,16 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Console\OutputPrinter;
+use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Application;
+use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\Output\OutputPrinter;
+use Drift\Server\Mime\MimeTypeChecker;
 use Drift\Server\RequestHandler;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
+use Throwable;
 
 /**
  * Class RunServerCommand.
@@ -40,8 +44,8 @@ final class RunServerCommand extends ServerCommand
         OutputPrinter $outputPrinter
     ) {
         $rootPath = getcwd();
-        $requestHandler = new RequestHandler($outputPrinter);
         $filesystem = Filesystem::create($loop);
+        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem);
 
         $application = new Application(
             $loop,
@@ -51,11 +55,26 @@ final class RunServerCommand extends ServerCommand
             $this->bootstrapPath
         );
 
-        $kernel = $application->buildAKernel();
-        $application->run(
-            $kernel,
-            $requestHandler,
-            $filesystem
-        );
+        $application
+            ->buildAKernel()
+            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter, $serverContext) {
+                (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);
+                (new ConsoleServerMessage('Kernel preloaded.', '~', true))->print($outputPrinter);
+                (new ConsoleServerMessage('Kernel ready to accept requests.', '~', true))->print($outputPrinter);
+
+                if ($serverContext->hasExchanges()) {
+                    (new ConsoleServerMessage('Kernel connected to exchanges.', '~', true))->print($outputPrinter);
+                }
+
+                $application->run(
+                    $kernel,
+                    $requestHandler,
+                    $filesystem
+                );
+            }, function (Throwable $e) use ($outputPrinter) {
+                (new ConsoleServerMessage($e->getMessage(), '~', false))->print($outputPrinter);
+                (new ConsoleServerMessage('The server will shut down.', '~', false))->print($outputPrinter);
+                (new ConsoleServerMessage('Bye!', '~', false))->print($outputPrinter);
+            });
     }
 }

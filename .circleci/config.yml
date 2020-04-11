@@ -1,8 +1,8 @@
 version: 2
 jobs:
-  test-php72:
+  test-php73:
     docker:
-      - image: circleci/php:7.2-cli
+      - image: circleci/php:7.3-cli
 
     working_directory: ~/project
     steps:
@@ -12,11 +12,6 @@ jobs:
           name: Install PHP dependencies
           command: |
             sudo docker-php-ext-install pcntl
-
-      - run:
-          name: Install PHPUnit
-          command: |
-            composer require phpunit/phpunit:7.5.17 --no-update
 
       - run:
           name: Run tests / Symfony 5^0
@@ -46,11 +41,6 @@ jobs:
             sudo docker-php-ext-install pcntl
 
       - run:
-          name: Install PHPUnit
-          command: |
-            composer require phpunit/phpunit:7.5.17 --no-update
-
-      - run:
           name: Run tests / Symfony 5^0
           command: |
             rm -Rf var/*
@@ -61,5 +51,5 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-php72
+      - test-php73
       - test-php74

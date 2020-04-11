@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
-use Drift\Server\Output\OutputPrinter;
+use Drift\Console\OutputPrinter;
 use React\Http\Response;
 
 /**

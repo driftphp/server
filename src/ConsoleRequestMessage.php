@@ -15,12 +15,12 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
-use Drift\Server\Output\OutputPrinter;
+use Drift\Console\OutputPrinter;
 
 /**
- * Class ConsoleMessage.
+ * Class ConsoleRequestMessage.
  */
-final class ConsoleMessage implements Printable
+final class ConsoleRequestMessage implements Printable
 {
     private $url;
     private $method;
@@ -69,7 +69,7 @@ final class ConsoleMessage implements Printable
         $outputPrinter->print("\033[01;{$color}m".$this->code."\033[0m");
         $outputPrinter->print(" $method $this->url ");
         $outputPrinter->print("(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)");
-        if ($this->code >= 300) {
+        if ($this->code >= 400) {
             $outputPrinter->print(" - \e[00;37m".$this->messageInMessage($this->message)."\e[0m");
         }
         $outputPrinter->printLine();

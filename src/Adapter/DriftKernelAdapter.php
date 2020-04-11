@@ -45,27 +45,27 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
     }
 
     /**
-     * Get watcher folders
+     * Get watcher folders.
      *
      * @return string[]
      */
     public static function getObservableFolders(): array
     {
-        return ['Drift', 'src'];
+        return ['Drift', 'src', 'public'];
     }
 
     /**
-     * Get watcher folders
+     * Get watcher folders.
      *
      * @return string[]
      */
     public static function getObservableExtensions(): array
     {
-        return ['php', 'yml', 'yaml', 'xml'];
+        return ['php', 'yml', 'yaml', 'xml', 'css', 'js', 'html'];
     }
 
     /**
-     * Get watcher ignoring folders
+     * Get watcher ignoring folders.
      *
      * @return string[]
      */
