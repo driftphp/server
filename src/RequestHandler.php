@@ -33,9 +33,10 @@ use Drift\Server\Mime\MimeTypeChecker;
 use function React\Promise\all;
 use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
-use Ratchet\Wamp\Exception;
+use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use React\Filesystem\FilesystemInterface;
 use React\Promise\PromiseInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
@@ -57,17 +58,25 @@ class RequestHandler
     private $mimetypeChecker;
 
     /**
+     * @var FilesystemInterface
+     */
+    private $filesystem;
+
+    /**
      * RequestHandler constructor.
      *
-     * @param OutputPrinter   $outputPrinter
-     * @param MimeTypeChecker $mimetypeChecker
+     * @param OutputPrinter       $outputPrinter
+     * @param MimeTypeChecker     $mimetypeChecker
+     * @param FilesystemInterface $filesystem
      */
     public function __construct(
         OutputPrinter $outputPrinter,
-        MimeTypeChecker $mimetypeChecker
+        MimeTypeChecker $mimetypeChecker,
+        FilesystemInterface $filesystem
     ) {
         $this->outputPrinter = $outputPrinter;
         $this->mimetypeChecker = $mimetypeChecker;
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -89,37 +98,44 @@ class RequestHandler
         $uriPath = $request->getUri()->getPath();
         $method = $request->getMethod();
 
-        $symfonyRequest = $this->toSymfonyRequest(
-            $request,
-            $method,
-            $uriPath
-        );
+        return
+            $this->toSymfonyRequest(
+                $request,
+                $method,
+                $uriPath
+            )
+            ->then(function (Request $symfonyRequest) use ($kernel, $from, $uriPath, $method) {
+                return all([
+                    resolve($symfonyRequest),
+                    $kernel->handleAsync($symfonyRequest),
+                ])
+                ->then(function (array $parts) use ($kernel) {
+                    list($symfonyRequest, $symfonyResponse) = $parts;
+                    $kernel->terminate($symfonyRequest, $symfonyResponse);
 
-        return all([
-                resolve($symfonyRequest),
-                $kernel->handleAsync($symfonyRequest),
-            ])
-            ->then(function (array $parts) use ($kernel) {
-                list($symfonyRequest, $symfonyResponse) = $parts;
-                $kernel->terminate($symfonyRequest, $symfonyResponse);
+                    return $parts;
+                })
+                ->then(function (array $parts) use ($from) {
+                    list($symfonyRequest, $symfonyResponse) = $parts;
 
-                return $parts;
-            })
-            ->then(function (array $parts) use ($from) {
-                list($symfonyRequest, $symfonyResponse) = $parts;
+                    /*
+                     * We don't have to wait to this clean
+                     */
+                    $this->cleanTemporaryUploadedFiles($symfonyRequest);
 
-                return $this->toServerResponse(
-                    $symfonyRequest,
-                    $symfonyResponse,
-                    $from
-                );
-            }, function (\Throwable $exception) use ($from, $method, $uriPath) {
-                return $this->createExceptionServerResponse(
-                    $exception,
-                    $from,
-                    $method,
-                    $uriPath
-                );
+                    return $this->toServerResponse(
+                        $symfonyRequest,
+                        $symfonyResponse,
+                        $from
+                    );
+                }, function (\Throwable $exception) use ($from, $method, $uriPath) {
+                    return $this->createExceptionServerResponse(
+                        $exception,
+                        $from,
+                        $method,
+                        $uriPath
+                    );
+                });
             });
     }
 
@@ -187,35 +203,42 @@ class RequestHandler
      * @param string                 $method
      * @param string                 $uriPath
      *
-     * @return Request
+     * @return PromiseInterface<Request>
      */
     private function toSymfonyRequest(
         ServerRequestInterface $request,
         string $method,
         string $uriPath
-    ): Request {
-        $body = $request->getBody()->getContents();
-        $headers = $request->getHeaders();
+    ): PromiseInterface {
+        $uploadedFiles = array_map(function (PsrUploadedFile $file) {
+            return $this->toSymfonyUploadedFile($file);
+        }, $request->getUploadedFiles());
 
-        $symfonyRequest = new Request(
-            $request->getQueryParams(),
-            $request->getParsedBody() ?? [],
-            $request->getAttributes(),
-            $request->getCookieParams(),
-            $request->getUploadedFiles(),
-            [], // Server is partially filled a few lines below
-            $body
-        );
+        return all($uploadedFiles)
+            ->then(function (array $uploadedFiles) use ($request, $method, $uriPath) {
+                $body = $request->getBody()->getContents();
+                $headers = $request->getHeaders();
 
-        $symfonyRequest->setMethod($method);
-        $symfonyRequest->headers->replace($headers);
-        $symfonyRequest->server->set('REQUEST_URI', $uriPath);
+                $symfonyRequest = new Request(
+                    $request->getQueryParams(),
+                    $request->getParsedBody() ?? [],
+                    $request->getAttributes(),
+                    $request->getCookieParams(),
+                    $uploadedFiles,
+                    $_SERVER,
+                    $body
+                );
 
-        if (isset($headers['Host'])) {
-            $symfonyRequest->server->set('SERVER_NAME', explode(':', $headers['Host'][0]));
-        }
+                $symfonyRequest->setMethod($method);
+                $symfonyRequest->headers->replace($headers);
+                $symfonyRequest->server->set('REQUEST_URI', $uriPath);
 
-        return $symfonyRequest;
+                if (isset($headers['Host'])) {
+                    $symfonyRequest->server->set('SERVER_NAME', explode(':', $headers['Host'][0]));
+                }
+
+                return $symfonyRequest;
+            });
     }
 
     /**
@@ -353,5 +376,67 @@ class RequestHandler
 
             return;
         }
+    }
+
+    /**
+     * PSR Uploaded file to Symfony file.
+     *
+     * @param PsrUploadedFile $file
+     *
+     * @return PromiseInterface<SymfonyUploadedFile>
+     */
+    private function toSymfonyUploadedFile(PsrUploadedFile $file): PromiseInterface
+    {
+        $content = $file
+            ->getStream()
+            ->getContents();
+
+        $filename = $file->getClientFilename();
+        $extension = $this->mimetypeChecker->getExtension($filename);
+        $tmpFilename = sys_get_temp_dir().'/'.md5(uniqid((string) rand(), true)).'.'.$extension;
+        if (UPLOAD_ERR_NO_FILE == $file->getError()) {
+            return resolve([
+                'error' => $file->getError(),
+                'name' => $file->getClientFilename(),
+                'size' => $file->getSize(),
+                'tmp_name' => $tmpFilename,
+                'type' => $file->getClientMediaType(),
+            ]);
+        }
+
+        $promise = (UPLOAD_ERR_OK == $file->getError())
+            ? $this
+                ->filesystem
+                ->file($tmpFilename)
+                ->putContents($content)
+            : resolve();
+
+        return $promise
+            ->then(function () use ($file, $tmpFilename, $filename) {
+                return new SymfonyUploadedFile(
+                    $tmpFilename,
+                    $filename,
+                    $file->getClientMediaType(),
+                    $file->getError(),
+                    true
+                );
+            });
+    }
+
+    /**
+     * Clean tmp files.
+     *
+     * @param Request $request
+     *
+     * @return PromiseInterface[]
+     */
+    private function cleanTemporaryUploadedFiles(Request $request): array
+    {
+        return array_map(function (SymfonyUploadedFile $file) {
+            return $this
+                ->filesystem
+                ->file($file->getPath().'/'.$file->getFilename())
+                ->remove();
+        }, $request->files->all());
     }
 }

@@ -113,10 +113,9 @@ abstract class ServerCommand extends Command
         );
 
         (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
-        EventLoopUtils::runLoop($loop, 2, function(int $timesMissing) use ($outputPrinter) {
+        EventLoopUtils::runLoop($loop, 2, function (int $timesMissing) use ($outputPrinter) {
             (new ConsoleServerMessage(
-                sprintf('Rerunning EventLoop. %d times missing', $timesMissing)
-                , '~', false)
+                sprintf('Rerunning EventLoop. %d times missing', $timesMissing), '~', false)
             )->print($outputPrinter);
         });
         (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
