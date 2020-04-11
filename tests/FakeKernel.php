@@ -21,6 +21,7 @@ use React\Promise\PromiseInterface;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -87,6 +88,21 @@ class FakeKernel extends AsyncKernel
         $code = \intval($request->query->get('code', 200));
         if (400 === $code) {
             throw new \Exception('Bad Request');
+        }
+
+        if (
+            '/file' === $request->getPathInfo()
+        ) {
+            $files = $request->files->all();
+
+            return new JsonResponse([
+                'files' => array_map(function (UploadedFile $file) {
+                    return [
+                        $file->getPath().'/'.$file->getFilename(),
+                        file_get_contents($file->getPath().'/'.$file->getFilename()),
+                    ];
+                }, $files),
+            ], $code);
         }
 
         if (

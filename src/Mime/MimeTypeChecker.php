@@ -34,6 +34,18 @@ class MimeTypeChecker
     }
 
     /**
+     * Get extension.
+     *
+     * @param string $filename
+     *
+     * @return string
+     */
+    public function getExtension(string $filename): string
+    {
+        return strtolower(substr($filename, strrpos($filename, '.') + 1));
+    }
+
+    /**
      * Get mime type.
      *
      * @param string $fileName
@@ -42,7 +54,7 @@ class MimeTypeChecker
      */
     public function getMimeType(string $filename): string
     {
-        $extension = strtolower(substr($filename, strrpos($filename, '.') + 1));
+        $extension = $this->getExtension($filename);
         if (isset($this->types[$extension])) {
             return $this->types[$extension];
         }

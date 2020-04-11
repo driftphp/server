@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
+use CURLFile;
+
 /**
  * Class Utils.
  */
@@ -23,14 +25,16 @@ class Utils
     /**
      * Make curl.
      *
-     * @param string $url
-     * @param array  $headers
+     * @param string   $url
+     * @param string[] $headers
+     * @param string[] $files
      *
      * @return [string, string]
      */
     public static function curl(
         string $url,
-        array $headers = []
+        array $headers = [],
+        array $files = []
     ): array {
         $curlHandle = curl_init();
         curl_setopt($curlHandle, CURLOPT_URL, $url);
@@ -39,7 +43,27 @@ class Utils
         curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curlHandle, CURLOPT_USERAGENT, 'Your application name');
         curl_setopt($curlHandle, CURLOPT_HEADER, 1);
+
+        if (!empty($files)) {
+            $filesArray = [];
+            foreach ($files as $file) {
+                $fileParts = explode('.', $file, 2);
+                $filesArray[$fileParts[0]] = new CURLFile(realpath(__DIR__.'/'.$file));
+            }
+
+            curl_setopt($curlHandle, CURLOPT_POST, 1);
+            curl_setopt(
+                $curlHandle,
+                CURLOPT_POSTFIELDS,
+                $filesArray
+            );
+        }
+
         $response = curl_exec($curlHandle);
+        if (false === $response) {
+            return [false, []];
+        }
+
         $headerSize = curl_getinfo($curlHandle, CURLINFO_HEADER_SIZE);
         $headers = substr($response, 0, $headerSize);
         $headersArray = explode("\r\n", $headers);
