@@ -109,12 +109,6 @@ class RequestHandler
                     resolve($symfonyRequest),
                     $kernel->handleAsync($symfonyRequest),
                 ])
-                ->then(function (array $parts) use ($kernel) {
-                    list($symfonyRequest, $symfonyResponse) = $parts;
-                    $kernel->terminate($symfonyRequest, $symfonyResponse);
-
-                    return $parts;
-                })
                 ->then(function (array $parts) use ($from) {
                     list($symfonyRequest, $symfonyResponse) = $parts;
 
