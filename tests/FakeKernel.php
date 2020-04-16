@@ -100,6 +100,7 @@ class FakeKernel extends AsyncKernel
                     return [
                         $file->getPath().'/'.$file->getFilename(),
                         file_get_contents($file->getPath().'/'.$file->getFilename()),
+                        $file->isValid(),
                     ];
                 }, $files),
             ], $code);

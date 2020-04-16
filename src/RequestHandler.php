@@ -387,22 +387,23 @@ class RequestHandler
      */
     private function toSymfonyUploadedFile(PsrUploadedFile $file): PromiseInterface
     {
-        $content = $file
-            ->getStream()
-            ->getContents();
+        if (UPLOAD_ERR_NO_FILE == $file->getError()) {
+            return resolve(new SymfonyUploadedFile(
+                '',
+                $file->getClientFilename(),
+                $file->getClientMediaType(),
+                $file->getError(),
+                true
+            ));
+        }
 
         $filename = $file->getClientFilename();
         $extension = $this->mimetypeChecker->getExtension($filename);
         $tmpFilename = sys_get_temp_dir().'/'.md5(uniqid((string) rand(), true)).'.'.$extension;
-        if (UPLOAD_ERR_NO_FILE == $file->getError()) {
-            return resolve([
-                'error' => $file->getError(),
-                'name' => $file->getClientFilename(),
-                'size' => $file->getSize(),
-                'tmp_name' => $tmpFilename,
-                'type' => $file->getClientMediaType(),
-            ]);
-        }
+
+        $content = $file
+            ->getStream()
+            ->getContents();
 
         $promise = (UPLOAD_ERR_OK == $file->getError())
             ? $this
