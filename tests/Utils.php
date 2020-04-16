@@ -45,17 +45,17 @@ class Utils
         curl_setopt($curlHandle, CURLOPT_HEADER, 1);
 
         if (!empty($files)) {
-            $filesArray = [];
+            $postData = [];
             foreach ($files as $file) {
                 $fileParts = explode('.', $file, 2);
-                $filesArray[$fileParts[0]] = new CURLFile(realpath(__DIR__.'/'.$file));
+                $postData[$fileParts[0]] = new CURLFile(realpath(__DIR__.'/'.$file));
             }
 
             curl_setopt($curlHandle, CURLOPT_POST, 1);
             curl_setopt(
                 $curlHandle,
                 CURLOPT_POSTFIELDS,
-                $filesArray
+                $postData
             );
         }
 
