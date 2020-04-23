@@ -61,7 +61,7 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
      */
     public static function getObservableExtensions(): array
     {
-        return ['php', 'yml', 'yaml', 'xml', 'css', 'js', 'html'];
+        return ['php', 'yml', 'yaml', 'xml', 'css', 'js', 'html', 'twig'];
     }
 
     /**
