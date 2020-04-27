@@ -212,6 +212,7 @@ class Application
 
                         ? $requestHandler
                             ->handleStaticResource(
+                                $request,
                                 $filesystem,
                                 $this->rootPath,
                                 $uriPath

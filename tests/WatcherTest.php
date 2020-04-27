@@ -39,7 +39,7 @@ class WatcherTest extends TestCase
 
         $process->start();
         sleep(2);
-        Utils::curl("http://127.0.0.1:$port?code=200");
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
         $output = $process->getOutput();
         $this->assertNotFalse(
             strpos(

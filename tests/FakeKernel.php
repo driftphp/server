@@ -17,7 +17,9 @@ namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
 use function React\Promise\resolve;
+use React\Http\Response;
 use React\Promise\PromiseInterface;
+use React\Stream\ThroughStream;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -86,13 +88,12 @@ class FakeKernel extends AsyncKernel
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
         $code = \intval($request->query->get('code', 200));
+        $pathInfo = $request->getPathInfo();
         if (400 === $code) {
             throw new \Exception('Bad Request');
         }
 
-        if (
-            '/file' === $request->getPathInfo()
-        ) {
+        if ('/file' === $pathInfo) {
             $files = $request->files->all();
 
             return new JsonResponse([
@@ -106,15 +107,48 @@ class FakeKernel extends AsyncKernel
             ], $code);
         }
 
-        if (
-            '/' !== $request->getPathInfo() &&
-            '/valid/query' !== $request->getPathInfo()
-        ) {
-            throw new RouteNotFoundException();
+        if ('/psr' === $pathInfo) {
+            return new Response(200, [
+                'Content-Type' => 'plain/text',
+            ], 'ReactPHP Response');
         }
 
-        return new JsonResponse([
-            'query' => $request->query,
-        ], $code);
+        if (
+            '/psr-stream' === $pathInfo ||
+            '/psr-stream-gzipped' === $pathInfo
+        ) {
+            if ('/psr-stream-gzipped' === $request->getPathInfo()) {
+                $request->headers->set('Accept-Encoding', $request->query->get('type'));
+            }
+
+            $streamResponse = new ThroughStream();
+            $streamResponse->write('React');
+            $loop = $this->getContainer()->get('reactphp.event_loop');
+            $loop->futureTick(function () use ($streamResponse, $loop) {
+                $streamResponse->write('PHP ');
+                $loop->futureTick(function () use ($streamResponse) {
+                    $streamResponse->write('stream');
+                    $streamResponse->end('...');
+                });
+            });
+
+            return new Response(200, [
+                'Content-Type' => 'plain/text',
+            ], $streamResponse);
+        }
+
+        if ('/text' === $pathInfo) {
+            return new Response(200, [
+                'Content-Type' => 'plain/text',
+            ], 'This is one text for testing');
+        }
+
+        if ('/query' === $pathInfo) {
+            return new JsonResponse([
+                'query' => $request->query,
+            ], $code);
+        }
+
+        throw new RouteNotFoundException();
     }
 }
