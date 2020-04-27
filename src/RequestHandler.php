@@ -26,6 +26,7 @@ namespace Drift\Server;
  * @author Marc Morera <yuhu@mmoreram.com>
  */
 
+use Clue\React\Zlib\Compressor;
 use Drift\Console\OutputPrinter;
 use Drift\Console\TimeFormatter;
 use Drift\HttpKernel\AsyncKernel;
@@ -33,9 +34,14 @@ use Drift\Server\Mime\MimeTypeChecker;
 use function React\Promise\all;
 use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use React\Filesystem\FilesystemInterface;
+use React\Http\Response as ReactResponse;
 use React\Promise\PromiseInterface;
+use React\Stream\ReadableStreamInterface;
+use React\Stream\ThroughStream;
+use RingCentral\Psr7\Response as PSRResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -104,45 +110,48 @@ class RequestHandler
                 $method,
                 $uriPath
             )
-            ->then(function (Request $symfonyRequest) use ($kernel, $from, $uriPath, $method) {
-                return all([
-                    resolve($symfonyRequest),
-                    $kernel->handleAsync($symfonyRequest),
-                ])
-                ->then(function (array $parts) use ($from) {
-                    list($symfonyRequest, $symfonyResponse) = $parts;
+                ->then(function (Request $symfonyRequest) use ($kernel, $from, $uriPath, $method) {
+                    return all([
+                        resolve($symfonyRequest),
+                        $kernel->handleAsync($symfonyRequest),
+                    ])
+                        ->then(function (array $parts) use ($from) {
+                            list($symfonyRequest, $symfonyResponse) = $parts;
 
-                    /*
-                     * We don't have to wait to this clean
-                     */
-                    $this->cleanTemporaryUploadedFiles($symfonyRequest);
+                            /*
+                             * We don't have to wait to this clean
+                             */
+                            $this->cleanTemporaryUploadedFiles($symfonyRequest);
 
-                    return $this->toServerResponse(
-                        $symfonyRequest,
-                        $symfonyResponse,
-                        $from
-                    );
-                }, function (\Throwable $exception) use ($from, $method, $uriPath) {
-                    return $this->createExceptionServerResponse(
-                        $exception,
-                        $from,
-                        $method,
-                        $uriPath
-                    );
+                            return $this->toServerResponse(
+                                $symfonyRequest,
+                                $symfonyResponse,
+                                $from
+                            );
+                        }, function (\Throwable $exception) use ($from, $method, $uriPath) {
+                            return $this->createExceptionServerResponse(
+                                $exception,
+                                $from,
+                                $method,
+                                $uriPath
+                            );
+                        });
                 });
-            });
     }
 
     /**
      * Handle static resource.
      *
-     * @param FilesystemInterface $filesystem
-     * @param string              $rootPath
-     * @param string              $resourcePath
+     * @param ServerRequestInterface $request
+     * @param FilesystemInterface    $filesystem
+     * @param string                 $rootPath
+     * @param string                 $resourcePath
+     * @param string|null            $acceptedContentHeader
      *
      * @return PromiseInterface
      */
     public function handleStaticResource(
+        ServerRequestInterface $request,
         FilesystemInterface $filesystem,
         string $rootPath,
         string $resourcePath
@@ -150,30 +159,39 @@ class RequestHandler
         $from = microtime(true);
 
         return $filesystem
-            ->getContents($rootPath.$resourcePath)
-            ->then(function ($content) use ($rootPath, $resourcePath, $from) {
-                $to = microtime(true);
+            ->file($rootPath.$resourcePath)
+            ->open('r')
+            ->then(function (ReadableStreamInterface $stream) use ($rootPath, $resourcePath, $from, $request) {
                 $mimeType = $this
                     ->mimetypeChecker
-                    ->getMimeType($rootPath.$resourcePath);
+                    ->getMimeType($resourcePath);
 
-                return new ServerResponseWithMessage(
-                    new \React\Http\Response(
-                        Response::HTTP_OK,
-                        ['Content-Type' => $mimeType],
-                        $content
-                    ),
-                    $this->outputPrinter,
-                    new ConsoleStaticMessage(
-                        $resourcePath,
-                        TimeFormatter::formatTime($to - $from)
-                    )
+                $response = new ReactResponse(
+                    Response::HTTP_OK,
+                    ['Content-Type' => $mimeType],
+                    $stream
                 );
-            }, function (Throwable $exception) use ($resourcePath, $from) {
+
+                return $this
+                    ->applyResponseEncoding($response, $request->getHeaderLine('Accept-Encoding'))
+                    ->then(function (PSRResponse $response) use ($resourcePath, $from) {
+                        $to = microtime(true);
+
+                        return new ServerResponseWithMessage(
+                            $response,
+                            $this->outputPrinter,
+                            new ConsoleStaticMessage(
+                                $resourcePath,
+                                TimeFormatter::formatTime($to - $from)
+                            )
+                        );
+                    });
+            })
+            ->otherwise(function (Throwable $exception) use ($resourcePath, $from) {
                 $to = microtime(true);
 
                 return new ServerResponseWithMessage(
-                    new \React\Http\Response(
+                    new ReactResponse(
                         Response::HTTP_NOT_FOUND,
                         [],
                         ''
@@ -242,49 +260,43 @@ class RequestHandler
      * @param Response $symfonyResponse
      * @param float    $from
      *
-     * @return ServerResponseWithMessage
+     * @return PromiseInterface<ServerResponseWithMessage>
      */
     private function toServerResponse(
         Request $symfonyRequest,
-        Response $symfonyResponse,
+        $response,
         float $from
-    ): ServerResponseWithMessage {
-        $to = microtime(true);
-
-        $nonEncodedContent = $symfonyResponse->getContent();
-        $this->applyResponseEncoding(
-            $symfonyRequest,
-            $symfonyResponse
-        );
-
-        if ($symfonyResponse->getStatusCode() >= 400) {
-            $nonEncodedContent = 'Error returned';
-            if (404 == $symfonyResponse->getStatusCode()) {
-                $nonEncodedContent = 'Route not found';
-            }
+    ): PromiseInterface {
+        if ($response instanceof Response) {
+            $response = new PSRResponse(
+                $response->getStatusCode(),
+                $response->headers->all(),
+                $response->getContent()
+            );
         }
 
-        $serverResponse =
-            new ServerResponseWithMessage(
-                new \React\Http\Response(
-                    $symfonyResponse->getStatusCode(),
-                    $symfonyResponse->headers->all(),
-                    $symfonyResponse->getContent()
-                ),
-                $this->outputPrinter,
-                new ConsoleRequestMessage(
-                    $symfonyRequest->getPathInfo(),
-                    $symfonyRequest->getMethod(),
-                    $symfonyResponse->getStatusCode(),
-                    $nonEncodedContent,
-                    TimeFormatter::formatTime($to - $from)
-                )
-            );
+        return $this
+            ->applyResponseEncoding($response, $symfonyRequest->headers->get('Accept-Encoding'))
+            ->then(function (PSRResponse $response) use ($symfonyRequest, $from) {
+                $to = microtime(true);
+                $serverResponse =
+                    new ServerResponseWithMessage(
+                        $response,
+                        $this->outputPrinter,
+                        new ConsoleRequestMessage(
+                            $symfonyRequest->getPathInfo(),
+                            $symfonyRequest->getMethod(),
+                            $response->getStatusCode(),
+                            '',
+                            TimeFormatter::formatTime($to - $from)
+                        )
+                    );
 
-        $symfonyRequest = null;
-        $symfonyResponse = null;
+                $symfonyRequest = null;
+                $symfonyResponse = null;
 
-        return $serverResponse;
+                return $serverResponse;
+            });
     }
 
     /**
@@ -314,7 +326,7 @@ class RequestHandler
 
         $serverResponse =
             new ServerResponseWithMessage(
-                new \React\Http\Response(
+                new ReactResponse(
                     $code,
                     ['Content-Type' => 'text/plain'],
                     $exception->getMessage()
@@ -338,38 +350,76 @@ class RequestHandler
     /**
      * Apply response encoding.
      *
-     * @param Request  $request
-     * @param Response $response
+     * @param PSRResponse $response
+     * @param string|null $acceptEncodingHeader
+     *
+     * @return PromiseInterface
      */
     private function applyResponseEncoding(
-        Request $request,
-        Response $response
-    ) {
-        $allowedCompressionAsString = $request
-            ->headers
-            ->get('Accept-Encoding');
-
-        if (!$allowedCompressionAsString) {
-            return;
+        PSRResponse $response,
+        ?string $acceptEncodingHeader
+    ): PromiseInterface {
+        if (!$acceptEncodingHeader) {
+            return resolve($response);
         }
-        $allowedCompression = explode(',', $allowedCompressionAsString);
+
+        $allowedCompression = explode(',', $acceptEncodingHeader);
         $allowedCompression = array_map('trim', $allowedCompression);
         if (in_array('gzip', $allowedCompression)) {
-            $response->setContent(gzencode($response->getContent()));
-            $response
-                ->headers
-                ->set('Content-Encoding', 'gzip');
-
-            return;
+            return $this->compressResponse($response, 'gzip');
         }
+
         if (in_array('deflate', $allowedCompression)) {
-            $response->setContent(gzdeflate($response->getContent()));
-            $response
-                ->headers
-                ->set('Content-Encoding', 'deflate');
-
-            return;
+            return $this->compressResponse($response, 'deflate');
         }
+
+        return resolve($response);
+    }
+
+    /**
+     * Apply compression to response.
+     *
+     * @param PSRResponse $response
+     * @param string      $compression
+     *
+     * @return PromiseInterface
+     */
+    private function compressResponse(
+        PSRResponse $response,
+        string $compression
+    ): PromiseInterface {
+        $body = $response->getBody();
+        $response = $response->withHeader('Content-Encoding', $compression);
+
+        if ($body instanceof ReadableStreamInterface) {
+            $compressedStream = new ThroughStream();
+            $compressionStrategy = 'gzip' === $compression
+                ? ZLIB_ENCODING_GZIP
+                : ZLIB_ENCODING_RAW;
+            $compressor = new Compressor($compressionStrategy);
+            $body->pipe($compressor)->pipe($compressedStream);
+
+            return resolve(new ReactResponse(
+                $response->getStatusCode(),
+                $response->getHeaders(),
+                $compressedStream
+            ));
+        }
+
+        if ($body instanceof StreamInterface) {
+            $compressionMethod = 'gzip' === $compression
+                ? 'gzencode'
+                : 'gzdeflate';
+            $content = $body->getContents();
+
+            return resolve(new ReactResponse(
+                $response->getStatusCode(),
+                $response->getHeaders(),
+                $compressionMethod($content)
+            ));
+        }
+
+        return resolve($response);
     }
 
     /**
