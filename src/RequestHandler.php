@@ -398,6 +398,10 @@ class RequestHandler
                 : ZLIB_ENCODING_RAW;
             $compressor = new Compressor($compressionStrategy);
             $body->pipe($compressor)->pipe($compressedStream);
+            $compressedStream->on('close', function () use ($body, $compressor) {
+                $compressor->close();
+                $body->close();
+            });
 
             return resolve(new ReactResponse(
                 $response->getStatusCode(),
