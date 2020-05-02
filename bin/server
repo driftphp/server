@@ -14,6 +14,8 @@
  * @author Marc Morera <yuhu@mmoreram.com>
  */
 
+date_default_timezone_set('UTC');
+
 $bootstrapPath = require(dirname(__DIR__) . '/src/bootstrap.php');
 
 $application = new \Symfony\Component\Console\Application();
