@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Context;
 
+use Drift\Server\Adapter\SymfonyKernelAdapter;
 use Drift\Server\Adapter\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
 use Exception;
@@ -57,6 +58,7 @@ final class ServerContext
         $adapter = $input->getOption('adapter');
         $adapter = [
                 'drift' => DriftKernelAdapter::class,
+                'symfony' => SymfonyKernelAdapter::class,
             ][$adapter] ?? $adapter;
 
         if (!is_a($adapter, KernelAdapter::class, true)) {
