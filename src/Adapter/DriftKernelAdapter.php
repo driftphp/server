@@ -24,6 +24,11 @@ use Drift\Server\Watcher\ObservableKernel;
  */
 class DriftKernelAdapter implements KernelAdapter, ObservableKernel
 {
+    public static function getKernelClass() : string
+    {
+        return ApplicationKernel::class;
+    }
+
     /**
      * Build AsyncKernel.
      */

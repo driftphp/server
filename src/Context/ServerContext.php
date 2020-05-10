@@ -18,6 +18,7 @@ namespace Drift\Server\Context;
 use Drift\Server\Adapter\SymfonyKernelAdapter;
 use Drift\Server\Adapter\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
+use Drift\HttpKernel\AsyncKernel;
 use Exception;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -55,14 +56,41 @@ final class ServerContext
         $serverContext->debug = $input->getOption('debug');
         $serverContext->printHeader = !$input->getOption('no-header');
 
-        $adapter = $input->getOption('adapter');
-        $adapter = [
-                'drift' => DriftKernelAdapter::class,
-                'symfony' => SymfonyKernelAdapter::class,
-            ][$adapter] ?? $adapter;
+        $adapterName = $input->getOption('adapter');
+        $adapters = [
+            'drift' => DriftKernelAdapter::class,
+            'symfony' => SymfonyKernelAdapter::class,
+        ];
+
+        if ($adapterName === null) {
+            $foundAdapterClass = false;
+            $foundExistingClasses = [];
+            foreach ($adapters as $adapterName => $adapterClass) {
+                $kernelClass = call_user_func([$adapterClass, 'getKernelClass']);
+                if (class_exists($kernelClass)) {
+                    $foundExistingClasses[] = $kernelClass;
+                    if (is_a($kernelClass, AsyncKernel::class, true)) {
+                        $foundAdapterClass = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$foundAdapterClass) {
+                if (empty($foundExistingClasses)) {
+                    fwrite(STDERR, sprintf('No supported kernel found. Please specify your own kernel adapter by implementing %s'.PHP_EOL, KernelAdapter::class));
+                } else {
+                    fwrite(STDERR, sprintf('One of your kernel classes %s MUST extend %s'.PHP_EOL, implode(', ', $foundExistingClasses), AsyncKernel::class));
+                }
+                exit(1);
+            }
+        }
+
+        $adapter = $adapters[$adapterName] ?? $adapterName;
 
         if (!is_a($adapter, KernelAdapter::class, true)) {
-            die('You must define an existing kernel adapter, or by an alias or my a namespace. This class MUST implement KernelAdapter'.PHP_EOL);
+            fwrite(STDERR, sprintf('You must define an existing kernel adapter, or by an alias or by a namespace. This class MUST implement %s'.PHP_EOL, KernelAdapter::class));
+            exit(1);
         }
 
         $serverContext->adapter = $adapter;

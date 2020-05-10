@@ -68,7 +68,7 @@ abstract class ServerCommand extends Command
             ->addOption('no-static-folder', null, InputOption::VALUE_NONE, 'Disable static folder')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
             ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disabled the header')
-            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
+            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter');
 
         /*
          * If we have the EventBus loaded, we can add listeners as well

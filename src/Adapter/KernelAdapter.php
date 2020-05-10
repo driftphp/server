@@ -23,6 +23,11 @@ use Drift\HttpKernel\AsyncKernel;
 interface KernelAdapter
 {
     /**
+     * @return string
+     */
+    public static function getKernelClass() : string;
+
+    /**
      * Build kernel.
      *
      * @param string $environment
