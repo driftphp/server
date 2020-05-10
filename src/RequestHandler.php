@@ -34,6 +34,7 @@ use Drift\Server\Mime\MimeTypeChecker;
 use React\Http\Io\HttpBodyStream;
 use function React\Promise\all;
 use React\Promise\FulfilledPromise;
+use React\Promise\Promise;
 use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -43,11 +44,13 @@ use React\Http\Response as ReactResponse;
 use React\Promise\PromiseInterface;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
+use RingCentral\Psr7\BufferStream;
 use RingCentral\Psr7\Response as PSRResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Throwable;
 
@@ -274,6 +277,26 @@ class RequestHandler
             if ($response instanceof BinaryFileResponse) {
                 $streamPromise = $this->filesystem->file($response->getFile()->getPathname())->open('r')->then(function (ReadableStreamInterface $stream) {
                     return new HttpBodyStream($stream, null);
+                });
+            } elseif($response instanceof StreamedResponse) {
+                $streamPromise = new Promise(function($resolve, $reject) use($response) {
+                    $stream = new BufferStream();
+                    $resolve($stream);
+                    ob_start(function($data) use($stream, $resolve, &$isResolved) {
+                        $stream->write($data);
+                    }, 1);
+                    $response->sendContent();
+                    ob_end_flush();
+                });
+            } elseif($response instanceof StreamedResponse) {
+                $streamPromise = new Promise(function($resolve, $reject) use($response) {
+                    $stream = new BufferStream();
+                    $resolve($stream);
+                    ob_start(function($data) use($stream, $resolve, &$isResolved) {
+                        $stream->write($data);
+                    }, 1);
+                    $response->sendContent();
+                    ob_end_flush();
                 });
             } else {
                 $streamPromise = new FulfilledPromise($response->getContent());
