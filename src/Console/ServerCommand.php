@@ -18,6 +18,8 @@ namespace Drift\Server\Console;
 use Drift\Console\OutputPrinter;
 use Drift\EventBus\Bus\EventBus;
 use Drift\EventLoop\EventLoopUtils;
+use Drift\Server\Console\Style\Muted;
+use Drift\Server\Console\Style\Purple;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
@@ -96,7 +98,7 @@ abstract class ServerCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $serverContext = ServerContext::buildByInput($input);
-        $outputPrinter = new OutputPrinter($output);
+        $outputPrinter = $this->createOutputPrinter($output);
         $loop = EventLoopFactory::create();
         if ($serverContext->printHeader()) {
             ServerHeaderPrinter::print(
@@ -137,4 +139,21 @@ abstract class ServerCommand extends Command
         ServerContext $serverContext,
         OutputPrinter $outputPrinter
     );
+
+    /**
+     * Create OutputPrinter and add some custom OutputFormatterStyles to the
+     * OutputInterface instance.
+     *
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     *
+     * @return \Drift\Console\OutputPrinter
+     */
+    protected function createOutputPrinter(OutputInterface $output): OutputPrinter
+    {
+        $outputFormatter = $output->getFormatter();
+        $outputFormatter->setStyle('muted', new Muted());
+        $outputFormatter->setStyle('purple', new Purple());
+
+        return new OutputPrinter($output);
+    }
 }

@@ -36,6 +36,7 @@ class ApplicationStaticFolderTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
+            '--ansi'
         ]);
 
         $process->start();
@@ -48,6 +49,7 @@ class ApplicationStaticFolderTest extends TestCase
             ) > 0
         );
 
+        usleep(100000);
         $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.js", '$(\'lol\');', 'application/javascript');
         $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.css", '.lol {}', 'text/css');
         $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.txt", 'LOL', 'text/plain');
