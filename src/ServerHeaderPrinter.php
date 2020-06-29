@@ -41,7 +41,7 @@ class ServerHeaderPrinter
 
         $outputPrinter->printLine();
         $outputPrinter->printHeaderLine();
-        $outputPrinter->printHeaderLine('ReactPHP Client for DriftPHP');
+        $outputPrinter->printHeaderLine('ReactPHP HTTP Server for DriftPHP');
         $outputPrinter->printHeaderLine('  by Marc Morera (@mmoreram)');
         $outputPrinter->printHeaderLine();
         $outputPrinter->printHeaderLine("Host: {$serverContext->getHost()}");

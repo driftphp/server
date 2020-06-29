@@ -35,16 +35,17 @@ class WatcherTest extends TestCase
             'watch',
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
+            '--ansi'
         ]);
 
         $process->start();
         sleep(2);
-        Utils::curl("http://127.0.0.1:$port?code=200");
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
         $output = $process->getOutput();
         $this->assertNotFalse(
             strpos(
                 $output,
-                '[01;32m200[0m GET'
+                '[32;1m200[39;22m GET'
             )
         );
         $process->stop();

@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
+use CURLFile;
+
 /**
  * Class Utils.
  */
@@ -23,24 +25,60 @@ class Utils
     /**
      * Make curl.
      *
-     * @param string $url
-     * @param array  $headers
+     * @param string   $url
+     * @param string[] $headers
+     * @param string[] $files
      *
-     * @return string
+     * @return [string, string]
      */
     public static function curl(
         string $url,
-        array $headers = []
-    ): string {
-        $curl_handle = curl_init();
-        curl_setopt($curl_handle, CURLOPT_URL, $url);
-        curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 2);
-        curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl_handle, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($curl_handle, CURLOPT_USERAGENT, 'Your application name');
-        $result = curl_exec($curl_handle);
-        curl_close($curl_handle);
+        array $headers = [],
+        array $files = []
+    ): array {
+        $curlHandle = curl_init();
+        curl_setopt($curlHandle, CURLOPT_URL, $url);
+        curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curlHandle, CURLOPT_USERAGENT, 'Your application name');
+        curl_setopt($curlHandle, CURLOPT_HEADER, 1);
 
-        return $result;
+        if (!empty($files)) {
+            $postData = [];
+            foreach ($files as $file) {
+                $fileParts = explode('.', $file, 2);
+                $postData[$fileParts[0]] = new CURLFile(realpath(__DIR__.'/'.$file));
+            }
+
+            curl_setopt($curlHandle, CURLOPT_POST, 1);
+            curl_setopt(
+                $curlHandle,
+                CURLOPT_POSTFIELDS,
+                $postData
+            );
+        }
+
+        $response = curl_exec($curlHandle);
+        if (false === $response) {
+            return [false, []];
+        }
+
+        $headerSize = curl_getinfo($curlHandle, CURLINFO_HEADER_SIZE);
+        $headers = substr($response, 0, $headerSize);
+        $headersArray = explode("\r\n", $headers);
+        $headersClean = [];
+        array_shift($headersArray);
+        foreach ($headersArray as $headerElement) {
+            $parts = explode(':', $headerElement);
+            if (2 === count($parts)) {
+                $headersClean[trim($parts[0])] = trim($parts[1]);
+            }
+        }
+
+        $body = substr($response, $headerSize);
+        curl_close($curlHandle);
+
+        return [$body, $headersClean];
     }
 }

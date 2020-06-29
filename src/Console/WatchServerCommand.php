@@ -77,14 +77,14 @@ final class WatchServerCommand extends ServerCommand
         $dirname = dirname(__DIR__);
         $found = false;
         $paths = [
-            '../../../../vendor/bin/php-watcher',
-            '../../../../bin/php-watcher',
-            '../vendor/bin/php-watcher',
+            $dirname.'../../../../vendor/bin/php-watcher',
+            $dirname.'../../../../bin/php-watcher',
+            $dirname.'../vendor/bin/php-watcher',
+            getcwd().'/vendor/bin/php-watcher',
         ];
 
         $completePath = null;
-        foreach ($paths as $path) {
-            $completePath = "$dirname/$path";
+        foreach ($paths as $completePath) {
             if (is_file($completePath)) {
                 $found = true;
                 break;
@@ -132,12 +132,12 @@ final class WatchServerCommand extends ServerCommand
         array $folders,
         string $rootPath
     ): array {
-        $folders = array_map(function (string $path) use ($rootPath) {
+        $folders = array_map(function (string $path) use ($rootPath): ?string {
             $path = sprintf('%s/%s/', $rootPath, trim($path, '/'));
 
             return is_file($path) || is_dir($path)
                 ? $path
-                : false;
+                : null;
         }, $folders);
         $folders = array_filter($folders);
         $folders = array_map(function (string $folder) {

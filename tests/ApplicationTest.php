@@ -36,23 +36,24 @@ class ApplicationTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
+            '--ansi'
         ]);
 
         $process->start();
-        usleep(300000);
-        Utils::curl("http://127.0.0.1:$port/valid/query?code=200");
-        usleep(100000);
+        usleep(500000);
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
+        usleep(500000);
         $this->assertNotFalse(
             strpos(
                 $process->getOutput(),
-                '[01;32m200[0m GET'
+                '[32;1m200[39;22m GET'
             )
         );
 
         $this->assertNotFalse(
             strpos(
                 $process->getOutput(),
-                '/valid/query'
+                '/query'
             )
         );
 
@@ -76,9 +77,9 @@ class ApplicationTest extends TestCase
         ]);
 
         $process->start();
-        usleep(300000);
+        usleep(500000);
         Utils::curl("http://127.0.0.1:$port?code=200");
-        usleep(100000);
+        usleep(500000);
 
         $this->assertEquals(
             '',
@@ -101,17 +102,49 @@ class ApplicationTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
+            '--ansi'
         ]);
 
         $process->start();
-        usleep(300000);
+        usleep(500000);
         Utils::curl("http://127.0.0.1:$port/another/route?code=200");
-        usleep(300000);
+        usleep(500000);
 
         $this->assertNotFalse(
             strpos(
                 $process->getOutput(),
-                '[01;31m404[0m GET'
+                '[31;1m404[39;22m GET'
+            )
+        );
+
+        $process->stop();
+    }
+
+    /**
+     * Test non blocking server.
+     */
+    public function testNonAnsi()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--dev',
+            '--no-ansi'
+        ]);
+
+        $process->start();
+        usleep(500000);
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
+        usleep(500000);
+
+        $this->assertNotFalse(
+            strpos(
+                $process->getOutput(),
+                '200 GET'
             )
         );
 

@@ -51,7 +51,7 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
      */
     public static function getObservableFolders(): array
     {
-        return ['Drift', 'src'];
+        return ['Drift', 'src', 'public'];
     }
 
     /**
@@ -61,7 +61,7 @@ class DriftKernelAdapter implements KernelAdapter, ObservableKernel
      */
     public static function getObservableExtensions(): array
     {
-        return ['php', 'yml', 'yaml', 'xml'];
+        return ['php', 'yml', 'yaml', 'xml', 'css', 'js', 'html', 'twig'];
     }
 
     /**

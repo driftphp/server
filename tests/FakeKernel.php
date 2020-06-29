@@ -16,11 +16,14 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
-use React\Promise\FulfilledPromise;
+use function React\Promise\resolve;
+use React\Http\Response;
 use React\Promise\PromiseInterface;
+use React\Stream\ThroughStream;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -73,7 +76,7 @@ class FakeKernel extends AsyncKernel
      */
     public function handleAsync(Request $request): PromiseInterface
     {
-        return (new FulfilledPromise($request))
+        return (resolve($request))
             ->then(function (Request $request) {
                 return $this->handle($request);
             });
@@ -85,19 +88,67 @@ class FakeKernel extends AsyncKernel
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
         $code = \intval($request->query->get('code', 200));
+        $pathInfo = $request->getPathInfo();
         if (400 === $code) {
             throw new \Exception('Bad Request');
         }
 
-        if (
-            '/' !== $request->getPathInfo() &&
-            '/valid/query' !== $request->getPathInfo()
-        ) {
-            throw new RouteNotFoundException();
+        if ('/file' === $pathInfo) {
+            $files = $request->files->all();
+
+            return new JsonResponse([
+                'files' => array_map(function (UploadedFile $file) {
+                    return [
+                        $file->getPath().'/'.$file->getFilename(),
+                        file_get_contents($file->getPath().'/'.$file->getFilename()),
+                        $file->isValid(),
+                    ];
+                }, $files),
+            ], $code);
         }
 
-        return new JsonResponse([
-            'query' => $request->query,
-        ], $code);
+        if ('/psr' === $pathInfo) {
+            return new Response(200, [
+                'Content-Type' => 'plain/text',
+            ], 'ReactPHP Response');
+        }
+
+        if (
+            '/psr-stream' === $pathInfo ||
+            '/psr-stream-gzipped' === $pathInfo
+        ) {
+            if ('/psr-stream-gzipped' === $request->getPathInfo()) {
+                $request->headers->set('Accept-Encoding', $request->query->get('type'));
+            }
+
+            $streamResponse = new ThroughStream();
+            $streamResponse->write('React');
+            $loop = $this->getContainer()->get('reactphp.event_loop');
+            $loop->futureTick(function () use ($streamResponse, $loop) {
+                $streamResponse->write('PHP ');
+                $loop->futureTick(function () use ($streamResponse) {
+                    $streamResponse->write('stream');
+                    $streamResponse->end('...');
+                });
+            });
+
+            return new Response(200, [
+                'Content-Type' => 'plain/text',
+            ], $streamResponse);
+        }
+
+        if ('/text' === $pathInfo) {
+            return new Response(200, [
+                'Content-Type' => 'plain/text',
+            ], 'This is one text for testing');
+        }
+
+        if ('/query' === $pathInfo) {
+            return new JsonResponse([
+                'query' => $request->query,
+            ], $code);
+        }
+
+        throw new RouteNotFoundException();
     }
 }

@@ -20,6 +20,7 @@ use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Application;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
+use Drift\Server\Mime\MimeTypeChecker;
 use Drift\Server\RequestHandler;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
@@ -43,8 +44,8 @@ final class RunServerCommand extends ServerCommand
         OutputPrinter $outputPrinter
     ) {
         $rootPath = getcwd();
-        $requestHandler = new RequestHandler($outputPrinter);
         $filesystem = Filesystem::create($loop);
+        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem);
 
         $application = new Application(
             $loop,
