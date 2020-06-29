@@ -50,15 +50,15 @@ final class ConsoleServerMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
-        $color = '31';
+        $color = 'red';
         if ($this->ok) {
-            $color = '32';
+            $color = 'green';
         }
 
-        $outputPrinter->print("\033[01;{$color}mSRV\033[0m");
+        $outputPrinter->print("<fg=$color;options=bold>SRV</>");
         $outputPrinter->print(' ');
-        $outputPrinter->print("(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)");
-        $outputPrinter->print(" - \e[00;37m".$this->message."\e[0m");
+        $outputPrinter->print("(<muted>".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB</muted>)");
+        $outputPrinter->print(" - <muted>".$this->message."</muted>");
         $outputPrinter->printLine();
     }
 }
