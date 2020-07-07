@@ -69,7 +69,9 @@ abstract class ServerCommand extends Command
             ->addOption('static-folder', null, InputOption::VALUE_OPTIONAL, 'Static folder path', '')
             ->addOption('no-static-folder', null, InputOption::VALUE_NONE, 'Disable static folder')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
-            ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disabled the header')
+            ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disable the header')
+            ->addOption('no-cookies', null, InputOption::VALUE_NONE, 'Disable cookies')
+            ->addOption('no-file-uploads', null, InputOption::VALUE_NONE, 'Disable file uploads')
             ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
 
         /*

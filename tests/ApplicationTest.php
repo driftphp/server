@@ -36,7 +36,7 @@ class ApplicationTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
-            '--ansi'
+            '--ansi',
         ]);
 
         $process->start();
@@ -102,7 +102,7 @@ class ApplicationTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
-            '--ansi'
+            '--ansi',
         ]);
 
         $process->start();
@@ -133,7 +133,7 @@ class ApplicationTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
-            '--no-ansi'
+            '--no-ansi',
         ]);
 
         $process->start();

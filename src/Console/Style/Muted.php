@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace Drift\Server\Console\Style;
 
 /**
- * Class DriftFormatterStyle
+ * Class DriftFormatterStyle.
  */
 final class Muted extends CustomStyle
 {

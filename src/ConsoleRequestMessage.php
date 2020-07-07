@@ -68,9 +68,9 @@ final class ConsoleRequestMessage implements Printable
 
         $outputPrinter->print("<fg=$color;options=bold>{$this->code}</>");
         $outputPrinter->print(" $method $this->url ");
-        $outputPrinter->print("(<muted>".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB</muted>)");
+        $outputPrinter->print('(<muted>'.$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000)).' MB</muted>)');
         if ($this->code >= 400) {
-            $outputPrinter->print(" - <muted>".$this->messageInMessage($this->message)."</muted>");
+            $outputPrinter->print(' - <muted>'.$this->messageInMessage($this->message).'</muted>');
         }
         $outputPrinter->printLine();
     }

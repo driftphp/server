@@ -50,7 +50,7 @@ final class ConsoleStaticMessage implements Printable
 
         $outputPrinter->print('<purple>200</purple>');
         $outputPrinter->print(" $method $this->url ");
-        $outputPrinter->print("(<muted>".$this->elapsedTime. ' |  ' .((int) (memory_get_usage() / 1000000))." MB</muted>");
+        $outputPrinter->print('(<muted>'.$this->elapsedTime.' |  '.((int) (memory_get_usage() / 1000000)).' MB</muted>');
         $outputPrinter->printLine();
     }
 }
