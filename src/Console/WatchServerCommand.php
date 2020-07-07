@@ -112,7 +112,7 @@ final class WatchServerCommand extends ServerCommand
 
         $completePath = realpath($completePath);
         $script = '"'.addslashes(addslashes(implode(' ', array_values($argv)))).'"';
-        $script = str_replace('/server watch ', '/server run ', $script);
+        $script = str_replace('/server watch ', '/server run --debug ', $script);
         $command = sprintf('%s %s --exec %s %s %s', PHP_BINARY, $completePath, PHP_BINARY, $script, implode(' ', $extra));
 
         $process = new Process($command);
