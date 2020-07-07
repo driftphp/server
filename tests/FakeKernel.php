@@ -16,9 +16,9 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
-use function React\Promise\resolve;
 use React\Http\Response;
 use React\Promise\PromiseInterface;
+use function React\Promise\resolve;
 use React\Stream\ThroughStream;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -146,6 +146,12 @@ class FakeKernel extends AsyncKernel
         if ('/query' === $pathInfo) {
             return new JsonResponse([
                 'query' => $request->query,
+            ], $code);
+        }
+
+        if ('/cookies' === $pathInfo) {
+            return new JsonResponse([
+                'cookies' => $request->cookies->all(),
             ], $code);
         }
 

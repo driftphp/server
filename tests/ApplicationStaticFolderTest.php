@@ -36,7 +36,7 @@ class ApplicationStaticFolderTest extends TestCase
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
             '--dev',
-            '--ansi'
+            '--ansi',
         ]);
 
         $process->start();

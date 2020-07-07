@@ -30,6 +30,8 @@ final class ServerContext
     private $staticFolder;
     private $debug;
     private $printHeader;
+    private $disableCookies;
+    private $disableFileUploads;
     private $adapter;
     private $host;
     private $port;
@@ -53,6 +55,8 @@ final class ServerContext
         $serverContext->silent = $input->getOption('quiet');
         $serverContext->debug = $input->getOption('debug');
         $serverContext->printHeader = !$input->getOption('no-header');
+        $serverContext->disableCookies = (bool) $input->getOption('no-cookies');
+        $serverContext->disableFileUploads = (bool) $input->getOption('no-file-uploads');
 
         $adapter = $input->getOption('adapter');
         $adapter = [
@@ -133,6 +137,22 @@ final class ServerContext
     public function printHeader(): bool
     {
         return $this->printHeader;
+    }
+
+    /**
+     * @return bool
+     */
+    public function areCookiesDisabled(): bool
+    {
+        return $this->disableCookies;
+    }
+
+    /**
+     * @return bool
+     */
+    public function areFileUploadsDisabled(): bool
+    {
+        return $this->disableFileUploads;
     }
 
     /**

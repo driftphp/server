@@ -30,15 +30,16 @@ use Clue\React\Zlib\Compressor;
 use Drift\Console\OutputPrinter;
 use Drift\Console\TimeFormatter;
 use Drift\HttpKernel\AsyncKernel;
+use Drift\Server\Context\ServerContext;
 use Drift\Server\Mime\MimeTypeChecker;
-use function React\Promise\all;
-use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use React\Filesystem\FilesystemInterface;
 use React\Http\Response as ReactResponse;
+use function React\Promise\all;
 use React\Promise\PromiseInterface;
+use function React\Promise\resolve;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
 use RingCentral\Psr7\Response as PSRResponse;
@@ -69,20 +70,28 @@ class RequestHandler
     private $filesystem;
 
     /**
+     * @var ServerContext
+     */
+    private $serverContext;
+
+    /**
      * RequestHandler constructor.
      *
      * @param OutputPrinter       $outputPrinter
      * @param MimeTypeChecker     $mimetypeChecker
      * @param FilesystemInterface $filesystem
+     * @param ServerContext       $serverContext
      */
     public function __construct(
         OutputPrinter $outputPrinter,
         MimeTypeChecker $mimetypeChecker,
-        FilesystemInterface $filesystem
+        FilesystemInterface $filesystem,
+        ServerContext $serverContext
     ) {
         $this->outputPrinter = $outputPrinter;
         $this->mimetypeChecker = $mimetypeChecker;
         $this->filesystem = $filesystem;
+        $this->serverContext = $serverContext;
     }
 
     /**
@@ -146,7 +155,6 @@ class RequestHandler
      * @param FilesystemInterface    $filesystem
      * @param string                 $rootPath
      * @param string                 $resourcePath
-     * @param string|null            $acceptedContentHeader
      *
      * @return PromiseInterface
      */
@@ -222,9 +230,15 @@ class RequestHandler
         string $method,
         string $uriPath
     ): PromiseInterface {
-        $uploadedFiles = array_map(function (PsrUploadedFile $file) {
-            return $this->toSymfonyUploadedFile($file);
-        }, $request->getUploadedFiles());
+        $allowFileUploads = !$this
+            ->serverContext
+            ->areFileUploadsDisabled();
+
+        $uploadedFiles = $allowFileUploads
+            ? array_map(function (PsrUploadedFile $file) {
+                return $this->toSymfonyUploadedFile($file);
+            }, $request->getUploadedFiles())
+            : [];
 
         return all($uploadedFiles)
             ->then(function (array $uploadedFiles) use ($request, $method, $uriPath) {
@@ -235,7 +249,9 @@ class RequestHandler
                     $request->getQueryParams(),
                     $request->getParsedBody() ?? [],
                     $request->getAttributes(),
-                    $request->getCookieParams(),
+                    $this->serverContext->areCookiesDisabled()
+                        ? []
+                        : $request->getCookieParams(),
                     $uploadedFiles,
                     $_SERVER,
                     $body

@@ -45,7 +45,7 @@ final class RunServerCommand extends ServerCommand
     ) {
         $rootPath = getcwd();
         $filesystem = Filesystem::create($loop);
-        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem);
+        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem, $serverContext);
 
         $application = new Application(
             $loop,
