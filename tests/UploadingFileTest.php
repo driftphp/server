@@ -83,4 +83,27 @@ class UploadingFileTest extends TestCase
         $this->assertFalse($content['files']['file1'][2]);
         $process->stop();
     }
+
+    /**
+     * Test disable file uploads.
+     */
+    public function testDisableFileUploads()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--no-file-uploads',
+            '--dev',
+        ]);
+
+        $process->start();
+        usleep(300000);
+        list($content, $headers) = Utils::curl("http://127.0.0.1:$port/file", [], ['somefile.txt']);
+        $content = json_decode($content, true);
+        $this->assertEmpty($content['files']);
+    }
 }

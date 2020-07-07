@@ -18,7 +18,7 @@ namespace Drift\Server\Console\Style;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
 /**
- * Class CustomStyle
+ * Class CustomStyle.
  */
 abstract class CustomStyle extends OutputFormatterStyle
 {

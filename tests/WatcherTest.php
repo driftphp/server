@@ -35,7 +35,7 @@ class WatcherTest extends TestCase
             'watch',
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
-            '--ansi'
+            '--ansi',
         ]);
 
         $process->start();

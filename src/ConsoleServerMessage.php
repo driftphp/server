@@ -57,8 +57,8 @@ final class ConsoleServerMessage implements Printable
 
         $outputPrinter->print("<fg=$color;options=bold>SRV</>");
         $outputPrinter->print(' ');
-        $outputPrinter->print("(<muted>".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB</muted>)");
-        $outputPrinter->print(" - <muted>".$this->message."</muted>");
+        $outputPrinter->print('(<muted>'.$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000)).' MB</muted>)');
+        $outputPrinter->print(' - <muted>'.$this->message.'</muted>');
         $outputPrinter->printLine();
     }
 }

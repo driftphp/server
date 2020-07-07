@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace Drift\Server\Console\Style;
 
 /**
- * Class Purple
+ * Class Purple.
  */
 final class Purple extends CustomStyle
 {

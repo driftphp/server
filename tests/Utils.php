@@ -28,13 +28,15 @@ class Utils
      * @param string   $url
      * @param string[] $headers
      * @param string[] $files
+     * @param string   $cookie
      *
      * @return [string, string]
      */
     public static function curl(
         string $url,
         array $headers = [],
-        array $files = []
+        array $files = [],
+        string $cookie = ''
     ): array {
         $curlHandle = curl_init();
         curl_setopt($curlHandle, CURLOPT_URL, $url);
@@ -43,6 +45,7 @@ class Utils
         curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curlHandle, CURLOPT_USERAGENT, 'Your application name');
         curl_setopt($curlHandle, CURLOPT_HEADER, 1);
+        curl_setopt($curlHandle, CURLOPT_COOKIE, $cookie);
 
         if (!empty($files)) {
             $postData = [];
