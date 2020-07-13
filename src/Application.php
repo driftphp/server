@@ -193,6 +193,7 @@ class Application
         );
 
         $http = new HttpServer(
+            $this->loop,
             function (ServerRequestInterface $request) use ($kernel, $requestHandler, $filesystem) {
                 return new Promise(function (callable $resolve) use ($request, $kernel, $requestHandler, $filesystem) {
                     $resolveResponseCallback = function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {

@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
-use React\Http\Response;
+use React\Http\Message\Response;
 use React\Promise\PromiseInterface;
 use function React\Promise\resolve;
 use React\Stream\ThroughStream;
