@@ -36,7 +36,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use React\Filesystem\FilesystemInterface;
-use React\Http\Response as ReactResponse;
+use React\Http\Message\Response as ReactResponse;
 use function React\Promise\all;
 use React\Promise\PromiseInterface;
 use function React\Promise\resolve;
