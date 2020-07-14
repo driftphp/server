@@ -75,8 +75,6 @@ class RequestHandler
     private $serverContext;
 
     /**
-     * RequestHandler constructor.
-     *
      * @param OutputPrinter       $outputPrinter
      * @param MimeTypeChecker     $mimetypeChecker
      * @param FilesystemInterface $filesystem
@@ -149,8 +147,6 @@ class RequestHandler
     }
 
     /**
-     * Handle static resource.
-     *
      * @param ServerRequestInterface $request
      * @param FilesystemInterface    $filesystem
      * @param string                 $rootPath
@@ -316,8 +312,6 @@ class RequestHandler
     }
 
     /**
-     * Create exception Server response.
-     *
      * @param Throwable $exception
      * @param float     $from
      * @param string    $method
@@ -364,8 +358,6 @@ class RequestHandler
     }
 
     /**
-     * Apply response encoding.
-     *
      * @param PSRResponse $response
      * @param string|null $acceptEncodingHeader
      *
@@ -393,8 +385,6 @@ class RequestHandler
     }
 
     /**
-     * Apply compression to response.
-     *
      * @param PSRResponse $response
      * @param string      $compression
      *
@@ -489,8 +479,6 @@ class RequestHandler
     }
 
     /**
-     * Clean tmp files.
-     *
      * @param Request $request
      *
      * @return PromiseInterface[]

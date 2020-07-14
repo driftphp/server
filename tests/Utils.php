@@ -29,6 +29,7 @@ class Utils
      * @param string[] $headers
      * @param string[] $files
      * @param string   $cookie
+     * @param string   $json
      *
      * @return [string, string]
      */
@@ -36,9 +37,18 @@ class Utils
         string $url,
         array $headers = [],
         array $files = [],
-        string $cookie = ''
+        string $cookie = '',
+        string $json = null
     ): array {
         $curlHandle = curl_init();
+
+        if (!empty($json)) {
+            $headers[] = 'Content-Type: application/json';
+            $headers[] = 'Content-Length: '.strlen($json);
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $json);
+            curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'POST');
+        }
+
         curl_setopt($curlHandle, CURLOPT_URL, $url);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 2);
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
@@ -46,6 +56,7 @@ class Utils
         curl_setopt($curlHandle, CURLOPT_USERAGENT, 'Your application name');
         curl_setopt($curlHandle, CURLOPT_HEADER, 1);
         curl_setopt($curlHandle, CURLOPT_COOKIE, $cookie);
+        curl_setopt($curlHandle, CURLOPT_TIMEOUT_MS, 500);
 
         if (!empty($files)) {
             $postData = [];
