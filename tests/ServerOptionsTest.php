@@ -19,14 +19,14 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
 /**
- * Class ApplicationTest.
+ * Class ServerOptionsTest.
  */
-class ApplicationTest extends TestCase
+class ServerOptionsTest extends TestCase
 {
     /**
-     * Test non blocking server.
+     * Test different options.
      */
-    public function testRegular()
+    public function testMultipleOptionsAreWorking()
     {
         $port = rand(2000, 9999);
         $process = new Process([
@@ -35,31 +35,28 @@ class ApplicationTest extends TestCase
             'run',
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
-            '--dev',
+            '--concurrent-requests=2',
             '--ansi',
+            '--request-body-buffer=64',
         ]);
 
         $process->start();
         usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
+
         $this->assertContains(
             '[32;1m200[39;22m GET',
             $process->getOutput()
         );
 
-        $this->assertContains(
-            '/query',
-            $process->getOutput()
-        );
-
         $process->stop();
     }
 
     /**
-     * Test silent.
+     * Test 0 concurrency.
      */
-    public function testSilentServer()
+    public function test0Concurrency()
     {
         $port = rand(2000, 9999);
         $process = new Process([
@@ -68,66 +65,7 @@ class ApplicationTest extends TestCase
             'run',
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
-            '--quiet',
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(500000);
-        Utils::curl("http://127.0.0.1:$port?code=200");
-        usleep(500000);
-
-        $this->assertEquals(
-            '',
-            $process->getOutput()
-        );
-
-        $process->stop();
-    }
-
-    /**
-     * Test route not found.
-     */
-    public function testRouteNotFound()
-    {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
-        Utils::curl("http://127.0.0.1:$port/another/route?code=200");
-        usleep(500000);
-
-        $this->assertContains(
-            '[31;1m404[39;22m GET',
-            $process->getOutput()
-        );
-
-        $process->stop();
-    }
-
-    /**
-     * Test non blocking server.
-     */
-    public function testNonAnsi()
-    {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--no-ansi',
+            '--concurrent-requests=0',
         ]);
 
         $process->start();
@@ -135,12 +73,63 @@ class ApplicationTest extends TestCase
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
 
-        $this->assertNotFalse(
-            strpos(
-                $process->getOutput(),
-                '200 GET'
-            )
+        $this->assertContains(
+            '500 EXC',
+            $process->getOutput()
         );
+
+        $process->stop();
+    }
+
+    /**
+     * Test body size limited.
+     */
+    public function testBodySizeLimited()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--request-body-buffer=1',
+        ]);
+
+        $process->start();
+        usleep(500000);
+        list($body, $headers) = Utils::curl("http://127.0.0.1:$port/body", [], [], '', json_encode(array_fill(0, 1000, 'Holis')));
+        usleep(500000);
+
+        $body = json_decode($body, true);
+        $this->assertEmpty($body['body']);
+
+        $process->stop();
+    }
+
+    /**
+     * Test body size OK.
+     */
+    public function testBodySizeOk()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--request-body-buffer=1000',
+        ]);
+
+        $process->start();
+        usleep(500000);
+        list($body, $headers) = Utils::curl("http://127.0.0.1:$port/body", [], [], '', json_encode(array_fill(0, 1000, 'Holis')));
+        usleep(500000);
+
+        $body = json_decode($body, true);
+        $body = json_decode($body['body'], true);
+        $this->assertCount(1000, $body);
 
         $process->stop();
     }

@@ -155,6 +155,12 @@ class FakeKernel extends AsyncKernel
             ], $code);
         }
 
+        if ('/body' === $pathInfo) {
+            return new JsonResponse([
+                'body' => $request->getContent(),
+            ], $code);
+        }
+
         throw new RouteNotFoundException();
     }
 }

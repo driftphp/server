@@ -72,6 +72,8 @@ abstract class ServerCommand extends Command
             ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disable the header')
             ->addOption('no-cookies', null, InputOption::VALUE_NONE, 'Disable cookies')
             ->addOption('no-file-uploads', null, InputOption::VALUE_NONE, 'Disable file uploads')
+            ->addOption('concurrent-requests', null, InputOption::VALUE_OPTIONAL, 'Limit of concurrent requests', 100)
+            ->addOption('request-body-buffer', null, InputOption::VALUE_OPTIONAL, 'Limit of the buffer used for the Request body. In KiB.', 1024)
             ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
 
         /*

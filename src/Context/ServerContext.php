@@ -37,6 +37,9 @@ final class ServerContext
     private $port;
     private $exchanges;
 
+    private $limitConcurrentRequests;
+    private $requestBodyBuffer;
+
     /**
      * Build by Input.
      *
@@ -93,6 +96,8 @@ final class ServerContext
         $serverContext->host = $host;
         $serverContext->port = \intval($port);
         $serverContext->exchanges = self::buildQueueArray($input);
+        $serverContext->limitConcurrentRequests = intval($input->getOption('concurrent-requests'));
+        $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
 
         return $serverContext;
     }
@@ -206,6 +211,22 @@ final class ServerContext
     public function hasExchanges(): bool
     {
         return !empty($this->exchanges);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLimitConcurrentRequests()
+    {
+        return $this->limitConcurrentRequests;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRequestBodyBufferInBytes()
+    {
+        return $this->requestBodyBuffer * 1024;
     }
 
     /**

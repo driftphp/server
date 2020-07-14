@@ -24,6 +24,8 @@ use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
+use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
+use React\Http\Middleware\RequestBodyBufferMiddleware;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
@@ -66,8 +68,6 @@ class Application
     private $outputPrinter;
 
     /**
-     * Application constructor.
-     *
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param string        $rootPath
@@ -112,8 +112,6 @@ class Application
     }
 
     /**
-     * Build a kernel.
-     *
      * @return PromiseInterface
      *
      * @throws SyncKernelException
@@ -142,8 +140,6 @@ class Application
     }
 
     /**
-     * Run.
-     *
      * @param AsyncKernel         $kernel
      * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
@@ -175,8 +171,6 @@ class Application
     }
 
     /**
-     * Run server.
-     *
      * @param AsyncKernel         $kernel
      * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
@@ -194,6 +188,8 @@ class Application
 
         $http = new HttpServer(
             $this->loop,
+            new RequestBodyBufferMiddleware($this->serverContext->getRequestBodyBufferInBytes()),
+            new LimitConcurrentRequestsMiddleware($this->serverContext->getLimitConcurrentRequests()),
             function (ServerRequestInterface $request) use ($kernel, $requestHandler, $filesystem) {
                 return new Promise(function (callable $resolve) use ($request, $kernel, $requestHandler, $filesystem) {
                     $resolveResponseCallback = function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {
