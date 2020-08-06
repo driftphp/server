@@ -257,6 +257,16 @@ class RequestHandler
                 $symfonyRequest->headers->replace($headers);
                 $symfonyRequest->server->set('REQUEST_URI', $uriPath);
 
+                if ($symfonyRequest->headers->has('authorization') &&
+                    stripos($symfonyRequest->headers->get('authorization'), 'basic ') === 0) {
+                    $exploded = explode(':', base64_decode(substr($symfonyRequest->headers->get('authorization'), 6)), 2);
+                    if (2 == \count($exploded)) {
+                        list($basicAuthUsername, $basicAuthPassword) = $exploded;
+                        $symfonyRequest->headers->set('PHP_AUTH_USER', $basicAuthUsername);
+                        $symfonyRequest->headers->set('PHP_AUTH_PW', $basicAuthPassword);
+                    }
+                }
+
                 if (isset($headers['Host'])) {
                     $symfonyRequest->server->set('SERVER_NAME', explode(':', $headers['Host'][0]));
                 }
