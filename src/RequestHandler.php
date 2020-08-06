@@ -288,16 +288,6 @@ class RequestHandler
                     $response->sendContent();
                     ob_end_flush();
                 });
-            } elseif($response instanceof StreamedResponse) {
-                $streamPromise = new Promise(function($resolve, $reject) use($response) {
-                    $stream = new BufferStream();
-                    $resolve($stream);
-                    ob_start(function($data) use($stream, $resolve, &$isResolved) {
-                        $stream->write($data);
-                    }, 1);
-                    $response->sendContent();
-                    ob_end_flush();
-                });
             } else {
                 $streamPromise = new FulfilledPromise($response->getContent());
             }
