@@ -238,24 +238,32 @@ class RequestHandler
 
         return all($uploadedFiles)
             ->then(function (array $uploadedFiles) use ($request, $method, $uriPath) {
-                $body = $request->getBody()->getContents();
                 $headers = $request->getHeaders();
+                $isNotTransferEncoding = !array_key_exists('Transfer-Encoding', $headers);
+
+                $bodyParsed = [];
+                $bodyContent = '';
+                if ($isNotTransferEncoding) {
+                    $bodyParsed = $request->getParsedBody() ?? [];
+                    $bodyContent = $request->getBody()->getContents();
+                }
 
                 $symfonyRequest = new Request(
                     $request->getQueryParams(),
-                    $request->getParsedBody() ?? [],
+                    $bodyParsed,
                     $request->getAttributes(),
                     $this->serverContext->areCookiesDisabled()
                         ? []
                         : $request->getCookieParams(),
                     $uploadedFiles,
                     $_SERVER,
-                    $body
+                    $bodyContent
                 );
 
                 $symfonyRequest->setMethod($method);
                 $symfonyRequest->headers->replace($headers);
                 $symfonyRequest->server->set('REQUEST_URI', $uriPath);
+                $symfonyRequest->attributes->set('body', $request->getBody());
 
                 if (isset($headers['Host'])) {
                     $symfonyRequest->server->set('SERVER_NAME', explode(':', $headers['Host'][0]));

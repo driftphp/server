@@ -16,6 +16,12 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use CURLFile;
+use Psr\Http\Message\ResponseInterface;
+use React\EventLoop\LoopInterface;
+use React\Http\Browser;
+use React\Promise\Deferred;
+use React\Promise\PromiseInterface;
+use React\Stream\ReadableStreamInterface;
 
 /**
  * Class Utils.
@@ -94,5 +100,37 @@ class Utils
         curl_close($curlHandle);
 
         return [$body, $headersClean];
+    }
+
+    /**
+     * Make stream call.
+     *
+     * @param LoopInterface $loop
+     * @param string   $url
+     * @param ReadableStreamInterface $stream
+     * @param string[] $headers
+     *
+     * @return PromiseInterface<ResponseInterface>
+     */
+    public static function callWithStreamedBody(
+        LoopInterface $loop,
+        string $url,
+        ReadableStreamInterface $stream,
+        array $headers = []
+    ): PromiseInterface {
+
+        $deferred = new Deferred();
+
+        $loop
+            ->futureTick(function() use ($loop, $url, $stream, $headers, $deferred) {
+
+                $browser = new Browser($loop);
+                $browser->put($url, $headers, $stream)
+                    ->then(function(ResponseInterface $response) use ($deferred) {
+                        $deferred->resolve($response->getBody()->getContents());
+                    });
+            });
+
+        return $deferred->promise();
     }
 }
