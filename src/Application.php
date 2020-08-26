@@ -20,12 +20,14 @@ use Drift\EventBus\Subscriber\EventBusSubscriber;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\SyncKernelException;
+use Drift\Server\Middleware\StreamedBodyCheckerMiddleware;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
 use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
 use React\Http\Middleware\RequestBodyBufferMiddleware;
+use React\Http\Middleware\StreamingRequestMiddleware;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
@@ -188,7 +190,8 @@ class Application
 
         $http = new HttpServer(
             $this->loop,
-            new RequestBodyBufferMiddleware($this->serverContext->getRequestBodyBufferInBytes()),
+            new StreamingRequestMiddleware(),
+            new StreamedBodyCheckerMiddleware($this->serverContext->getRequestBodyBufferInBytes()),
             new LimitConcurrentRequestsMiddleware($this->serverContext->getLimitConcurrentRequests()),
             function (ServerRequestInterface $request) use ($kernel, $requestHandler, $filesystem) {
                 return new Promise(function (callable $resolve) use ($request, $kernel, $requestHandler, $filesystem) {

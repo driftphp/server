@@ -17,6 +17,7 @@ namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
 use React\Http\Message\Response;
+use React\Promise\Deferred;
 use React\Promise\PromiseInterface;
 use function React\Promise\resolve;
 use React\Stream\ThroughStream;
@@ -87,6 +88,7 @@ class FakeKernel extends AsyncKernel
      */
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
+        $loop = $this->getContainer()->get('reactphp.event_loop');
         $code = \intval($request->query->get('code', 200));
         $pathInfo = $request->getPathInfo();
         if (400 === $code) {
@@ -123,7 +125,6 @@ class FakeKernel extends AsyncKernel
 
             $streamResponse = new ThroughStream();
             $streamResponse->write('React');
-            $loop = $this->getContainer()->get('reactphp.event_loop');
             $loop->futureTick(function () use ($streamResponse, $loop) {
                 $streamResponse->write('PHP ');
                 $loop->futureTick(function () use ($streamResponse) {
@@ -159,6 +160,26 @@ class FakeKernel extends AsyncKernel
             return new JsonResponse([
                 'body' => $request->getContent(),
             ], $code);
+        }
+
+        if ('/streamed-body' === $pathInfo) {
+            $stream = $request->attributes->get('body');
+
+            $deferred = new Deferred();
+            $data = '';
+            $stream->on('data', function(string $chunk) use (&$data) {
+                $data .= $chunk;
+            });
+
+            $stream->on('close', function() use ($deferred, &$data) {
+                $deferred->resolve($data);
+            });
+
+            return $deferred
+                ->promise()
+                ->then(function(string $data) use ($loop) {
+                    return new Response(200, [], $data);
+                });
         }
 
         throw new RouteNotFoundException();
