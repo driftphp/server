@@ -238,6 +238,7 @@ class RequestHandler
 
         return all($uploadedFiles)
             ->then(function (array $uploadedFiles) use ($request, $method, $uriPath) {
+                $uploadedFiles = array_filter($uploadedFiles);
                 $headers = $request->getHeaders();
                 $isNotTransferEncoding = !array_key_exists('Transfer-Encoding', $headers);
 
@@ -463,9 +464,13 @@ class RequestHandler
         $extension = $this->mimetypeChecker->getExtension($filename);
         $tmpFilename = sys_get_temp_dir().'/'.md5(uniqid((string) rand(), true)).'.'.$extension;
 
-        $content = $file
-            ->getStream()
-            ->getContents();
+        try {
+            $content = $file
+                ->getStream()
+                ->getContents();
+        } catch (Throwable $throwable) {
+            return resolve(false);
+        }
 
         $promise = (UPLOAD_ERR_OK == $file->getError())
             ? $this
