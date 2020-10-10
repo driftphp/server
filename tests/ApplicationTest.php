@@ -78,7 +78,7 @@ class ApplicationTest extends TestCase
         usleep(500000);
 
         $this->assertEquals(
-            '',
+            '[Preloaded]',
             $process->getOutput()
         );
 

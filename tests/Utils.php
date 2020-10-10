@@ -105,10 +105,10 @@ class Utils
     /**
      * Make stream call.
      *
-     * @param LoopInterface $loop
-     * @param string   $url
+     * @param LoopInterface           $loop
+     * @param string                  $url
      * @param ReadableStreamInterface $stream
-     * @param string[] $headers
+     * @param string[]                $headers
      *
      * @return PromiseInterface<ResponseInterface>
      */
@@ -118,15 +118,13 @@ class Utils
         ReadableStreamInterface $stream,
         array $headers = []
     ): PromiseInterface {
-
         $deferred = new Deferred();
 
         $loop
-            ->futureTick(function() use ($loop, $url, $stream, $headers, $deferred) {
-
+            ->futureTick(function () use ($loop, $url, $stream, $headers, $deferred) {
                 $browser = new Browser($loop);
                 $browser->put($url, $headers, $stream)
-                    ->then(function(ResponseInterface $response) use ($deferred) {
+                    ->then(function (ResponseInterface $response) use ($deferred) {
                         $deferred->resolve($response->getBody()->getContents());
                     });
             });

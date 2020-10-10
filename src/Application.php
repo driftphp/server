@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use function Clue\React\Block\await;
 use Drift\Console\OutputPrinter;
 use Drift\EventBus\Subscriber\EventBusSubscriber;
 use Drift\HttpKernel\AsyncKernel;
@@ -26,7 +27,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
 use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
-use React\Http\Middleware\RequestBodyBufferMiddleware;
 use React\Http\Middleware\StreamingRequestMiddleware;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
@@ -145,16 +145,19 @@ class Application
      * @param AsyncKernel         $kernel
      * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
+     * @param bool                $forceShutdownReference
      */
     public function run(
         AsyncKernel $kernel,
         RequestHandler $requestHandler,
-        FilesystemInterface $filesystem
+        FilesystemInterface $filesystem,
+        bool &$forceShutdownReference
     ) {
         $this->runServer(
             $kernel,
             $requestHandler,
-            $filesystem
+            $filesystem,
+            $forceShutdownReference
         );
 
         $container = $kernel->getContainer();
@@ -176,11 +179,13 @@ class Application
      * @param AsyncKernel         $kernel
      * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
+     * @param bool                $forceShutdownReference
      */
     public function runServer(
         AsyncKernel $kernel,
         RequestHandler $requestHandler,
-        FilesystemInterface $filesystem
+        FilesystemInterface $filesystem,
+        bool &$forceShutdownReference
     ) {
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
@@ -234,5 +239,17 @@ class Application
         });
 
         $http->listen($socket);
+
+        $signalHandler = function () use (&$signalHandler, $socket, $kernel, &$forceShutdownReference) {
+            $loop = $this->loop;
+            $loop->removeSignal(SIGTERM, $signalHandler);
+            $loop->removeSignal(SIGINT, $signalHandler);
+            $socket->close();
+            $forceShutdownReference = true;
+            await($kernel->shutdown(), $loop);
+        };
+
+        $this->loop->addSignal(SIGTERM, $signalHandler);
+        $this->loop->addSignal(SIGINT, $signalHandler);
     }
 }
