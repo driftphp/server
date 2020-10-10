@@ -74,7 +74,8 @@ abstract class ServerCommand extends Command
             ->addOption('no-file-uploads', null, InputOption::VALUE_NONE, 'Disable file uploads')
             ->addOption('concurrent-requests', null, InputOption::VALUE_OPTIONAL, 'Limit of concurrent requests', 100)
             ->addOption('request-body-buffer', null, InputOption::VALUE_OPTIONAL, 'Limit of the buffer used for the Request body. In KiB.', 1024)
-            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
+            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift')
+            ->addOption('allowed-loop-stops', null, InputOption::VALUE_OPTIONAL, 'Number of allowed loop stops', 0);
 
         /*
          * If we have the EventBus loaded, we can add listeners as well
@@ -112,18 +113,26 @@ abstract class ServerCommand extends Command
             );
         }
 
+        $forceShutdownReference = false;
         $this->executeServerCommand(
             $loop,
             $serverContext,
-            $outputPrinter
+            $outputPrinter,
+            $forceShutdownReference
         );
 
         (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
-        EventLoopUtils::runLoop($loop, 2, function (int $timesMissing) use ($outputPrinter) {
-            (new ConsoleServerMessage(
-                sprintf('Rerunning EventLoop. %d times missing', $timesMissing), '~', false)
-            )->print($outputPrinter);
-        });
+        EventLoopUtils::runLoop($loop, (\intval($input->getOption('allowed-loop-stops')) + 1), function (int $timesMissing) use ($outputPrinter, &$forceShutdownReference) {
+            if ($forceShutdownReference) {
+                (new ConsoleServerMessage(
+                    sprintf('Loop forced to stop.'), '~', false)
+                )->print($outputPrinter);
+            } else {
+                (new ConsoleServerMessage(
+                    sprintf('Rerunning EventLoop. %d retries missing', $timesMissing), '~', false)
+                )->print($outputPrinter);
+            }
+        }, $forceShutdownReference);
         (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
         (new ConsoleServerMessage('Closing the server.', '~', false))->print($outputPrinter);
         (new ConsoleServerMessage('Bye bye!.', '~', false))->print($outputPrinter);
@@ -137,11 +146,13 @@ abstract class ServerCommand extends Command
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param OutputPrinter $outputPrinter
+     * @param bool          $forceShutdownReference
      */
     abstract protected function executeServerCommand(
         LoopInterface $loop,
         ServerContext $serverContext,
-        OutputPrinter $outputPrinter
+        OutputPrinter $outputPrinter,
+        bool &$forceShutdownReference
     );
 
     /**

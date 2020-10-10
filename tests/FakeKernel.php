@@ -56,6 +56,26 @@ class FakeKernel extends AsyncKernel
     }
 
     /**
+     * Preload kernel.
+     */
+    public function preload(): PromiseInterface
+    {
+        echo '[Preloaded]';
+
+        return parent::preload();
+    }
+
+    /**
+     * Shutdown kernel.
+     */
+    public function shutdown(): PromiseInterface
+    {
+        echo '[Shutdown]';
+
+        return parent::shutdown();
+    }
+
+    /**
      * You can modify the container here before it is dumped to PHP code.
      */
     public function process(ContainerBuilder $container)
@@ -167,17 +187,17 @@ class FakeKernel extends AsyncKernel
 
             $deferred = new Deferred();
             $data = '';
-            $stream->on('data', function(string $chunk) use (&$data) {
+            $stream->on('data', function (string $chunk) use (&$data) {
                 $data .= $chunk;
             });
 
-            $stream->on('close', function() use ($deferred, &$data) {
+            $stream->on('close', function () use ($deferred, &$data) {
                 $deferred->resolve($data);
             });
 
             return $deferred
                 ->promise()
-                ->then(function(string $data) use ($loop) {
+                ->then(function (string $data) use ($loop) {
                     return new Response(200, [], $data);
                 });
         }

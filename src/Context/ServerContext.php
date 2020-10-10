@@ -39,10 +39,9 @@ final class ServerContext
 
     private $limitConcurrentRequests;
     private $requestBodyBuffer;
+    private $allowedLoopStops;
 
     /**
-     * Build by Input.
-     *
      * @param InputInterface $input
      *
      * @return ServerContext
@@ -98,6 +97,8 @@ final class ServerContext
         $serverContext->exchanges = self::buildQueueArray($input);
         $serverContext->limitConcurrentRequests = intval($input->getOption('concurrent-requests'));
         $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
+
+        $serverContext->allowedLoopStops = intval($input->getOption('allowed-loop-stops'));
 
         return $serverContext;
     }
@@ -214,9 +215,9 @@ final class ServerContext
     }
 
     /**
-     * @return mixed
+     * @return int
      */
-    public function getLimitConcurrentRequests()
+    public function getLimitConcurrentRequests(): int
     {
         return $this->limitConcurrentRequests;
     }
@@ -224,9 +225,17 @@ final class ServerContext
     /**
      * @return int
      */
-    public function getRequestBodyBufferInBytes()
+    public function getRequestBodyBufferInBytes(): int
     {
         return $this->requestBodyBuffer * 1024;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAllowedLoopStops(): int
+    {
+        return $this->allowedLoopStops;
     }
 
     /**

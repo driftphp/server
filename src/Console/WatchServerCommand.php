@@ -54,13 +54,15 @@ final class WatchServerCommand extends ServerCommand
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param OutputPrinter $outputPrinter
+     * @param bool          $forceShutdownReference
      *
      * @throws \Exception Watcher not found
      */
     protected function executeServerCommand(
         LoopInterface $loop,
         ServerContext $serverContext,
-        OutputPrinter $outputPrinter
+        OutputPrinter $outputPrinter,
+        bool &$forceShutdownReference
     ) {
         $rootPath = getcwd();
         $application = new Application(

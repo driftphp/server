@@ -55,6 +55,7 @@ class ServerHeaderPrinter
             : 'disabled'
         ));
         $outputPrinter->printHeaderLine('Loaded bootstrap file: '.realpath($bootstrapPath));
+        $outputPrinter->printHeaderLine('Allowed number of loop stops: '.$serverContext->getAllowedLoopStops());
         $outputPrinter->printHeaderLine();
         $outputPrinter->printLine();
     }
