@@ -249,8 +249,6 @@ class RequestHandler
                     $bodyContent = $request->getBody()->getContents();
                 }
 
-                $server = $request->getServerParams() + $_SERVER;
-
                 $symfonyRequest = new Request(
                     $request->getQueryParams(),
                     $bodyParsed,
@@ -259,13 +257,17 @@ class RequestHandler
                         ? []
                         : $request->getCookieParams(),
                     $uploadedFiles,
-                    $server,
+                    $_SERVER,
                     $bodyContent
                 );
 
                 $symfonyRequest->setMethod($method);
                 $symfonyRequest->headers->replace($headers);
-                $symfonyRequest->server->set('REQUEST_URI', $uriPath);
+                $symfonyRequest->server->replace(
+                    $request->getServerParams()
+                    + ['REQUEST_URI' => $uriPath]
+                    + $symfonyRequest->server->all()
+                );
                 $symfonyRequest->attributes->set('body', $request->getBody());
 
                 if (isset($headers['Host'])) {
