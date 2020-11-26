@@ -32,17 +32,20 @@ use Drift\Console\TimeFormatter;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Mime\MimeTypeChecker;
+use React\Http\Io\HttpBodyStream;
+use function React\Promise\all;
+use React\Promise\FulfilledPromise;
+use function React\Promise\resolve;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use React\Filesystem\FilesystemInterface;
 use React\Http\Message\Response as ReactResponse;
-use function React\Promise\all;
 use React\Promise\PromiseInterface;
-use function React\Promise\resolve;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
 use RingCentral\Psr7\Response as PSRResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -289,35 +292,49 @@ class RequestHandler
         float $from
     ): PromiseInterface {
         if ($response instanceof Response) {
-            $response = new PSRResponse(
-                $response->getStatusCode(),
-                $response->headers->all(),
-                $response->getContent()
-            );
+            if ($response instanceof BinaryFileResponse) {
+                $streamPromise = $this->filesystem->file($response->getFile()->getPathname())->open('r')->then(function (ReadableStreamInterface $stream) {
+                    return new HttpBodyStream($stream, null);
+                });
+            } else {
+                $streamPromise = new FulfilledPromise($response->getContent());
+            }
+
+            $responsePromise = $streamPromise->then(function ($stream) use($response) {
+                return new PSRResponse(
+                    $response->getStatusCode(),
+                    $response->headers->all(),
+                    $stream
+                );
+            });
+        } else {
+            $responsePromise = new FulfilledPromise($response);
         }
 
-        return $this
-            ->applyResponseEncoding($response, $symfonyRequest->headers->get('Accept-Encoding'))
-            ->then(function (PSRResponse $response) use ($symfonyRequest, $from) {
-                $to = microtime(true);
-                $serverResponse =
-                    new ServerResponseWithMessage(
-                        $response,
-                        $this->outputPrinter,
-                        new ConsoleRequestMessage(
-                            $symfonyRequest->getPathInfo(),
-                            $symfonyRequest->getMethod(),
-                            $response->getStatusCode(),
-                            '',
-                            TimeFormatter::formatTime($to - $from)
-                        )
-                    );
+        return $responsePromise->then(function (PSRResponse $response) use ($symfonyRequest, $from) {
+            return $this
+                ->applyResponseEncoding($response, $symfonyRequest->headers->get('Accept-Encoding'))
+                ->then(function (PSRResponse $response) use ($symfonyRequest, $from) {
+                    $to = microtime(true);
+                    $serverResponse =
+                        new ServerResponseWithMessage(
+                            $response,
+                            $this->outputPrinter,
+                            new ConsoleRequestMessage(
+                                $symfonyRequest->getPathInfo(),
+                                $symfonyRequest->getMethod(),
+                                $response->getStatusCode(),
+                                '',
+                                TimeFormatter::formatTime($to - $from)
+                            )
+                        );
 
-                $symfonyRequest = null;
-                $symfonyResponse = null;
+                    $symfonyRequest = null;
+                    $symfonyResponse = null;
 
-                return $serverResponse;
-            });
+                    return $serverResponse;
+                });
+        });
     }
 
     /**
