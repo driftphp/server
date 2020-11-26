@@ -15,15 +15,19 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use function Clue\React\Block\await;
 use Drift\Console\OutputPrinter;
 use Drift\EventBus\Subscriber\EventBusSubscriber;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\SyncKernelException;
+use Drift\Server\Middleware\StreamedBodyCheckerMiddleware;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
+use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
+use React\Http\Middleware\StreamingRequestMiddleware;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
@@ -66,8 +70,6 @@ class Application
     private $outputPrinter;
 
     /**
-     * Application constructor.
-     *
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param string        $rootPath
@@ -112,8 +114,6 @@ class Application
     }
 
     /**
-     * Build a kernel.
-     *
      * @return PromiseInterface
      *
      * @throws SyncKernelException
@@ -142,21 +142,22 @@ class Application
     }
 
     /**
-     * Run.
-     *
      * @param AsyncKernel         $kernel
      * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
+     * @param bool                $forceShutdownReference
      */
     public function run(
         AsyncKernel $kernel,
         RequestHandler $requestHandler,
-        FilesystemInterface $filesystem
+        FilesystemInterface $filesystem,
+        bool &$forceShutdownReference
     ) {
         $this->runServer(
             $kernel,
             $requestHandler,
-            $filesystem
+            $filesystem,
+            $forceShutdownReference
         );
 
         $container = $kernel->getContainer();
@@ -175,16 +176,16 @@ class Application
     }
 
     /**
-     * Run server.
-     *
      * @param AsyncKernel         $kernel
      * @param RequestHandler      $requestHandler
      * @param FilesystemInterface $filesystem
+     * @param bool                $forceShutdownReference
      */
     public function runServer(
         AsyncKernel $kernel,
         RequestHandler $requestHandler,
-        FilesystemInterface $filesystem
+        FilesystemInterface $filesystem,
+        bool &$forceShutdownReference
     ) {
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
@@ -193,6 +194,10 @@ class Application
         );
 
         $http = new HttpServer(
+            $this->loop,
+            new StreamingRequestMiddleware(),
+            new StreamedBodyCheckerMiddleware($this->serverContext->getRequestBodyBufferInBytes()),
+            new LimitConcurrentRequestsMiddleware($this->serverContext->getLimitConcurrentRequests()),
             function (ServerRequestInterface $request) use ($kernel, $requestHandler, $filesystem) {
                 return new Promise(function (callable $resolve) use ($request, $kernel, $requestHandler, $filesystem) {
                     $resolveResponseCallback = function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {
@@ -234,5 +239,17 @@ class Application
         });
 
         $http->listen($socket);
+
+        $signalHandler = function () use (&$signalHandler, $socket, $kernel, &$forceShutdownReference) {
+            $loop = $this->loop;
+            $loop->removeSignal(SIGTERM, $signalHandler);
+            $loop->removeSignal(SIGINT, $signalHandler);
+            $socket->close();
+            $forceShutdownReference = true;
+            await($kernel->shutdown(), $loop);
+        };
+
+        $this->loop->addSignal(SIGTERM, $signalHandler);
+        $this->loop->addSignal(SIGINT, $signalHandler);
     }
 }

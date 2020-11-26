@@ -30,14 +30,18 @@ final class ServerContext
     private $staticFolder;
     private $debug;
     private $printHeader;
+    private $disableCookies;
+    private $disableFileUploads;
     private $adapter;
     private $host;
     private $port;
     private $exchanges;
 
+    private $limitConcurrentRequests;
+    private $requestBodyBuffer;
+    private $allowedLoopStops;
+
     /**
-     * Build by Input.
-     *
      * @param InputInterface $input
      *
      * @return ServerContext
@@ -53,6 +57,8 @@ final class ServerContext
         $serverContext->silent = $input->getOption('quiet');
         $serverContext->debug = $input->getOption('debug');
         $serverContext->printHeader = !$input->getOption('no-header');
+        $serverContext->disableCookies = (bool) $input->getOption('no-cookies');
+        $serverContext->disableFileUploads = (bool) $input->getOption('no-file-uploads');
 
         $adapter = $input->getOption('adapter');
         $adapter = [
@@ -89,6 +95,10 @@ final class ServerContext
         $serverContext->host = $host;
         $serverContext->port = \intval($port);
         $serverContext->exchanges = self::buildQueueArray($input);
+        $serverContext->limitConcurrentRequests = intval($input->getOption('concurrent-requests'));
+        $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
+
+        $serverContext->allowedLoopStops = intval($input->getOption('allowed-loop-stops'));
 
         return $serverContext;
     }
@@ -133,6 +143,22 @@ final class ServerContext
     public function printHeader(): bool
     {
         return $this->printHeader;
+    }
+
+    /**
+     * @return bool
+     */
+    public function areCookiesDisabled(): bool
+    {
+        return $this->disableCookies;
+    }
+
+    /**
+     * @return bool
+     */
+    public function areFileUploadsDisabled(): bool
+    {
+        return $this->disableFileUploads;
     }
 
     /**
@@ -186,6 +212,30 @@ final class ServerContext
     public function hasExchanges(): bool
     {
         return !empty($this->exchanges);
+    }
+
+    /**
+     * @return int
+     */
+    public function getLimitConcurrentRequests(): int
+    {
+        return $this->limitConcurrentRequests;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRequestBodyBufferInBytes(): int
+    {
+        return $this->requestBodyBuffer * 1024;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAllowedLoopStops(): int
+    {
+        return $this->allowedLoopStops;
     }
 
     /**

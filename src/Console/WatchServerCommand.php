@@ -54,13 +54,15 @@ final class WatchServerCommand extends ServerCommand
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param OutputPrinter $outputPrinter
+     * @param bool          $forceShutdownReference
      *
      * @throws \Exception Watcher not found
      */
     protected function executeServerCommand(
         LoopInterface $loop,
         ServerContext $serverContext,
-        OutputPrinter $outputPrinter
+        OutputPrinter $outputPrinter,
+        bool &$forceShutdownReference
     ) {
         $rootPath = getcwd();
         $application = new Application(
@@ -112,7 +114,7 @@ final class WatchServerCommand extends ServerCommand
 
         $completePath = realpath($completePath);
         $script = '"'.addslashes(addslashes(implode(' ', array_values($argv)))).'"';
-        $script = str_replace('/server watch ', '/server run ', $script);
+        $script = str_replace('/server watch ', '/server run --debug ', $script);
         $command = sprintf('%s %s --exec %s %s %s', PHP_BINARY, $completePath, PHP_BINARY, $script, implode(' ', $extra));
 
         $process = new Process($command);

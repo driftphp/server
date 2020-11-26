@@ -57,6 +57,11 @@ class UploadingFileTest extends TestCase
         $this->assertTrue($content2['files']['somefile'][2]);
         $this->assertTrue($content2['files']['anotherfile'][2]);
 
+        $content3 = exec('curl -s -F "file1=lolazo;filename=lolazo.txt" http://127.0.0.1:'.$port.'/file');
+        $content3 = json_decode($content3, true);
+        $this->assertEquals('lolazo', $content3['files']['file1'][1]);
+        $this->assertTrue($content3['files']['file1'][2]);
+
         $process->stop();
     }
 
@@ -80,7 +85,30 @@ class UploadingFileTest extends TestCase
 
         $content = exec('curl -s -F "file1=@/dev/null;filename=" http://127.0.0.1:'.$port.'/file');
         $content = json_decode($content, true);
-        $this->assertFalse($content['files']['file1'][2]);
+        $this->assertEmpty($content['files']);
         $process->stop();
+    }
+
+    /**
+     * Test disable file uploads.
+     */
+    public function testDisableFileUploads()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--no-file-uploads',
+            '--dev',
+        ]);
+
+        $process->start();
+        usleep(300000);
+        list($content, $headers) = Utils::curl("http://127.0.0.1:$port/file", [], ['somefile.txt']);
+        $content = json_decode($content, true);
+        $this->assertEmpty($content['files']);
     }
 }

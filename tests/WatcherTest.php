@@ -35,6 +35,7 @@ class WatcherTest extends TestCase
             'watch',
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
+            '--ansi',
         ]);
 
         $process->start();
@@ -44,7 +45,7 @@ class WatcherTest extends TestCase
         $this->assertNotFalse(
             strpos(
                 $output,
-                '[01;32m200[0m GET'
+                '[32;1m200[39;22m GET'
             )
         );
         $process->stop();

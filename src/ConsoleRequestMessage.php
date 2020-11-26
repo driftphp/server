@@ -59,18 +59,18 @@ final class ConsoleRequestMessage implements Printable
     public function print(OutputPrinter $outputPrinter)
     {
         $method = str_pad($this->method, 6, ' ');
-        $color = '32';
+        $color = 'green';
         if ($this->code >= 300 && $this->code < 400) {
-            $color = '33';
+            $color = 'yellow';
         } elseif ($this->code >= 400) {
-            $color = '31';
+            $color = 'red';
         }
 
-        $outputPrinter->print("\033[01;{$color}m".$this->code."\033[0m");
+        $outputPrinter->print("<fg=$color;options=bold>{$this->code}</>");
         $outputPrinter->print(" $method $this->url ");
-        $outputPrinter->print("(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)");
+        $outputPrinter->print('(<muted>'.$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000)).' MB</muted>)');
         if ($this->code >= 400) {
-            $outputPrinter->print(" - \e[00;37m".$this->messageInMessage($this->message)."\e[0m");
+            $outputPrinter->print(' - <muted>'.$this->messageInMessage($this->message).'</muted>');
         }
         $outputPrinter->printLine();
     }

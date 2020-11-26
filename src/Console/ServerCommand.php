@@ -18,6 +18,8 @@ namespace Drift\Server\Console;
 use Drift\Console\OutputPrinter;
 use Drift\EventBus\Bus\EventBus;
 use Drift\EventLoop\EventLoopUtils;
+use Drift\Server\Console\Style\Muted;
+use Drift\Server\Console\Style\Purple;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
@@ -67,8 +69,13 @@ abstract class ServerCommand extends Command
             ->addOption('static-folder', null, InputOption::VALUE_OPTIONAL, 'Static folder path', '')
             ->addOption('no-static-folder', null, InputOption::VALUE_NONE, 'Disable static folder')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
-            ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disabled the header')
-            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift');
+            ->addOption('no-header', null, InputOption::VALUE_NONE, 'Disable the header')
+            ->addOption('no-cookies', null, InputOption::VALUE_NONE, 'Disable cookies')
+            ->addOption('no-file-uploads', null, InputOption::VALUE_NONE, 'Disable file uploads')
+            ->addOption('concurrent-requests', null, InputOption::VALUE_OPTIONAL, 'Limit of concurrent requests', 100)
+            ->addOption('request-body-buffer', null, InputOption::VALUE_OPTIONAL, 'Limit of the buffer used for the Request body. In KiB.', 1024)
+            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift')
+            ->addOption('allowed-loop-stops', null, InputOption::VALUE_OPTIONAL, 'Number of allowed loop stops', 0);
 
         /*
          * If we have the EventBus loaded, we can add listeners as well
@@ -96,7 +103,7 @@ abstract class ServerCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $serverContext = ServerContext::buildByInput($input);
-        $outputPrinter = new OutputPrinter($output);
+        $outputPrinter = $this->createOutputPrinter($output);
         $loop = EventLoopFactory::create();
         if ($serverContext->printHeader()) {
             ServerHeaderPrinter::print(
@@ -106,18 +113,26 @@ abstract class ServerCommand extends Command
             );
         }
 
+        $forceShutdownReference = false;
         $this->executeServerCommand(
             $loop,
             $serverContext,
-            $outputPrinter
+            $outputPrinter,
+            $forceShutdownReference
         );
 
         (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
-        EventLoopUtils::runLoop($loop, 2, function (int $timesMissing) use ($outputPrinter) {
-            (new ConsoleServerMessage(
-                sprintf('Rerunning EventLoop. %d times missing', $timesMissing), '~', false)
-            )->print($outputPrinter);
-        });
+        EventLoopUtils::runLoop($loop, (\intval($input->getOption('allowed-loop-stops')) + 1), function (int $timesMissing) use ($outputPrinter, &$forceShutdownReference) {
+            if ($forceShutdownReference) {
+                (new ConsoleServerMessage(
+                    sprintf('Loop forced to stop.'), '~', false)
+                )->print($outputPrinter);
+            } else {
+                (new ConsoleServerMessage(
+                    sprintf('Rerunning EventLoop. %d retries missing', $timesMissing), '~', false)
+                )->print($outputPrinter);
+            }
+        }, $forceShutdownReference);
         (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
         (new ConsoleServerMessage('Closing the server.', '~', false))->print($outputPrinter);
         (new ConsoleServerMessage('Bye bye!.', '~', false))->print($outputPrinter);
@@ -131,10 +146,29 @@ abstract class ServerCommand extends Command
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param OutputPrinter $outputPrinter
+     * @param bool          $forceShutdownReference
      */
     abstract protected function executeServerCommand(
         LoopInterface $loop,
         ServerContext $serverContext,
-        OutputPrinter $outputPrinter
+        OutputPrinter $outputPrinter,
+        bool &$forceShutdownReference
     );
+
+    /**
+     * Create OutputPrinter and add some custom OutputFormatterStyles to the
+     * OutputInterface instance.
+     *
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     *
+     * @return \Drift\Console\OutputPrinter
+     */
+    protected function createOutputPrinter(OutputInterface $output): OutputPrinter
+    {
+        $outputFormatter = $output->getFormatter();
+        $outputFormatter->setStyle('muted', new Muted());
+        $outputFormatter->setStyle('purple', new Purple());
+
+        return new OutputPrinter($output);
+    }
 }

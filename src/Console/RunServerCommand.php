@@ -37,16 +37,17 @@ final class RunServerCommand extends ServerCommand
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
      * @param OutputPrinter $outputPrinter
+     * @param bool          $forceShutdownReference
      */
     protected function executeServerCommand(
         LoopInterface $loop,
         ServerContext $serverContext,
-        OutputPrinter $outputPrinter
+        OutputPrinter $outputPrinter,
+        bool &$forceShutdownReference
     ) {
         $rootPath = getcwd();
         $filesystem = Filesystem::create($loop);
-        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem);
-
+        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem, $serverContext);
         $application = new Application(
             $loop,
             $serverContext,
@@ -57,7 +58,7 @@ final class RunServerCommand extends ServerCommand
 
         $application
             ->buildAKernel()
-            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter, $serverContext) {
+            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter, $serverContext, &$forceShutdownReference) {
                 (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);
                 (new ConsoleServerMessage('Kernel preloaded.', '~', true))->print($outputPrinter);
                 (new ConsoleServerMessage('Kernel ready to accept requests.', '~', true))->print($outputPrinter);
@@ -69,7 +70,8 @@ final class RunServerCommand extends ServerCommand
                 $application->run(
                     $kernel,
                     $requestHandler,
-                    $filesystem
+                    $filesystem,
+                    $forceShutdownReference
                 );
             }, function (Throwable $e) use ($outputPrinter) {
                 (new ConsoleServerMessage($e->getMessage(), '~', false))->print($outputPrinter);

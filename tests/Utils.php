@@ -16,6 +16,12 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use CURLFile;
+use Psr\Http\Message\ResponseInterface;
+use React\EventLoop\LoopInterface;
+use React\Http\Browser;
+use React\Promise\Deferred;
+use React\Promise\PromiseInterface;
+use React\Stream\ReadableStreamInterface;
 
 /**
  * Class Utils.
@@ -28,21 +34,35 @@ class Utils
      * @param string   $url
      * @param string[] $headers
      * @param string[] $files
+     * @param string   $cookie
+     * @param string   $json
      *
      * @return [string, string]
      */
     public static function curl(
         string $url,
         array $headers = [],
-        array $files = []
+        array $files = [],
+        string $cookie = '',
+        string $json = null
     ): array {
         $curlHandle = curl_init();
+
+        if (!empty($json)) {
+            $headers[] = 'Content-Type: application/json';
+            $headers[] = 'Content-Length: '.strlen($json);
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $json);
+            curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, 'POST');
+        }
+
         curl_setopt($curlHandle, CURLOPT_URL, $url);
         curl_setopt($curlHandle, CURLOPT_CONNECTTIMEOUT, 2);
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($curlHandle, CURLOPT_USERAGENT, 'Your application name');
         curl_setopt($curlHandle, CURLOPT_HEADER, 1);
+        curl_setopt($curlHandle, CURLOPT_COOKIE, $cookie);
+        curl_setopt($curlHandle, CURLOPT_TIMEOUT_MS, 500);
 
         if (!empty($files)) {
             $postData = [];
@@ -80,5 +100,35 @@ class Utils
         curl_close($curlHandle);
 
         return [$body, $headersClean];
+    }
+
+    /**
+     * Make stream call.
+     *
+     * @param LoopInterface           $loop
+     * @param string                  $url
+     * @param ReadableStreamInterface $stream
+     * @param string[]                $headers
+     *
+     * @return PromiseInterface<ResponseInterface>
+     */
+    public static function callWithStreamedBody(
+        LoopInterface $loop,
+        string $url,
+        ReadableStreamInterface $stream,
+        array $headers = []
+    ): PromiseInterface {
+        $deferred = new Deferred();
+
+        $loop
+            ->futureTick(function () use ($loop, $url, $stream, $headers, $deferred) {
+                $browser = new Browser($loop);
+                $browser->put($url, $headers, $stream)
+                    ->then(function (ResponseInterface $response) use ($deferred) {
+                        $deferred->resolve($response->getBody()->getContents());
+                    });
+            });
+
+        return $deferred->promise();
     }
 }

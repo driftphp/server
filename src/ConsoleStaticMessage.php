@@ -47,11 +47,10 @@ final class ConsoleStaticMessage implements Printable
     public function print(OutputPrinter $outputPrinter)
     {
         $method = str_pad('GET', 6, ' ');
-        $color = '95';
 
-        echo "\033[01;{$color}m200\033[0m";
-        echo " $method $this->url ";
-        echo "(\e[00;37m".$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000))." MB\e[0m)";
-        echo PHP_EOL;
+        $outputPrinter->print('<purple>200</purple>');
+        $outputPrinter->print(" $method $this->url ");
+        $outputPrinter->print('(<muted>'.$this->elapsedTime.' |  '.((int) (memory_get_usage() / 1000000)).' MB</muted>');
+        $outputPrinter->printLine();
     }
 }
