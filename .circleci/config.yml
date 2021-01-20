@@ -47,9 +47,30 @@ jobs:
             composer update -n --prefer-dist --no-suggest
             php vendor/bin/phpunit
 
+  test-php80:
+    docker:
+      - image: circleci/php:8.0-cli
+
+    working_directory: ~/project
+    steps:
+      - checkout
+
+      - run:
+          name: Install PHP dependencies
+          command: |
+            sudo docker-php-ext-install pcntl
+
+      - run:
+          name: Run tests / Symfony 5^0
+          command: |
+            rm -Rf var/*
+            composer update -n --prefer-dist --no-suggest
+            php vendor/bin/phpunit
+
 workflows:
   version: 2
   test:
     jobs:
       - test-php73
       - test-php74
+      - test-php80
