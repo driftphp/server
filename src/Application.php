@@ -39,39 +39,17 @@ use Symfony\Component\Debug\Debug;
  */
 class Application
 {
-    /**
-     * @var LoopInterface
-     */
-    private $loop;
-
-    /**
-     * @var ServerContext
-     */
-    private $serverContext;
-
-    /**
-     * @var string
-     */
-    private $rootPath;
-
-    /**
-     * @var string
-     */
-    private $bootstrapPath;
-
-    /**
-     * @var string
-     */
-    private $kernelAdapter;
-
-    /**
-     * @var OutputPrinter
-     */
-    private $outputPrinter;
+    private LoopInterface $loop;
+    private ServerContext $serverContext;
+    private string $rootPath;
+    private string $bootstrapPath;
+    private string $kernelAdapter;
+    private OutputPrinter $outputPrinter;
 
     /**
      * @param LoopInterface $loop
      * @param ServerContext $serverContext
+     * @param OutputPrinter $outputPrinter
      * @param string        $rootPath
      * @param string        $bootstrapPath
      *
@@ -190,7 +168,8 @@ class Application
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
             $this->serverContext->getPort(),
-            $this->loop
+            $this->loop,
+            ['tcp' => ['so_reuseport' => ($this->serverContext->getWorkers() > 1)]]
         );
 
         $http = new HttpServer(

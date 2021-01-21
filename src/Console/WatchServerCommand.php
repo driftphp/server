@@ -27,10 +27,7 @@ use React\EventLoop\LoopInterface;
  */
 final class WatchServerCommand extends ServerCommand
 {
-    /**
-     * @var array
-     */
-    private $argv;
+    private array $argv;
 
     /**
      * Construct.
@@ -113,6 +110,7 @@ final class WatchServerCommand extends ServerCommand
         }
 
         $completePath = realpath($completePath);
+        $argv[] = '--workers=1';
         $script = '"'.addslashes(addslashes(implode(' ', array_values($argv)))).'"';
         $script = str_replace('/server watch ', '/server run --debug ', $script);
         $command = sprintf('%s %s --exec %s %s %s', PHP_BINARY, $completePath, PHP_BINARY, $script, implode(' ', $extra));
@@ -159,5 +157,13 @@ final class WatchServerCommand extends ServerCommand
         return array_map(function (string $folder) {
             return "--ignore $folder";
         }, $ignoreFolders);
+    }
+
+    /**
+     * @param ServerContext $context
+     */
+    protected function configureServerContext(ServerContext $context)
+    {
+        $context->cleanWorkers();
     }
 }

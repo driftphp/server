@@ -67,16 +67,67 @@ final class RunServerCommand extends ServerCommand
                     (new ConsoleServerMessage('Kernel connected to exchanges.', '~', true))->print($outputPrinter);
                 }
 
-                $application->run(
-                    $kernel,
-                    $requestHandler,
-                    $filesystem,
-                    $forceShutdownReference
-                );
+                $applicationCallback = function () use ($application, $kernel, $requestHandler, $filesystem, &$forceShutdownReference) {
+                    $application->run(
+                        $kernel,
+                        $requestHandler,
+                        $filesystem,
+                        $forceShutdownReference
+                    );
+                };
+
+                if (1 === $serverContext->getWorkers()) {
+                    $applicationCallback();
+                } else {
+                    $this->forkApplication($serverContext->getWorkers(), $applicationCallback, $outputPrinter);
+                }
             }, function (Throwable $e) use ($outputPrinter) {
                 (new ConsoleServerMessage($e->getMessage(), '~', false))->print($outputPrinter);
                 (new ConsoleServerMessage('The server will shut down.', '~', false))->print($outputPrinter);
                 (new ConsoleServerMessage('Bye!', '~', false))->print($outputPrinter);
             });
+    }
+
+    /**
+     * @param int           $timesMissing
+     * @param callable      $callable
+     * @param OutputPrinter $outputPrinter
+     * @param int           $numberOfFork
+     */
+    private function forkApplication(
+        int $timesMissing,
+        callable $callable,
+        OutputPrinter $outputPrinter,
+        int $numberOfFork = 0
+    ) {
+        $pid = pcntl_fork();
+        switch ($pid) {
+            case -1:
+                // @fail
+                die('Fork failed');
+                break;
+
+            case 0:
+                $GLOBALS['number_of_process'] = str_pad(\strval($numberOfFork), 2, '0', STR_PAD_LEFT);
+                (new ConsoleServerMessage("Worker #$numberOfFork starting", '~', true))->print($outputPrinter);
+                $callable();
+                break;
+
+            default:
+                // @parent
+                $timesMissing--;
+                ++$numberOfFork;
+                if ($timesMissing > 0) {
+                    $this->forkApplication(
+                        $timesMissing,
+                        $callable,
+                        $outputPrinter,
+                        $numberOfFork
+                    );
+                }
+
+                pcntl_waitpid($pid, $status);
+                break;
+        }
     }
 }

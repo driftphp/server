@@ -61,11 +61,11 @@ class KernelEventsTest extends TestCase
         ]);
 
         $process->start();
-        usleep(300000);
+        sleep(1);
         $this->assertFalse($process->isTerminated());
 
         $process->signal(SIGTERM);
-        usleep(300000);
+        sleep(1);
         $this->assertContains('Loop forced to stop', $process->getOutput());
         $this->assertContains('[Shutdown]', $process->getOutput());
         $this->assertTrue($process->isTerminated());

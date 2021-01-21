@@ -23,7 +23,7 @@ class MimeTypeChecker
     /**
      * @var string[]
      */
-    private $types;
+    private array $types;
 
     /**
      * MimeTypeChecker constructor.
