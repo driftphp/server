@@ -24,10 +24,7 @@ use React\Http\Middleware\RequestBodyParserMiddleware;
  */
 class StreamedBodyCheckerMiddleware
 {
-    /**
-     * @var int
-     */
-    private $maxBufferSize;
+    private int $maxBufferSize;
 
     /**
      * @param int $maxBufferSize

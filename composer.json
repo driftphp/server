@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=7.3",
+        "php": "^7.4 || ^8.0",
         "ext-pcntl": "*",
 
         "symfony/http-kernel": "^5.0",
@@ -33,6 +33,7 @@
         "symfony/framework-bundle": "^5.0",
         "symfony/process": "^5.0",
         "symfony/config": "^5.0",
+        "vimeo/psalm": "^4",
         "ext-fileinfo": "*"
     },
     "autoload": {

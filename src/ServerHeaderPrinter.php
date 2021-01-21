@@ -50,6 +50,7 @@ class ServerHeaderPrinter
         $outputPrinter->printHeaderLine('Debug: '.($serverContext->isDebug() ? 'enabled' : 'disabled'));
         $outputPrinter->printHeaderLine('Static Folder: '.($serverContext->getStaticFolder() ?: 'disabled'));
         $outputPrinter->printHeaderLine("Adapter: {$serverContext->getAdapter()}");
+        $outputPrinter->printHeaderLine("Workers: {$serverContext->getWorkers()}");
         $outputPrinter->printHeaderLine('Exchanges subscribed: '.($serverContext->hasExchanges()
             ? implode(', ', $serverContext->getPlainExchanges())
             : 'disabled'

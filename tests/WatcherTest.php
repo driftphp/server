@@ -42,6 +42,7 @@ class WatcherTest extends TestCase
         sleep(2);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         $output = $process->getOutput();
+        $this->assertContains('Workers: 1', $output);
         $this->assertNotFalse(
             strpos(
                 $output,
@@ -72,11 +73,13 @@ class WatcherTest extends TestCase
             'watch',
             "0.0.0.0:$port",
             '--adapter='.FakeAdapter::class,
+            '--workers=8',
         ]);
 
         $process->start();
         sleep(2);
         $output = $process->getOutput();
+        $this->assertContains('Workers: 1', $output);
         $this->assertFalse(
             strpos(
                 $output,

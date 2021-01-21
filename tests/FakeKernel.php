@@ -109,7 +109,7 @@ class FakeKernel extends AsyncKernel
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
         $loop = $this->getContainer()->get('reactphp.event_loop');
-        $code = \intval($request->query->get('code', 200));
+        $code = \intval($request->query->get('code', '200'));
         $pathInfo = $request->getPathInfo();
         if (400 === $code) {
             throw new \Exception('Bad Request');
@@ -161,6 +161,7 @@ class FakeKernel extends AsyncKernel
         if ('/text' === $pathInfo) {
             return new Response(200, [
                 'Content-Type' => 'plain/text',
+                'Connection' => 'keep-alive',
             ], 'This is one text for testing');
         }
 

@@ -25,21 +25,22 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 final class ServerContext
 {
-    private $environment;
-    private $silent;
-    private $staticFolder;
-    private $debug;
-    private $printHeader;
-    private $disableCookies;
-    private $disableFileUploads;
-    private $adapter;
-    private $host;
-    private $port;
-    private $exchanges;
+    private string $environment;
+    private bool $silent;
+    private ?string $staticFolder;
+    private bool $debug;
+    private bool $printHeader;
+    private bool $disableCookies;
+    private bool $disableFileUploads;
+    private string $adapter;
+    private string $host;
+    private int $port;
+    private array $exchanges;
 
-    private $limitConcurrentRequests;
-    private $requestBodyBuffer;
-    private $allowedLoopStops;
+    private int $limitConcurrentRequests;
+    private int $requestBodyBuffer;
+    private int $allowedLoopStops;
+    private int $workers;
 
     /**
      * @param InputInterface $input
@@ -51,11 +52,11 @@ final class ServerContext
     public static function buildByInput(InputInterface $input): ServerContext
     {
         $serverContext = new self();
-        $serverContext->environment = $input->getOption('dev')
+        $serverContext->environment = \strval($input->getOption('dev')
             ? 'dev'
-            : $input->getOption('env');
-        $serverContext->silent = $input->getOption('quiet');
-        $serverContext->debug = $input->getOption('debug');
+            : $input->getOption('env'));
+        $serverContext->silent = \boolval($input->getOption('quiet'));
+        $serverContext->debug = \boolval($input->getOption('debug'));
         $serverContext->printHeader = !$input->getOption('no-header');
         $serverContext->disableCookies = (bool) $input->getOption('no-cookies');
         $serverContext->disableFileUploads = (bool) $input->getOption('no-file-uploads');
@@ -69,9 +70,9 @@ final class ServerContext
             die('You must define an existing kernel adapter, or by an alias or my a namespace. This class MUST implement KernelAdapter'.PHP_EOL);
         }
 
-        $serverContext->adapter = $adapter;
+        $serverContext->adapter = \strval($adapter);
 
-        $staticFolder = $input->getOption('static-folder', '');
+        $staticFolder = $input->getOption('static-folder');
         $staticFolder = $input->getOption('no-static-folder') ? null : $staticFolder;
         if (!is_null($staticFolder)) {
             $staticFolder = empty($staticFolder)
@@ -99,6 +100,17 @@ final class ServerContext
         $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
 
         $serverContext->allowedLoopStops = intval($input->getOption('allowed-loop-stops'));
+        $serverContext->workers = \intval($input->getOption('workers'));
+        if (-1 === $serverContext->workers) {
+            $serverContext->workers = \intval(shell_exec('nproc'));
+        }
+        if (
+            !\is_int($serverContext->workers) ||
+            $serverContext->workers < 1 ||
+            $serverContext->workers > 128
+        ) {
+            $serverContext->workers = 1;
+        }
 
         return $serverContext;
     }
@@ -236,6 +248,22 @@ final class ServerContext
     public function getAllowedLoopStops(): int
     {
         return $this->allowedLoopStops;
+    }
+
+    /**
+     * @return int
+     */
+    public function getWorkers(): int
+    {
+        return $this->workers;
+    }
+
+    /**
+     * Clean workers.
+     */
+    public function cleanWorkers()
+    {
+        $this->workers = 1;
     }
 
     /**

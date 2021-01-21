@@ -54,25 +54,10 @@ use Throwable;
  */
 class RequestHandler
 {
-    /**
-     * @var OutputPrinter
-     */
-    private $outputPrinter;
-
-    /**
-     * @var MimeTypeChecker
-     */
-    private $mimetypeChecker;
-
-    /**
-     * @var FilesystemInterface
-     */
-    private $filesystem;
-
-    /**
-     * @var ServerContext
-     */
-    private $serverContext;
+    private OutputPrinter $outputPrinter;
+    private MimeTypeChecker $mimetypeChecker;
+    private FilesystemInterface $filesystem;
+    private ServerContext $serverContext;
 
     /**
      * @param OutputPrinter       $outputPrinter

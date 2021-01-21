@@ -23,24 +23,9 @@ use RingCentral\Psr7\Response;
  */
 class ServerResponseWithMessage
 {
-    /**
-     * @var Response
-     *
-     * Server response
-     */
-    private $serverResponse;
-
-    /**
-     * @var OutputPrinter
-     */
-    private $outputPrinter;
-
-    /**
-     * @var Printable
-     *
-     * Message
-     */
-    private $message;
+    private Response $serverResponse;
+    private OutputPrinter $outputPrinter;
+    private Printable $message;
 
     /**
      * ServerResponseWithMessage constructor.
