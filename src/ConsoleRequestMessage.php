@@ -58,6 +58,10 @@ final class ConsoleRequestMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
+        if ($outputPrinter->isQuiet()) {
+            return;
+        }
+
         $method = str_pad($this->method, 6, ' ');
         $color = 'green';
         if ($this->code >= 300 && $this->code < 400) {
