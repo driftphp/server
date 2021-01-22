@@ -16,23 +16,20 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\HttpKernel\AsyncKernel;
-use Drift\Server\Adapter\KernelAdapter;
-use Drift\Server\Watcher\ObservableKernel;
+use Drift\Server\Adapter\DriftKernel\DriftKernelAdapter;
 
 /**
  * Class FakeAdapter.
  */
-class FakeAdapter implements KernelAdapter, ObservableKernel
+class FakeAdapter extends DriftKernelAdapter
 {
     /**
-     * Build kernel.
-     *
      * @param string $environment
      * @param bool   $debug
      *
      * @return AsyncKernel
      */
-    public static function buildKernel(
+    protected static function createKernelByEnvironmentAndDebug(
         string $environment,
         bool $debug
     ): AsyncKernel {

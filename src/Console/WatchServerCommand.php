@@ -18,6 +18,7 @@ namespace Drift\Server\Console;
 use Drift\Console\OutputPrinter;
 use Drift\Server\Application;
 use Drift\Server\Context\ServerContext;
+use Drift\Server\Mime\MimeTypeChecker;
 use Drift\Server\Watcher\ObservableKernel;
 use React\ChildProcess\Process;
 use React\EventLoop\LoopInterface;
@@ -62,10 +63,12 @@ final class WatchServerCommand extends ServerCommand
         bool &$forceShutdownReference
     ) {
         $rootPath = getcwd();
+        $mimeTypeChecker = new MimeTypeChecker();
         $application = new Application(
             $loop,
             $serverContext,
             $outputPrinter,
+            $mimeTypeChecker,
             $rootPath,
             $this->bootstrapPath
         );

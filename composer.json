@@ -22,7 +22,6 @@
         "react/promise": "^2.7",
         "react/filesystem": "^0.1",
         "clue/zlib-react": "^0.2.2",
-        "drift/http-kernel": "0.1.*, >=0.1.13",
         "drift/console-bridge": "0.1.*",
         "drift/event-loop-utils": "0.1.*",
         "seregazhuk/php-watcher": "^0.5.2"
@@ -33,6 +32,7 @@
         "symfony/framework-bundle": "^5.0",
         "symfony/process": "^5.0",
         "symfony/config": "^5.0",
+        "drift/http-kernel": "0.1.*, >=0.1.13",
         "vimeo/psalm": "^4",
         "ext-fileinfo": "*"
     },

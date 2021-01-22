@@ -15,25 +15,53 @@ declare(strict_types=1);
 
 namespace Drift\Server\Adapter;
 
-use Drift\HttpKernel\AsyncKernel;
+use Drift\Console\OutputPrinter;
+use Drift\Server\Context\ServerContext;
+use Drift\Server\Exception\KernelException;
+use Drift\Server\Mime\MimeTypeChecker;
+use Drift\Server\Watcher\ObservableKernel;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use React\EventLoop\LoopInterface;
+use React\Filesystem\FilesystemInterface;
+use React\Promise\PromiseInterface;
 
 /**
  * Class KernelAdapter.
  */
-interface KernelAdapter
+interface KernelAdapter extends ObservableKernel
 {
     /**
-     * Build kernel.
+     * @param LoopInterface       $loop
+     * @param string              $rootPath
+     * @param ServerContext       $serverContext
+     * @param FilesystemInterface $filesystem
+     * @param OutputPrinter       $outputPrinter
+     * @param MimeTypeChecker     $mimeTypeChecker
      *
-     * @param string $environment
-     * @param bool   $debug
+     * @return PromiseInterface<self>
      *
-     * @return AsyncKernel
+     * @throws KernelException
      */
-    public static function buildKernel(
-        string $environment,
-        bool $debug
-    ): AsyncKernel;
+    public static function create(
+        LoopInterface $loop,
+        string $rootPath,
+        ServerContext $serverContext,
+        FilesystemInterface $filesystem,
+        OutputPrinter $outputPrinter,
+        MimeTypeChecker $mimeTypeChecker
+    ): PromiseInterface;
+
+    /**
+     * @param ServerRequestInterface $request
+     * @param callable               $resolve
+     *
+     * @return PromiseInterface<ResponseInterface>
+     */
+    public function handle(
+        ServerRequestInterface $request,
+        callable $resolve
+    ): PromiseInterface;
 
     /**
      * Get static folder.
@@ -41,4 +69,9 @@ interface KernelAdapter
      * @return string|null
      */
     public static function getStaticFolder(): ? string;
+
+    /**
+     * @return PromiseInterface
+     */
+    public function shutDown(): PromiseInterface;
 }

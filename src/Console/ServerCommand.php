@@ -103,6 +103,14 @@ abstract class ServerCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $serverContext = ServerContext::buildByInput($input);
+
+        if ($serverContext->isDebug()) {
+            ini_set('display_errors', "1");
+            error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+        } else {
+            ini_set('display_errors', "0");
+        }
+
         $this->configureServerContext($serverContext);
         $outputPrinter = $this->createOutputPrinter($output);
         $loop = EventLoopFactory::create();
