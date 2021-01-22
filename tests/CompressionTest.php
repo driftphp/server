@@ -140,7 +140,14 @@ class CompressionTest extends TestCase
 
         $process->start();
         usleep(500000);
-        $stream = fopen("http://127.0.0.1:$port/psr-stream-gzipped?type=$encodingType", 'r');
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'header' => "Accept-encoding: $encodingType\r\n",
+            ],
+        ];
+        $context = stream_context_create($opts);
+        $stream = fopen("http://127.0.0.1:$port/psr-stream", 'r', false, $context);
         usleep(100000);
         $content = stream_get_contents($stream, 100, 0);
         $this->assertEquals('PHP stream...', $decompressCallback($content));

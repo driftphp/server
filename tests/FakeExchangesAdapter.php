@@ -23,14 +23,12 @@ use Drift\HttpKernel\AsyncKernel;
 class FakeExchangesAdapter extends FakeAdapter
 {
     /**
-     * Build kernel.
-     *
      * @param string $environment
      * @param bool   $debug
      *
      * @return AsyncKernel
      */
-    public static function buildKernel(
+    protected static function createKernelByEnvironmentAndDebug(
         string $environment,
         bool $debug
     ): AsyncKernel {

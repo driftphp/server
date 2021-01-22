@@ -67,6 +67,8 @@ class FakeKernel extends AsyncKernel
 
     /**
      * Shutdown kernel.
+     *
+     * @return PromiseInterface
      */
     public function shutdown(): PromiseInterface
     {
@@ -136,13 +138,8 @@ class FakeKernel extends AsyncKernel
         }
 
         if (
-            '/psr-stream' === $pathInfo ||
-            '/psr-stream-gzipped' === $pathInfo
+            '/psr-stream' === $pathInfo
         ) {
-            if ('/psr-stream-gzipped' === $request->getPathInfo()) {
-                $request->headers->set('Accept-Encoding', $request->query->get('type'));
-            }
-
             $streamResponse = new ThroughStream();
             $streamResponse->write('React');
             $loop->futureTick(function () use ($streamResponse, $loop) {

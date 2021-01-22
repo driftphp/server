@@ -16,12 +16,11 @@ declare(strict_types=1);
 namespace Drift\Server\Console;
 
 use Drift\Console\OutputPrinter;
-use Drift\HttpKernel\AsyncKernel;
+use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Application;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Mime\MimeTypeChecker;
-use Drift\Server\RequestHandler;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
 use Throwable;
@@ -47,18 +46,26 @@ final class RunServerCommand extends ServerCommand
     ) {
         $rootPath = getcwd();
         $filesystem = Filesystem::create($loop);
-        $requestHandler = new RequestHandler($outputPrinter, new MimeTypeChecker(), $filesystem, $serverContext);
+        $mimeTypeChecker = new MimeTypeChecker();
         $application = new Application(
             $loop,
             $serverContext,
             $outputPrinter,
+            $mimeTypeChecker,
             $rootPath,
             $this->bootstrapPath
         );
 
-        $application
-            ->buildAKernel()
-            ->then(function (AsyncKernel $kernel) use ($application, $requestHandler, $filesystem, $outputPrinter, $serverContext, &$forceShutdownReference) {
+        $kernelAdapterNamespace = $serverContext->getAdapter();
+        $kernelAdapterNamespace::create(
+            $loop,
+            $rootPath,
+            $serverContext,
+            $filesystem,
+            $outputPrinter,
+            $mimeTypeChecker
+        )
+            ->then(function (KernelAdapter $kernelAdapter) use ($application, $outputPrinter, $serverContext, $filesystem, &$forceShutdownReference) {
                 (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);
                 (new ConsoleServerMessage('Kernel preloaded.', '~', true))->print($outputPrinter);
                 (new ConsoleServerMessage('Kernel ready to accept requests.', '~', true))->print($outputPrinter);
@@ -67,10 +74,9 @@ final class RunServerCommand extends ServerCommand
                     (new ConsoleServerMessage('Kernel connected to exchanges.', '~', true))->print($outputPrinter);
                 }
 
-                $applicationCallback = function () use ($application, $kernel, $requestHandler, $filesystem, &$forceShutdownReference) {
-                    $application->run(
-                        $kernel,
-                        $requestHandler,
+                $applicationCallback = function () use ($application, $kernelAdapter, $filesystem, &$forceShutdownReference) {
+                    $application->runServer(
+                        $kernelAdapter,
                         $filesystem,
                         $forceShutdownReference
                     );

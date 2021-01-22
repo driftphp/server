@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Context;
 
-use Drift\Server\Adapter\DriftKernelAdapter;
+use Drift\Server\Adapter\DriftKernel\DriftKernelAdapter;
 use Drift\Server\Adapter\KernelAdapter;
 use Exception;
 use Symfony\Component\Console\Input\InputInterface;
