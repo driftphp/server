@@ -50,6 +50,11 @@ class KernelEventsTest extends TestCase
      */
     public function testShutdown()
     {
+        $phpVersion = phpversion();
+        if (strpos($phpVersion, '8.') === 0) {
+            $this->markTestSkipped('Events are not tested yet in PHP8.');
+        }
+
         $port = rand(2000, 9999);
         $process = new Process([
             'php',
@@ -76,6 +81,11 @@ class KernelEventsTest extends TestCase
      */
     public function testShutdownIsForced()
     {
+        $phpVersion = phpversion();
+        if (strpos($phpVersion, '8.') === 0) {
+            $this->markTestSkipped('Events are not tested yet in PHP8.');
+        }
+
         $port = rand(2000, 9999);
         $process = new Process([
             'php',
