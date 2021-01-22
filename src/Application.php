@@ -25,9 +25,8 @@ use Drift\Server\Exception\RouteNotFoundException;
 use Drift\Server\Middleware\StreamedBodyCheckerMiddleware;
 use Drift\Server\Mime\MimeTypeChecker;
 use Exception;
-use Psr\Http\Message\RequestInterface as PSRRequestInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ResponseInterface as PSResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use React\EventLoop\LoopInterface;
@@ -42,7 +41,6 @@ use function React\Promise\resolve;
 use React\Socket\Server as SocketServer;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
-use RingCentral\Psr7\Response as PSRResponse;
 use Throwable;
 
 /**
@@ -148,10 +146,7 @@ class Application
                             ->then(function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback) {
                                 $resolveResponseCallback($serverResponseWithMessage);
                             })
-                        : $kernelAdapter->handle(
-                                $request,
-                                $resolve
-                            )
+                        : $kernelAdapter->handle($request)
                             ->then(function (ResponseInterface $response) use ($from, $request) {
                                 return $this->toServerResponse(
                                     $request,
@@ -196,20 +191,20 @@ class Application
     /**
      * Response to http response.
      *
-     * @param PSRRequestInterface $request
-     * @param PSResponseInterface $response
-     * @param float               $from
+     * @param RequestInterface  $request
+     * @param ResponseInterface $response
+     * @param float             $from
      *
      * @return PromiseInterface<ServerResponseWithMessage>
      */
     private function toServerResponse(
-        PSRRequestInterface $request,
-        PSResponseInterface $response,
+        RequestInterface $request,
+        ResponseInterface $response,
         float $from
     ): PromiseInterface {
         return $this
             ->applyResponseEncoding($response, $request->getHeaderLine('Accept-encoding'))
-            ->then(function (PSRResponse $response) use ($request, $from) {
+            ->then(function (ResponseInterface $response) use ($request, $from) {
                 $to = microtime(true);
                 $serverResponse =
                     new ServerResponseWithMessage(
@@ -232,13 +227,13 @@ class Application
     }
 
     /**
-     * @param PSResponseInterface $response
-     * @param string|null         $acceptEncodingHeader
+     * @param ResponseInterface $response
+     * @param string|null       $acceptEncodingHeader
      *
      * @return PromiseInterface
      */
     private function applyResponseEncoding(
-        PSResponseInterface $response,
+        ResponseInterface $response,
         ?string $acceptEncodingHeader
     ): PromiseInterface {
         if (!$acceptEncodingHeader) {
@@ -260,20 +255,19 @@ class Application
     }
 
     /**
-     * @param PSResponseInterface $response
-     * @param string              $compression
+     * @param ResponseInterface $response
+     * @param string            $compression
      *
      * @return PromiseInterface
      */
     private function compressResponse(
-        PSResponseInterface $response,
+        ResponseInterface $response,
         string $compression
     ): PromiseInterface {
         $body = $response->getBody();
         $response = $response->withHeader('Content-Encoding', $compression);
 
         if ($body instanceof ReadableStreamInterface) {
-            echo 'X';
             $compressedStream = new ThroughStream();
             $compressionStrategy = 'gzip' === $compression
                 ? ZLIB_ENCODING_GZIP
@@ -340,7 +334,7 @@ class Application
 
                 return $this
                     ->applyResponseEncoding($response, $request->getHeaderLine('Accept-Encoding'))
-                    ->then(function (PSRResponse $response) use ($resourcePath, $from) {
+                    ->then(function (ResponseInterface $response) use ($resourcePath, $from) {
                         $to = microtime(true);
 
                         return new ServerResponseWithMessage(

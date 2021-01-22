@@ -16,26 +16,26 @@ declare(strict_types=1);
 namespace Drift\Server;
 
 use Drift\Console\OutputPrinter;
-use RingCentral\Psr7\Response;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class ServerResponseWithMessage.
  */
 class ServerResponseWithMessage
 {
-    private Response $serverResponse;
+    private ResponseInterface $serverResponse;
     private OutputPrinter $outputPrinter;
     private Printable $message;
 
     /**
      * ServerResponseWithMessage constructor.
      *
-     * @param Response      $serverResponse
-     * @param OutputPrinter $outputPrinter
-     * @param Printable     $message
+     * @param ResponseInterface $serverResponse
+     * @param OutputPrinter     $outputPrinter
+     * @param Printable         $message
      */
     public function __construct(
-        Response $serverResponse,
+        ResponseInterface $serverResponse,
         OutputPrinter $outputPrinter,
         Printable $message
     ) {
@@ -47,9 +47,9 @@ class ServerResponseWithMessage
     /**
      * Get ServerResponse.
      *
-     * @return Response
+     * @return ResponseInterface
      */
-    public function getServerResponse(): Response
+    public function getServerResponse(): ResponseInterface
     {
         return $this->serverResponse;
     }
