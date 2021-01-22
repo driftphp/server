@@ -26,7 +26,7 @@ use Symfony\Component\Console\Input\InputInterface;
 final class ServerContext
 {
     private string $environment;
-    private bool $silent;
+    private bool $quiet;
     private ?string $staticFolder;
     private bool $debug;
     private bool $printHeader;
@@ -55,7 +55,7 @@ final class ServerContext
         $serverContext->environment = \strval($input->getOption('dev')
             ? 'dev'
             : $input->getOption('env'));
-        $serverContext->silent = \boolval($input->getOption('quiet'));
+        $serverContext->quiet = \boolval($input->getOption('quiet'));
         $serverContext->debug = \boolval($input->getOption('debug'));
         $serverContext->printHeader = !$input->getOption('no-header');
         $serverContext->disableCookies = (bool) $input->getOption('no-cookies');
@@ -126,9 +126,9 @@ final class ServerContext
     /**
      * @return bool
      */
-    public function isSilent(): bool
+    public function isQuiet(): bool
     {
-        return $this->silent;
+        return $this->quiet;
     }
 
     /**

@@ -123,7 +123,7 @@ class Application
                 return new Promise(function (callable $resolve) use ($request, $kernelAdapter, $filesystem) {
                     $from = microtime(true);
                     $resolveResponseCallback = function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolve) {
-                        if (!$this->serverContext->isSilent()) {
+                        if (!$this->serverContext->isQuiet()) {
                             $serverResponseWithMessage->printMessage();
                         }
 

@@ -46,6 +46,10 @@ final class ConsoleStaticMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
+        if ($outputPrinter->isQuiet()) {
+            return;
+        }
+
         $method = str_pad('GET', 6, ' ');
 
         $forkNumber = isset($GLOBALS['number_of_process'])

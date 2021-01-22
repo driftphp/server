@@ -50,6 +50,10 @@ final class ConsoleServerMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
+        if ($outputPrinter->isQuiet()) {
+            return;
+        }
+
         $color = 'red';
         if ($this->ok) {
             $color = 'green';

@@ -112,7 +112,8 @@ abstract class ServerCommand extends Command
         }
 
         $this->configureServerContext($serverContext);
-        $outputPrinter = $this->createOutputPrinter($output);
+        $outputPrinter = $this->createOutputPrinter($output, $serverContext->isQuiet());
+
         $loop = EventLoopFactory::create();
         if ($serverContext->printHeader()) {
             ServerHeaderPrinter::print(
@@ -168,17 +169,20 @@ abstract class ServerCommand extends Command
      * Create OutputPrinter and add some custom OutputFormatterStyles to the
      * OutputInterface instance.
      *
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     * @param OutputInterface $output
+     * @param bool            $isQuiet
      *
-     * @return \Drift\Console\OutputPrinter
+     * @return OutputPrinter
      */
-    protected function createOutputPrinter(OutputInterface $output): OutputPrinter
-    {
+    protected function createOutputPrinter(
+        OutputInterface $output,
+        bool $isQuiet
+    ): OutputPrinter {
         $outputFormatter = $output->getFormatter();
         $outputFormatter->setStyle('muted', new Muted());
         $outputFormatter->setStyle('purple', new Purple());
 
-        return new OutputPrinter($output);
+        return new OutputPrinter($output, $isQuiet);
     }
 
     /**

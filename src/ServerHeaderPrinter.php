@@ -35,7 +35,7 @@ class ServerHeaderPrinter
         OutputPrinter $outputPrinter,
         string $bootstrapPath
     ) {
-        if ($serverContext->isSilent()) {
+        if ($serverContext->isQuiet()) {
             return;
         }
 
