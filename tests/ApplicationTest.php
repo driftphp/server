@@ -144,4 +144,36 @@ class ApplicationTest extends TestCase
 
         $process->stop();
     }
+
+    /**
+     * Test another psr7 implementation.
+     */
+    public function testAnotherPSR7Implementation()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeLaminasKernel::class,
+        ]);
+
+        $process->start();
+        usleep(500000);
+        $response = Utils::curl("http://127.0.0.1:$port/");
+        usleep(500000);
+
+        $this->assertStringContainsString(
+            '200 GET',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            'Laminas Response',
+            $response[0]
+        );
+
+        $process->stop();
+    }
 }

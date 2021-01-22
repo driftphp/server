@@ -13,23 +13,25 @@
 
 declare(strict_types=1);
 
-namespace Drift\Server\Adapter;
+namespace Drift\Server\Tests;
 
 use Drift\Console\OutputPrinter;
+use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\KernelException;
 use Drift\Server\Mime\MimeTypeChecker;
-use Drift\Server\Watcher\ObservableKernel;
+use Laminas\Diactoros\Response as LaminasResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
 use React\Promise\PromiseInterface;
+use function React\Promise\resolve;
 
 /**
- * Class KernelAdapter.
+ * Class FakeLaminasKernel.
  */
-interface KernelAdapter extends ObservableKernel
+class FakeLaminasKernel implements KernelAdapter
 {
     /**
      * @param LoopInterface       $loop
@@ -50,24 +52,67 @@ interface KernelAdapter extends ObservableKernel
         FilesystemInterface $filesystem,
         OutputPrinter $outputPrinter,
         MimeTypeChecker $mimeTypeChecker
-    ): PromiseInterface;
+    ): PromiseInterface {
+        return resolve(new self());
+    }
 
     /**
      * @param ServerRequestInterface $request
      *
      * @return PromiseInterface<ResponseInterface>
      */
-    public function handle(ServerRequestInterface $request): PromiseInterface;
+    public function handle(ServerRequestInterface $request): PromiseInterface
+    {
+        return resolve(new LaminasResponse\JsonResponse([
+            'Laminas Response',
+        ], 200, []));
+    }
 
     /**
      * Get static folder.
      *
      * @return string|null
      */
-    public static function getStaticFolder(): ? string;
+    public static function getStaticFolder(): ? string
+    {
+        return null;
+    }
 
     /**
      * @return PromiseInterface
      */
-    public function shutDown(): PromiseInterface;
+    public function shutDown(): PromiseInterface
+    {
+        return resolve();
+    }
+
+    /**
+     * Get watcher folders.
+     *
+     * @return string[]
+     */
+    public static function getObservableFolders(): array
+    {
+        return [];
+    }
+
+    /**
+     * Get watcher folders.
+     *
+     * @return string[]
+     */
+    public static function getObservableExtensions(): array
+    {
+        return [];
+    }
+
+    /**
+     * Get watcher ignoring folders.
+     *
+     * @return string[]
+     */
+    public static function getIgnorableFolders(): array
+    {
+        return [];
+    }
 }

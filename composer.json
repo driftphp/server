@@ -33,6 +33,7 @@
         "symfony/process": "^5.0",
         "symfony/config": "^5.0",
         "drift/http-kernel": "0.1.*, >=0.1.13",
+        "laminas/laminas-diactoros": "^2",
         "vimeo/psalm": "^4",
         "ext-fileinfo": "*"
     },

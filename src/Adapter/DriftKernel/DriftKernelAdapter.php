@@ -29,10 +29,10 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface as PsrUploadedFile;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
+use React\Http\Message\Response as ReactResponse;
 use function React\Promise\all;
 use React\Promise\PromiseInterface;
 use function React\Promise\resolve;
-use RingCentral\Psr7\Response as PSRResponse;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -124,14 +124,11 @@ class DriftKernelAdapter implements KernelAdapter
 
     /**
      * @param ServerRequestInterface $request
-     * @param callable               $resolve
      *
      * @return PromiseInterface<ResponseInterface>
      */
-    public function handle(
-        ServerRequestInterface $request,
-        callable $resolve
-    ): PromiseInterface {
+    public function handle(ServerRequestInterface $request): PromiseInterface
+    {
         $uriPath = $request->getUri()->getPath();
         $method = $request->getMethod();
 
@@ -160,7 +157,7 @@ class DriftKernelAdapter implements KernelAdapter
 
                             $response = $symfonyResponse;
                             if ($response instanceof Response) {
-                                $response = new PSRResponse(
+                                $response = new ReactResponse(
                                     $response->getStatusCode(),
                                     $response->headers->all(),
                                     $response->getContent()
