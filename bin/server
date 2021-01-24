@@ -20,5 +20,7 @@ $bootstrapPath = require(dirname(__DIR__) . '/src/bootstrap.php');
 
 $application = new \Symfony\Component\Console\Application();
 $application->add(new \Drift\Server\Console\RunServerCommand($bootstrapPath, 'run'));
-$application->add(new \Drift\Server\Console\WatchServerCommand($bootstrapPath, $argv, 'watch'));
+if (class_exists(\seregazhuk\PhpWatcher\Watcher::class)) {
+    $application->add(new \Drift\Server\Console\WatchServerCommand($bootstrapPath, $argv, 'watch'));
+}
 $application->run();
