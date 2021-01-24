@@ -23,11 +23,11 @@
         "react/filesystem": "^0.1",
         "clue/zlib-react": "^0.2.2",
         "drift/console-bridge": "0.1.*",
-        "drift/event-loop-utils": "0.1.*",
-        "seregazhuk/php-watcher": "^0.5.2"
+        "drift/event-loop-utils": "0.1.*"
     },
     "require-dev": {
         "phpunit/phpunit": "7.5.17",
+        "seregazhuk/php-watcher": "^0.5.2",
         "drift/event-bus-bundle": "0.1.*, >=0.1.2",
         "symfony/framework-bundle": "^5.0",
         "symfony/process": "^5.0",
@@ -36,6 +36,9 @@
         "laminas/laminas-diactoros": "^2",
         "vimeo/psalm": "^4",
         "ext-fileinfo": "*"
+    },
+    "suggest": {
+        "seregazhuk/php-watcher": "^0.5.2"
     },
     "autoload": {
         "psr-4": {
