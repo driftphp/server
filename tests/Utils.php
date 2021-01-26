@@ -81,7 +81,7 @@ class Utils
 
         $response = curl_exec($curlHandle);
         if (false === $response) {
-            return [false, []];
+            return [false, [], 500];
         }
 
         $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);

@@ -200,6 +200,17 @@ class FakeKernel extends AsyncKernel
                 });
         }
 
+        if ('/check-server-vars' === $pathInfo) {
+            $server = $request->server;
+            $code = (
+                '/check-server-vars' === $server->get('REQUEST_URI') &&
+                '127.0.0.1' === $server->get('REMOTE_ADDR') &&
+                $server->get('REMOTE_PORT') === $request->query->get('port')
+            ) ? 200 : 500;
+
+            return new JsonResponse([], $code);
+        }
+
         throw new RouteNotFoundException();
     }
 }

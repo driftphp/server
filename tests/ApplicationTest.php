@@ -242,4 +242,27 @@ class ApplicationTest extends TestCase
 
         $process->stop();
     }
+
+    /**
+     * Test server values.
+     */
+    public function testServerValues()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeLaminasKernel::class,
+        ]);
+
+        $process->start();
+        usleep(500000);
+        list($_, $_, $code) = Utils::curl("http://127.0.0.1:$port/check-server-vars?port=$port");
+        $this->assertEquals(200, $code);
+        usleep(500000);
+
+        $process->stop();
+    }
 }
