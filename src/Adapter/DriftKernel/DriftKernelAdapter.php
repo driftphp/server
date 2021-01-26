@@ -268,7 +268,13 @@ class DriftKernelAdapter implements KernelAdapter
 
                 $symfonyRequest->setMethod($method);
                 $symfonyRequest->headers->replace($headers);
-                $symfonyRequest->server->set('REQUEST_URI', $uriPath);
+
+                $symfonyRequest->server->replace(
+                    $request->getServerParams()
+                    + ['REQUEST_URI' => $uriPath]
+                    + $symfonyRequest->server->all()
+                );
+
                 $symfonyRequest->attributes->set('body', $request->getBody());
 
                 if (isset($headers['Host'])) {
