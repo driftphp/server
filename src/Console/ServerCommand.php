@@ -71,7 +71,7 @@ abstract class ServerCommand extends Command
             ->addOption('no-file-uploads', null, InputOption::VALUE_NONE, 'Disable file uploads')
             ->addOption('concurrent-requests', null, InputOption::VALUE_OPTIONAL, 'Limit of concurrent requests', 100)
             ->addOption('request-body-buffer', null, InputOption::VALUE_OPTIONAL, 'Limit of the buffer used for the Request body. In KiB.', 1024)
-            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter', 'drift')
+            ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter. Can be a namespace or a shortcut. Available shortcuts [drift, symfony]', 'drift')
             ->addOption('allowed-loop-stops', null, InputOption::VALUE_OPTIONAL, 'Number of allowed loop stops', 0)
             ->addOption('workers', null, InputOption::VALUE_OPTIONAL,
                 'Number of workers. Use -1 to get as many workers as physical thread available for your system. Maximum of 128 workers. Option disabled for watch command.', 1
