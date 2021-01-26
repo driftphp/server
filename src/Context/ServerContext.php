@@ -27,7 +27,7 @@ final class ServerContext
 {
     private string $environment;
     private bool $quiet;
-    private ?string $staticFolder;
+    private ?array $staticFolder;
     private bool $debug;
     private bool $printHeader;
     private bool $disableCookies;
@@ -80,11 +80,21 @@ final class ServerContext
                 : $staticFolder;
         }
 
+        $staticFolderParts = null;
         if (is_string($staticFolder) && !empty($staticFolder)) {
-            $staticFolder = '/'.trim($staticFolder, '/').'/';
+            $staticFolderParts = explode(':', $staticFolder, 2);
+            $staticFolderParts = (1 === count($staticFolderParts))
+                ? [$staticFolderParts[0], $staticFolderParts[0], true]
+                : [$staticFolderParts[0], $staticFolderParts[1], $staticFolderParts[0] === $staticFolderParts[1]];
+
+            $staticFolderParts = [
+                '/'.trim($staticFolderParts[0], '/').'/',
+                '/'.trim($staticFolderParts[1], '/').'/',
+                $staticFolderParts[2],
+            ];
         }
 
-        $serverContext->staticFolder = $staticFolder;
+        $serverContext->staticFolder = $staticFolderParts;
 
         $path = $input->getArgument('path');
         $serverArgs = explode(':', $path, 2);
@@ -132,13 +142,27 @@ final class ServerContext
     }
 
     /**
-     * @return string|null
+     * @return array|null
      */
-    public function getStaticFolder(): ? string
+    public function getStaticFolder(): ? array
     {
         return empty($this->staticFolder)
             ? null
             : $this->staticFolder;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStaticFolderAsString(): string
+    {
+        if (is_null($this->staticFolder)) {
+            return 'disabled';
+        }
+
+        return $this->staticFolder[2]
+            ? $this->staticFolder[0]
+            : $this->staticFolder[0].' resolves to '.$this->staticFolder[1];
     }
 
     /**

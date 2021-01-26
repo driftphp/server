@@ -48,7 +48,7 @@ class ServerHeaderPrinter
         $outputPrinter->printHeaderLine("Port: {$serverContext->getPort()}");
         $outputPrinter->printHeaderLine("Environment: {$serverContext->getEnvironment()}");
         $outputPrinter->printHeaderLine('Debug: '.($serverContext->isDebug() ? 'enabled' : 'disabled'));
-        $outputPrinter->printHeaderLine('Static Folder: '.($serverContext->getStaticFolder() ?: 'disabled'));
+        $outputPrinter->printHeaderLine('Static Folder: '.$serverContext->getStaticFolderAsString());
         $outputPrinter->printHeaderLine("Adapter: {$serverContext->getAdapter()}");
         $outputPrinter->printHeaderLine("Workers: {$serverContext->getWorkers()}");
         $outputPrinter->printHeaderLine('Exchanges subscribed: '.($serverContext->hasExchanges()

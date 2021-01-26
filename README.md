@@ -19,6 +19,15 @@ By default, the server will use the DriftPHP Kernel adapter, but you can change
 the adapter easily when starting the server (Check the [adapters](#build-your-adapter) 
 chapter)
 
+### Table of content
+
+- [Installation](#installation)
+- [Start the server](#start-the-server)
+- [Build your adapter](#build-your-adapter)
+- [Workers](#workers)
+- [Watcher](#watcher)
+- [Static server](#static-server)
+
 ## Installation
 
 You can install the server by adding the dependency in your `composer.json`
@@ -148,6 +157,31 @@ php vendor/bin/server watch 0.0.0.0:8000
 ```
 
 This feature is for development only.
+
+## Static server
+
+This server can serve static files as well located in your project. By default,
+an adapter will provide a path where static files should be found (like DriftPHP
+statics are located under `public/` folder), but you can overwrite this value,
+or even override it.
+
+```bash
+php vendor/bin/server watch 0.0.0.0:8000 --static-folder=/my/own/folder/
+php vendor/bin/server watch 0.0.0.0:8000 --no-static-folder
+```
+
+You can create an alias as well if you need it. That can be useful if you want
+to mask the internal path with an external one, only exposing this second one.
+Both values must be separated by the symbol `:`, being the first part the alias,
+and the second one the internal path.
+
+```bash
+php vendor/bin/server watch 0.0.0.0:8000 --static-folder=/public/:/internal/public/path
+```
+
+In this example, a file named `app.js` located under `/internal/public/path/` 
+folder will be accessible at `http://localhost:8000/public/app.js`. By default,
+this feature is disabled.
 
 ## DriftPHP resources
 
