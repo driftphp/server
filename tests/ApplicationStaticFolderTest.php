@@ -42,11 +42,9 @@ class ApplicationStaticFolderTest extends TestCase
         $process->start();
         usleep(300000);
 
-        $this->assertTrue(
-            strpos(
-                $process->getOutput(),
-                'Static Folder: /tests/public/'
-            ) > 0
+        $this->assertStringContainsString(
+            'Static Folder: /tests/public/',
+            $process->getOutput()
         );
 
         usleep(250000);
@@ -55,18 +53,14 @@ class ApplicationStaticFolderTest extends TestCase
         $this->assertFileWasReceived("http://127.0.0.1:$port/tests/public/app.txt", 'LOL', 'text/plain');
         usleep(250000);
 
-        $this->assertNotFalse(
-            strpos(
-                $process->getOutput(),
-                '[01;95m200[0m GET'
-            )
+        $this->assertStringContainsString(
+            '[01;95m200[0m GET',
+            $process->getOutput()
         );
 
-        $this->assertNotFalse(
-            strpos(
-                $process->getOutput(),
-                'tests/public/app.js'
-            )
+        $this->assertStringContainsString(
+            'tests/public/app.js',
+            $process->getOutput()
         );
 
         $process->stop();
@@ -91,15 +85,124 @@ class ApplicationStaticFolderTest extends TestCase
         $process->start();
         usleep(300000);
 
-        $this->assertTrue(
-            strpos(
-                $process->getOutput(),
-                'Static Folder: disabled'
-            ) > 0
+        $this->assertStringContainsString(
+            'Static Folder: disabled',
+            $process->getOutput()
         );
+
         usleep(500000);
-        list($content, $_) = Utils::curl("http://127.0.0.1:$port/tests/public/app.js");
+        list($content, $_, $statusCode) = Utils::curl("http://127.0.0.1:$port/tests/public/app.js");
         $this->assertEmpty($content);
+        $this->assertEquals(404, $statusCode);
+
+        $process->stop();
+    }
+
+    /**
+     * Test custom static folder.
+     */
+    public function testCustomStaticFolder()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--static-folder=/tests/anotherpublic/',
+            '--dev',
+        ]);
+
+        $process->start();
+        usleep(300000);
+
+        $this->assertStringContainsString(
+            'Static Folder: /tests/anotherpublic/',
+            $process->getOutput()
+        );
+
+        $this->assertStringNotContainsString(
+            'Static Folder: /tests/public/',
+            $process->getOutput()
+        );
+
+        usleep(250000);
+        $this->assertFileWasReceived("http://127.0.0.1:$port/tests/anotherpublic/app.txt", 'LOL ALT', 'text/plain');
+        list($_, $_, $statusCode) = Utils::curl("http://127.0.0.1:$port/tests/public/app.txt");
+        $this->assertEquals(404, $statusCode);
+        usleep(250000);
+
+        $process->stop();
+    }
+
+    /**
+     * Test custom static folder.
+     */
+    public function testStaticFolderAlias()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--static-folder=/rewritten-public/:/tests/public/',
+            '--dev',
+        ]);
+
+        $process->start();
+        usleep(300000);
+
+        $this->assertStringNotContainsString(
+            'Static Folder: /tests/anotherpublic/',
+            $process->getOutput()
+        );
+
+        $this->assertStringNotContainsString(
+            'Static Folder: /tests/public/',
+            $process->getOutput()
+        );
+
+        $this->assertStringNotContainsString(
+            'Static Folder: /rewritten-public/ resolves to /tests/anotherpublic/',
+            $process->getOutput()
+        );
+
+        usleep(250000);
+        $this->assertFileWasReceived("http://127.0.0.1:$port/rewritten-public/app.txt", 'LOL', 'text/plain');
+        list($_, $_, $statusCode) = Utils::curl("http://127.0.0.1:$port/tests/anotherpublic/app.txt");
+        $this->assertEquals(404, $statusCode);
+        list($_, $_, $statusCode) = Utils::curl("http://127.0.0.1:$port/tests/public/app.txt");
+        $this->assertEquals(404, $statusCode);
+        usleep(250000);
+
+        $process->stop();
+    }
+
+    /**
+     * Test files not found.
+     */
+    public function testFilesNotFound()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+            '--dev',
+            '--ansi',
+        ]);
+
+        $process->start();
+        usleep(300000);
+
+        list($_, $_, $statusCode) = Utils::curl("http://127.0.0.1:$port/tests/public/non-existing-app.txt");
+        $this->assertEquals(404, $statusCode);
+        usleep(250000);
 
         $process->stop();
     }

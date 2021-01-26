@@ -134,9 +134,12 @@ class Application
                     $uriPath = '/'.ltrim($uriPath, '/');
                     $staticFolder = $this->serverContext->getStaticFolder();
 
-                    return $staticFolder && (0 === strpos($uriPath, $staticFolder))
+                    if ($staticFolder && (0 === strpos($uriPath, $staticFolder[0]))) {
+                        if (!$staticFolder[2]) {
+                            $uriPath = str_replace($staticFolder[0], $staticFolder[1], $uriPath);
+                        }
 
-                        ? $this
+                        return $this
                             ->handleStaticResource(
                                 $request,
                                 $filesystem,
@@ -145,26 +148,28 @@ class Application
                             )
                             ->then(function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback) {
                                 $resolveResponseCallback($serverResponseWithMessage);
-                            })
-                        : $kernelAdapter->handle($request)
-                            ->then(function (ResponseInterface $response) use ($from, $request) {
-                                return $this->toServerResponse(
-                                    $request,
-                                    $response,
-                                    $from
-                                );
-                            })
-                            ->otherwise(function (Throwable $throwable) use ($from, $request, $uriPath) {
-                                return $this->createExceptionServerResponse(
-                                    $throwable,
-                                    $from,
-                                    $request->getMethod(),
-                                    $uriPath
-                                );
-                            })
-                            ->then(function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback) {
-                                $resolveResponseCallback($serverResponseWithMessage);
                             });
+                    }
+
+                    return $kernelAdapter->handle($request)
+                        ->then(function (ResponseInterface $response) use ($from, $request) {
+                            return $this->toServerResponse(
+                                $request,
+                                $response,
+                                $from
+                            );
+                        })
+                        ->otherwise(function (Throwable $throwable) use ($from, $request, $uriPath) {
+                            return $this->createExceptionServerResponse(
+                                $throwable,
+                                $from,
+                                $request->getMethod(),
+                                $uriPath
+                            );
+                        })
+                        ->then(function (ServerResponseWithMessage $serverResponseWithMessage) use ($resolveResponseCallback) {
+                            $resolveResponseCallback($serverResponseWithMessage);
+                        });
                 });
             }
         );
@@ -317,10 +322,13 @@ class Application
         string $resourcePath
     ): PromiseInterface {
         $from = microtime(true);
+        $file = $filesystem->file($rootPath.$resourcePath);
 
-        return $filesystem
-            ->file($rootPath.$resourcePath)
-            ->getContents()
+        return $file
+            ->exists()
+            ->then(function () use ($file) {
+                return $file->getContents();
+            })
             ->then(function (string $content) use ($rootPath, $resourcePath, $from, $request) {
                 $mimeType = $this
                     ->mimeTypeChecker

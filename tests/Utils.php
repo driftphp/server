@@ -84,6 +84,7 @@ class Utils
             return [false, []];
         }
 
+        $statusCode = curl_getinfo($curlHandle, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($curlHandle, CURLINFO_HEADER_SIZE);
         $headers = substr($response, 0, $headerSize);
         $headersArray = explode("\r\n", $headers);
@@ -99,7 +100,7 @@ class Utils
         $body = substr($response, $headerSize);
         curl_close($curlHandle);
 
-        return [$body, $headersClean];
+        return [$body, $headersClean, $statusCode];
     }
 
     /**
