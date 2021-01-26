@@ -245,6 +245,8 @@ class ApplicationTest extends TestCase
 
     /**
      * Test server values.
+     *
+     * @group lol
      */
     public function testServerValues()
     {
@@ -254,13 +256,41 @@ class ApplicationTest extends TestCase
             dirname(__FILE__).'/../bin/server',
             'run',
             "0.0.0.0:$port",
-            '--adapter='.FakeLaminasKernel::class,
+            '--adapter='.FakeAdapter::class,
         ]);
 
         $process->start();
         usleep(500000);
         list($_, $_, $code) = Utils::curl("http://127.0.0.1:$port/check-server-vars?port=$port");
         $this->assertEquals(200, $code);
+        usleep(500000);
+
+        $process->stop();
+    }
+
+    /**
+     * Test server values.
+     */
+    public function testBasicAuthHeaders()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeAdapter::class,
+        ]);
+
+        $process->start();
+        usleep(500000);
+        list($content) = Utils::curl("http://127.0.0.1:$port/auth", [
+            'authorization: basic '.base64_encode('my_key:my_value'),
+        ]);
+
+        $headers = json_decode($content, true);
+        $this->assertEquals('my_key', $headers['user']);
+        $this->assertEquals('my_value', $headers['password']);
         usleep(500000);
 
         $process->stop();

@@ -275,6 +275,16 @@ class DriftKernelAdapter implements KernelAdapter
                     + $symfonyRequest->server->all()
                 );
 
+                if ($symfonyRequest->headers->has('authorization') &&
+                    0 === stripos($symfonyRequest->headers->get('authorization'), 'basic ')) {
+                    $exploded = explode(':', base64_decode(substr($symfonyRequest->headers->get('authorization'), 6)), 2);
+                    if (2 == \count($exploded)) {
+                        list($basicAuthUsername, $basicAuthPassword) = $exploded;
+                        $symfonyRequest->headers->set('PHP_AUTH_USER', $basicAuthUsername);
+                        $symfonyRequest->headers->set('PHP_AUTH_PW', $basicAuthPassword);
+                    }
+                }
+
                 $symfonyRequest->attributes->set('body', $request->getBody());
 
                 if (isset($headers['Host'])) {

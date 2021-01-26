@@ -180,6 +180,13 @@ class FakeKernel extends AsyncKernel
             ], $code);
         }
 
+        if ('/auth' === $pathInfo) {
+            return new JsonResponse([
+                'user' => $request->headers->get('PHP_AUTH_USER'),
+                'password' => $request->headers->get('PHP_AUTH_PW'),
+            ], $code);
+        }
+
         if ('/streamed-body' === $pathInfo) {
             $stream = $request->attributes->get('body');
 
@@ -202,10 +209,11 @@ class FakeKernel extends AsyncKernel
 
         if ('/check-server-vars' === $pathInfo) {
             $server = $request->server;
+
             $code = (
                 '/check-server-vars' === $server->get('REQUEST_URI') &&
                 '127.0.0.1' === $server->get('REMOTE_ADDR') &&
-                $server->get('REMOTE_PORT') === $request->query->get('port')
+                \intval($server->get('SERVER_PORT')) === \intval($request->query->get('port'))
             ) ? 200 : 500;
 
             return new JsonResponse([], $code);
