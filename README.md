@@ -53,6 +53,13 @@ folder, so check it.
 php vendor/bin/server run 0.0.0.0:8000
 ```
 
+You can use as well the short mode, defining only the port and assuming this 
+host `0.0.0.0`.
+
+```bash
+php vendor/bin/server run 8000
+```
+
 And that's it. You will have a fully working server for your application.
 
 ## Build your adapter
