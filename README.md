@@ -27,6 +27,8 @@ chapter)
 - [Workers](#workers)
 - [Watcher](#watcher)
 - [Static server](#static-server)
+- [Symfony bridge](#symfony-bridge)
+- [DriftPHP resources](#driftphp-resources)
 
 ## Installation
 
@@ -189,6 +191,21 @@ php vendor/bin/server watch 0.0.0.0:8000 --static-folder=/public/:/internal/publ
 In this example, a file named `app.js` located under `/internal/public/path/` 
 folder will be accessible at `http://localhost:8000/public/app.js`. By default,
 this feature is disabled.
+
+## Symfony bridge
+
+In order to help you from migrating an application from Symfony to DriftPHP, 
+assuming that this means that your whole domain should turn on top of Promises, 
+including your infrastructure layer, this server is distributed with a small
+Symfony adapter. Use it as a tool, and never use it at production (using a
+ReactPHP based server in a blocking application is something not recommendable
+at all in terms of performance and service availability). That adapter will help
+your migrating from one platform to the other, as will allow this server to work
+with your Symfony kernel.
+
+```bash
+php vendor/bin/server watch 0.0.0.0:8000 --adapter=symfony
+```
 
 ## DriftPHP resources
 

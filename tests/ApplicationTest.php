@@ -295,4 +295,37 @@ class ApplicationTest extends TestCase
 
         $process->stop();
     }
+
+    /**
+     * Test Symfony adapter.
+     */
+    public function testSymfonyAdapter()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "0.0.0.0:$port",
+            '--adapter='.FakeSymfonyAdapter::class,
+            '--dev',
+            '--ansi',
+        ]);
+
+        $process->start();
+        usleep(500000);
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
+        usleep(500000);
+        $this->assertContains(
+            '[32;1m200[39;22m GET',
+            $process->getOutput()
+        );
+
+        $this->assertContains(
+            '/query',
+            $process->getOutput()
+        );
+
+        $process->stop();
+    }
 }

@@ -13,20 +13,21 @@
 
 declare(strict_types=1);
 
-namespace Drift\Server\Adapter\DriftKernel;
+namespace Drift\Server\Adapter\SymfonyKernel;
 
+use App\Kernel as ApplicationKernel;
 use Drift\HttpKernel\AsyncKernel;
-use Drift\Kernel as ApplicationKernel;
 use Drift\Server\Adapter\SymfonyKernelBasedAdapter;
 use Exception;
 use React\Promise\PromiseInterface;
+use function React\Promise\resolve;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Kernel;
 
 /**
- * Class DriftKernelAdapter.
+ * Class SymfonyKernelAdapter.
  */
-class DriftKernelAdapter extends SymfonyKernelBasedAdapter
+class SymfonyKernelAdapter extends SymfonyKernelBasedAdapter
 {
     /**
      * @param $kernel
@@ -35,9 +36,7 @@ class DriftKernelAdapter extends SymfonyKernelBasedAdapter
      */
     protected function checkKernel($kernel)
     {
-        if (!$kernel instanceof AsyncKernel) {
-            throw new SyncKernelException('The kernel should implement AsyncKernel interface, as you are using the DriftPHP kernel adapter');
-        }
+        // No checks here
     }
 
     /**
@@ -63,7 +62,7 @@ class DriftKernelAdapter extends SymfonyKernelBasedAdapter
         Kernel $kernel,
         Request $request
     ): PromiseInterface {
-        return $kernel->handleAsync($request);
+        return resolve($kernel->handle($request));
     }
 
     /**
@@ -71,7 +70,7 @@ class DriftKernelAdapter extends SymfonyKernelBasedAdapter
      */
     public function shutDown(): PromiseInterface
     {
-        return $this->kernel->shutdown();
+        // Nothing to do here
     }
 
     /**
@@ -81,6 +80,6 @@ class DriftKernelAdapter extends SymfonyKernelBasedAdapter
      */
     public static function getObservableFolders(): array
     {
-        return ['Drift', 'src', 'public', 'views'];
+        return ['App', 'src', 'public', 'views'];
     }
 }
