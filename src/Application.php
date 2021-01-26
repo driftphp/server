@@ -320,8 +320,8 @@ class Application
 
         return $filesystem
             ->file($rootPath.$resourcePath)
-            ->open('r')
-            ->then(function (ReadableStreamInterface $stream) use ($rootPath, $resourcePath, $from, $request) {
+            ->getContents()
+            ->then(function (string $content) use ($rootPath, $resourcePath, $from, $request) {
                 $mimeType = $this
                     ->mimeTypeChecker
                     ->getMimeType($resourcePath);
@@ -329,7 +329,7 @@ class Application
                 $response = new ReactResponse(
                     200,
                     ['Content-Type' => $mimeType],
-                    $stream
+                    $content
                 );
 
                 return $this
