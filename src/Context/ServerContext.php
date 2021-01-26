@@ -98,8 +98,10 @@ final class ServerContext
 
         $path = $input->getArgument('path');
         $serverArgs = explode(':', $path, 2);
-        if (2 !== count($serverArgs)) {
-            throw new Exception('The path should have a host:port format - 0.0.0.0:80');
+        if (1 === count($serverArgs)) {
+            $serverArgs = ['0.0.0.0', $serverArgs[0]];
+        } elseif ('' === $serverArgs[0]) {
+            $serverArgs = ['0.0.0.0', $serverArgs[1]];
         }
 
         list($host, $port) = $serverArgs;

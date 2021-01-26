@@ -57,6 +57,72 @@ class ApplicationTest extends TestCase
     }
 
     /**
+     * Test non blocking server.
+     */
+    public function testDefaultHost()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            "$port",
+            '--adapter='.FakeAdapter::class,
+            '--dev',
+            '--ansi',
+        ]);
+
+        $process->start();
+        usleep(500000);
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
+        usleep(500000);
+        $this->assertContains(
+            '[32;1m200[39;22m GET',
+            $process->getOutput()
+        );
+
+        $this->assertContains(
+            '/query',
+            $process->getOutput()
+        );
+
+        $process->stop();
+    }
+
+    /**
+     * Test non blocking server.
+     */
+    public function testEmptyHost()
+    {
+        $port = rand(2000, 9999);
+        $process = new Process([
+            'php',
+            dirname(__FILE__).'/../bin/server',
+            'run',
+            ":$port",
+            '--adapter='.FakeAdapter::class,
+            '--dev',
+            '--ansi',
+        ]);
+
+        $process->start();
+        usleep(500000);
+        Utils::curl("http://127.0.0.1:$port/query?code=200");
+        usleep(500000);
+        $this->assertContains(
+            '[32;1m200[39;22m GET',
+            $process->getOutput()
+        );
+
+        $this->assertContains(
+            '/query',
+            $process->getOutput()
+        );
+
+        $process->stop();
+    }
+
+    /**
      * Test silent.
      */
     public function testSilentServer()
