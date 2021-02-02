@@ -45,7 +45,7 @@ class ServerOptionsTest extends TestCase
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '[32;1m200[39;22m GET',
             $process->getOutput()
         );
@@ -73,7 +73,7 @@ class ServerOptionsTest extends TestCase
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '500 EXC',
             $process->getOutput()
         );

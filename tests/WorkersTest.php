@@ -41,11 +41,11 @@ class WorkersTest extends TestCase
         sleep(1);
 
         $output = $process->getOutput();
-        $this->assertContains('Workers: 1', $output);
-        $this->assertContains('200 GET', $output);
-        $this->assertNotContains('[00] ', $output);
-        $this->assertNotContains('[01] ', $output);
-        $this->assertNotContains('[02] ', $output);
+        $this->assertStringContainsString('Workers: 1', $output);
+        $this->assertStringContainsString('200 GET', $output);
+        $this->assertStringNotContainsString('[00] ', $output);
+        $this->assertStringNotContainsString('[01] ', $output);
+        $this->assertStringNotContainsString('[02] ', $output);
 
         $process->stop();
     }
@@ -67,11 +67,11 @@ class WorkersTest extends TestCase
         sleep(1);
 
         $output = $process->getOutput();
-        $this->assertContains('Workers: 1', $output);
-        $this->assertContains('200 GET', $output);
-        $this->assertNotContains('[00] ', $output);
-        $this->assertNotContains('[01] ', $output);
-        $this->assertNotContains('[02] ', $output);
+        $this->assertStringContainsString('Workers: 1', $output);
+        $this->assertStringContainsString('200 GET', $output);
+        $this->assertStringNotContainsString('[00] ', $output);
+        $this->assertStringNotContainsString('[01] ', $output);
+        $this->assertStringNotContainsString('[02] ', $output);
 
         $process->stop();
     }
@@ -103,10 +103,10 @@ class WorkersTest extends TestCase
         Utils::curl("http://127.0.0.1:$port/text");
 
         $output = $process->getOutput();
-        $this->assertContains('Workers: 2', $output);
-        $this->assertContains('[00] ', $output);
-        $this->assertContains('[01] ', $output);
-        $this->assertNotContains('[02] ', $output);
+        $this->assertStringContainsString('Workers: 2', $output);
+        $this->assertStringContainsString('[00] ', $output);
+        $this->assertStringContainsString('[01] ', $output);
+        $this->assertStringNotContainsString('[02] ', $output);
 
         $process->stop();
     }
@@ -134,10 +134,10 @@ class WorkersTest extends TestCase
 
         $output = $process->getOutput();
         sleep(2);
-        $this->assertContains("Workers: $numberOfProcs", $output);
+        $this->assertStringContainsString("Workers: $numberOfProcs", $output);
         for ($i = 0; $i < $numberOfProcs; ++$i) {
             $iWithTrailingZeros = str_pad(\strval($i), 2, '0', STR_PAD_LEFT);
-            $this->assertContains("[$iWithTrailingZeros] ", $output);
+            $this->assertStringContainsString("[$iWithTrailingZeros] ", $output);
         }
     }
 }

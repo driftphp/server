@@ -17,6 +17,7 @@ namespace Drift\Server;
 
 use Drift\Console\OutputPrinter;
 use Drift\Server\Context\ServerContext;
+use React\Filesystem\Filesystem;
 
 /**
  * Class ServerHeaderPrinter.
@@ -49,6 +50,10 @@ class ServerHeaderPrinter
         $outputPrinter->printHeaderLine("Environment: {$serverContext->getEnvironment()}");
         $outputPrinter->printHeaderLine('Debug: '.($serverContext->isDebug() ? 'enabled' : 'disabled'));
         $outputPrinter->printHeaderLine('Static Folder: '.$serverContext->getStaticFolderAsString());
+        if (!class_exists(Filesystem::class)) {
+            $outputPrinter->printHeaderLine('<purple>Static Folder: Attention! You should install the dependency `react/filesystem` to serve static content in a non-blocking way.</purple>');
+            $outputPrinter->printHeaderLine('<purple>Static Folder: Serving the content with blocking PHP functions.</purple>');
+        }
         $outputPrinter->printHeaderLine("Adapter: {$serverContext->getAdapter()}");
         $outputPrinter->printHeaderLine("Workers: {$serverContext->getWorkers()}");
         $outputPrinter->printHeaderLine('Exchanges subscribed: '.($serverContext->hasExchanges()

@@ -34,12 +34,12 @@ use function React\Promise\resolve;
 class FakeLaminasKernel implements KernelAdapter
 {
     /**
-     * @param LoopInterface       $loop
-     * @param string              $rootPath
-     * @param ServerContext       $serverContext
-     * @param FilesystemInterface $filesystem
-     * @param OutputPrinter       $outputPrinter
-     * @param MimeTypeChecker     $mimeTypeChecker
+     * @param LoopInterface            $loop
+     * @param string                   $rootPath
+     * @param ServerContext            $serverContext
+     * @param OutputPrinter            $outputPrinter
+     * @param MimeTypeChecker          $mimeTypeChecker
+     * @param FilesystemInterface|null $filesystem
      *
      * @return PromiseInterface<self>
      *
@@ -49,9 +49,9 @@ class FakeLaminasKernel implements KernelAdapter
         LoopInterface $loop,
         string $rootPath,
         ServerContext $serverContext,
-        FilesystemInterface $filesystem,
         OutputPrinter $outputPrinter,
-        MimeTypeChecker $mimeTypeChecker
+        MimeTypeChecker $mimeTypeChecker,
+        ?FilesystemInterface $filesystem
     ): PromiseInterface {
         return resolve(new self());
     }

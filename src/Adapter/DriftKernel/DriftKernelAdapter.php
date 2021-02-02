@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Adapter\DriftKernel;
 
+use Drift\EventBus\Subscriber\EventBusSubscriber;
 use Drift\HttpKernel\AsyncKernel;
 use Drift\Kernel as ApplicationKernel;
 use Drift\Server\Adapter\SymfonyKernelBasedAdapter;
@@ -44,13 +45,39 @@ class DriftKernelAdapter extends SymfonyKernelBasedAdapter
      * @param string $environment
      * @param bool   $debug
      *
-     * @return AsyncKernel
+     * @return Kernel
      */
     protected static function createKernelByEnvironmentAndDebug(
         string $environment,
         bool $debug
-    ): AsyncKernel {
+    ): Kernel {
         return new ApplicationKernel($environment, $debug);
+    }
+
+    /**
+     * @return PromiseInterface
+     */
+    protected function preload(): PromiseInterface
+    {
+        return $this
+            ->kernel
+            ->preload()
+            ->then(function () {
+                $container = $this->kernel->getContainer();
+                $serverContext = $this->serverContext;
+
+                if (
+                    class_exists(EventBusSubscriber::class) &&
+                    $serverContext->hasExchanges() &&
+                    $container->has(EventBusSubscriber::class)
+                ) {
+                    $eventBusSubscriber = $container->get(EventBusSubscriber::class);
+                    $eventBusSubscriber->subscribeToExchanges(
+                        $serverContext->getExchanges(),
+                        $this->outputPrinter
+                    );
+                }
+            });
     }
 
     /**

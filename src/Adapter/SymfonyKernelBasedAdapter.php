@@ -16,8 +16,6 @@ declare(strict_types=1);
 namespace Drift\Server\Adapter;
 
 use Drift\Console\OutputPrinter;
-use Drift\EventBus\Subscriber\EventBusSubscriber;
-use Drift\HttpKernel\AsyncKernel;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\KernelException;
 use Drift\Server\Exception\RouteNotFoundException;
@@ -45,21 +43,22 @@ use Throwable;
 abstract class SymfonyKernelBasedAdapter implements KernelAdapter
 {
     protected Kernel $kernel;
-    private FilesystemInterface $filesystem;
-    private ServerContext $serverContext;
-    private MimeTypeChecker $mimeTypeChecker;
-    private string $rootPath;
+    protected ?FilesystemInterface $filesystem;
+    protected ServerContext $serverContext;
+    protected MimeTypeChecker $mimeTypeChecker;
+    protected OutputPrinter $outputPrinter;
+    protected string $rootPath;
 
     /**
      * @param string $environment
      * @param bool   $debug
      *
-     * @return AsyncKernel
+     * @return Kernel
      */
     abstract protected static function createKernelByEnvironmentAndDebug(
         string $environment,
         bool $debug
-    ): AsyncKernel;
+    ): Kernel;
 
     /**
      * @param $kernel
@@ -80,12 +79,12 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
     ): PromiseInterface;
 
     /**
-     * @param LoopInterface       $loop
-     * @param string              $rootPath
-     * @param ServerContext       $serverContext
-     * @param FilesystemInterface $filesystem
-     * @param OutputPrinter       $outputPrinter
-     * @param MimeTypeChecker     $mimeTypeChecker
+     * @param LoopInterface            $loop
+     * @param string                   $rootPath
+     * @param ServerContext            $serverContext
+     * @param OutputPrinter            $outputPrinter
+     * @param MimeTypeChecker          $mimeTypeChecker
+     * @param FilesystemInterface|null $filesystem
      *
      * @return PromiseInterface<self>
      *
@@ -95,9 +94,9 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
         LoopInterface $loop,
         string $rootPath,
         ServerContext $serverContext,
-        FilesystemInterface $filesystem,
         OutputPrinter $outputPrinter,
-        MimeTypeChecker $mimeTypeChecker
+        MimeTypeChecker $mimeTypeChecker,
+        ?FilesystemInterface $filesystem
     ): PromiseInterface {
         $adapter = new static();
         $kernel = static::createKernelByEnvironmentAndDebug($serverContext->getEnvironment(), $serverContext->isDebug());
@@ -111,28 +110,22 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
         $adapter->serverContext = $serverContext;
         $adapter->filesystem = $filesystem;
         $adapter->mimeTypeChecker = $mimeTypeChecker;
+        $adapter->outputPrinter = $outputPrinter;
         $adapter->rootPath = $rootPath;
 
-        return $kernel
+        return $adapter
             ->preload()
-            ->then(function () use ($adapter, $outputPrinter) {
-                $container = $adapter->kernel->getContainer();
-                $serverContext = $adapter->serverContext;
-
-                if (
-                    $serverContext->hasExchanges() &&
-                    $container->has(EventBusSubscriber::class)
-                ) {
-                    $eventBusSubscriber = $container->get(EventBusSubscriber::class);
-                    $eventBusSubscriber->subscribeToExchanges(
-                        $serverContext->getExchanges(),
-                        $outputPrinter
-                    );
-                }
-            })
             ->then(function () use ($adapter) {
                 return $adapter;
             });
+    }
+
+    /**
+     * @return PromiseInterface
+     */
+    protected function preload(): PromiseInterface
+    {
+        return resolve();
     }
 
     /**
@@ -292,10 +285,14 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
         }
 
         $promise = (UPLOAD_ERR_OK == $file->getError())
-            ? $this
-                ->filesystem
-                ->file($tmpFilename)
-                ->putContents($content)
+            ? (
+                is_null($this->filesystem)
+                    ? resolve(file_put_contents($tmpFilename, $content))
+                    : $this
+                        ->filesystem
+                        ->file($tmpFilename)
+                        ->putContents($content)
+            )
             : resolve();
 
         return $promise
@@ -318,10 +315,14 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
     private function cleanTemporaryUploadedFiles(Request $request): array
     {
         return array_map(function (SymfonyUploadedFile $file) {
-            return $this
-                ->filesystem
-                ->file($file->getPath().'/'.$file->getFilename())
-                ->remove();
+            $filePath = $file->getPath().'/'.$file->getFilename();
+
+            return (is_null($this->filesystem))
+                ? resolve(unlink($filePath))
+                : $this
+                    ->filesystem
+                    ->file($filePath)
+                    ->remove();
         }, $request->files->all());
     }
 

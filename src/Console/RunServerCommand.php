@@ -45,7 +45,10 @@ final class RunServerCommand extends ServerCommand
         bool &$forceShutdownReference
     ) {
         $rootPath = getcwd();
-        $filesystem = Filesystem::create($loop);
+        $filesystem = class_exists(Filesystem::class)
+            ? Filesystem::create($loop)
+            : null;
+
         $mimeTypeChecker = new MimeTypeChecker();
         $application = new Application(
             $loop,
@@ -61,9 +64,9 @@ final class RunServerCommand extends ServerCommand
             $loop,
             $rootPath,
             $serverContext,
-            $filesystem,
             $outputPrinter,
-            $mimeTypeChecker
+            $mimeTypeChecker,
+            $filesystem
         )
             ->then(function (KernelAdapter $kernelAdapter) use ($application, $outputPrinter, $serverContext, $filesystem, &$forceShutdownReference) {
                 (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);

@@ -43,15 +43,15 @@ class ExchangesTest extends TestCase
         sleep(1);
         $output = $process->getOutput();
         $process->stop();
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Exchanges subscribed: exchange1, exchange2:queue2',
             $output
         );
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Subscribed to exchange exchange1 and temporary queue',
             $output
         );
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Subscribed to exchange exchange2 and queue queue2',
             $output
         );

@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use Drift\HttpKernel\AsyncKernel;
+use Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Class FakeExchangesAdapter.
@@ -26,12 +26,12 @@ class FakeExchangesAdapter extends FakeAdapter
      * @param string $environment
      * @param bool   $debug
      *
-     * @return AsyncKernel
+     * @return Kernel
      */
     protected static function createKernelByEnvironmentAndDebug(
         string $environment,
         bool $debug
-    ): AsyncKernel {
+    ): Kernel {
         return new FakeExchangesKernel($environment, $debug);
     }
 }
