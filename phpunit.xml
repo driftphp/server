@@ -11,8 +11,14 @@
          bootstrap="vendor/autoload.php"
 >
     <testsuites>
-        <testsuite name="Test Suite">
+        <testsuite name="all">
             <directory>./tests</directory>
+        </testsuite>
+
+        <testsuite name="no-watcher">
+            <directory>./tests</directory>
+            <exclude>./tests/WatcherTest.php</exclude>
+            <exclude>./tests/ExchangesTest.php</exclude>
         </testsuite>
     </testsuites>
 

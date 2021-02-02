@@ -80,12 +80,12 @@ designed for the watcher feature.
 interface KernelAdapter extends ObservableKernel
 {
     /**
-     * @param LoopInterface       $loop
-     * @param string              $rootPath
-     * @param ServerContext       $serverContext
-     * @param FilesystemInterface $filesystem
-     * @param OutputPrinter       $outputPrinter
-     * @param MimeTypeChecker     $mimeTypeChecker
+     * @param LoopInterface            $loop
+     * @param string                   $rootPath
+     * @param ServerContext            $serverContext
+     * @param OutputPrinter            $outputPrinter
+     * @param MimeTypeChecker          $mimeTypeChecker
+     * @param FilesystemInterface|null $filesystem
      *
      * @return PromiseInterface<self>
      *
@@ -95,9 +95,9 @@ interface KernelAdapter extends ObservableKernel
         LoopInterface $loop,
         string $rootPath,
         ServerContext $serverContext,
-        FilesystemInterface $filesystem,
         OutputPrinter $outputPrinter,
-        MimeTypeChecker $mimeTypeChecker
+        MimeTypeChecker $mimeTypeChecker,
+        ?FilesystemInterface $filesystem
     ): PromiseInterface;
 
     /**
@@ -191,6 +191,14 @@ php vendor/bin/server watch 0.0.0.0:8000 --static-folder=/public/:/internal/publ
 In this example, a file named `app.js` located under `/internal/public/path/` 
 folder will be accessible at `http://localhost:8000/public/app.js`. By default,
 this feature is disabled.
+
+### Important
+
+By default, this package will not install the `react/filesystem` package. This
+means that, if you don't install it by hand in your project, all the disk 
+operations will be blocking. These operations done synchronously will be much
+faster and efficient, but by using large size files could slow down the entire 
+process.
 
 ## Symfony bridge
 

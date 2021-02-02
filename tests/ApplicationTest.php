@@ -43,12 +43,12 @@ class ApplicationTest extends TestCase
         usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '[32;1m200[39;22m GET',
             $process->getOutput()
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '/query',
             $process->getOutput()
         );
@@ -76,12 +76,12 @@ class ApplicationTest extends TestCase
         usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '[32;1m200[39;22m GET',
             $process->getOutput()
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '/query',
             $process->getOutput()
         );
@@ -109,12 +109,12 @@ class ApplicationTest extends TestCase
         usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '[32;1m200[39;22m GET',
             $process->getOutput()
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '/query',
             $process->getOutput()
         );
@@ -172,7 +172,7 @@ class ApplicationTest extends TestCase
         Utils::curl("http://127.0.0.1:$port/another/route?code=200");
         usleep(500000);
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '[31;1m404[39;22m GET',
             $process->getOutput()
         );
@@ -245,8 +245,6 @@ class ApplicationTest extends TestCase
 
     /**
      * Test server values.
-     *
-     * @group lol
      */
     public function testServerValues()
     {
@@ -261,7 +259,7 @@ class ApplicationTest extends TestCase
 
         $process->start();
         usleep(500000);
-        list($_, $_, $code) = Utils::curl("http://127.0.0.1:$port/check-server-vars?port=$port");
+        list($_, $_, $code) = Utils::curl("http://127.0.0.1:$port/check-srv-vars?port=$port");
         $this->assertEquals(200, $code);
         usleep(500000);
 
@@ -316,12 +314,12 @@ class ApplicationTest extends TestCase
         usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         usleep(500000);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '[32;1m200[39;22m GET',
             $process->getOutput()
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '/query',
             $process->getOutput()
         );

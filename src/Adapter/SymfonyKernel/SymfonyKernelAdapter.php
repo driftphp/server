@@ -43,12 +43,12 @@ class SymfonyKernelAdapter extends SymfonyKernelBasedAdapter
      * @param string $environment
      * @param bool   $debug
      *
-     * @return AsyncKernel
+     * @return Kernel
      */
     protected static function createKernelByEnvironmentAndDebug(
         string $environment,
         bool $debug
-    ): AsyncKernel {
+    ): Kernel {
         return new ApplicationKernel($environment, $debug);
     }
 

@@ -40,8 +40,8 @@ class KernelEventsTest extends TestCase
 
         $process->start();
         usleep(300000);
-        $this->assertContains('Kernel preloaded', $process->getOutput());
-        $this->assertContains('[Preloaded]', $process->getOutput());
+        $this->assertStringContainsString('Kernel preloaded', $process->getOutput());
+        $this->assertStringContainsString('[Preloaded]', $process->getOutput());
         $this->assertFalse($process->isTerminated());
     }
 
@@ -71,8 +71,8 @@ class KernelEventsTest extends TestCase
 
         $process->signal(SIGTERM);
         sleep(1);
-        $this->assertContains('Loop forced to stop', $process->getOutput());
-        $this->assertContains('[Shutdown]', $process->getOutput());
+        $this->assertStringContainsString('Loop forced to stop', $process->getOutput());
+        $this->assertStringContainsString('[Shutdown]', $process->getOutput());
         $this->assertTrue($process->isTerminated());
     }
 
@@ -100,13 +100,13 @@ class KernelEventsTest extends TestCase
         $process->start();
         usleep(300000);
         $this->assertFalse($process->isTerminated());
-        $this->assertContains('Allowed number of loop stops: 10', $process->getOutput());
+        $this->assertStringContainsString('Allowed number of loop stops: 10', $process->getOutput());
 
         $process->signal(SIGINT);
         usleep(300000);
-        $this->assertContains('Loop forced to stop', $process->getOutput());
-        $this->assertContains('[Shutdown]', $process->getOutput());
-        $this->assertNotContains('9 retries missing', $process->getOutput());
+        $this->assertStringContainsString('Loop forced to stop', $process->getOutput());
+        $this->assertStringContainsString('[Shutdown]', $process->getOutput());
+        $this->assertStringNotContainsString('9 retries missing', $process->getOutput());
         $this->assertTrue($process->isTerminated());
     }
 }

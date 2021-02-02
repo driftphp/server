@@ -113,6 +113,7 @@ class FakeKernel extends AsyncKernel
         $loop = $this->getContainer()->get('reactphp.event_loop');
         $code = \intval($request->query->get('code', '200'));
         $pathInfo = $request->getPathInfo();
+
         if (400 === $code) {
             throw new \Exception('Bad Request');
         }
@@ -207,11 +208,11 @@ class FakeKernel extends AsyncKernel
                 });
         }
 
-        if ('/check-server-vars' === $pathInfo) {
+        if ('/check-srv-vars' === $pathInfo) {
             $server = $request->server;
 
             $code = (
-                '/check-server-vars' === $server->get('REQUEST_URI') &&
+                '/check-srv-vars' === $server->get('REQUEST_URI') &&
                 '127.0.0.1' === $server->get('REMOTE_ADDR') &&
                 \intval($server->get('SERVER_PORT')) === \intval($request->query->get('port'))
             ) ? 200 : 500;

@@ -37,6 +37,7 @@ use React\Http\Middleware\StreamingRequestMiddleware;
 use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
+use function React\Promise\reject;
 use function React\Promise\resolve;
 use React\Socket\Server as SocketServer;
 use React\Stream\ReadableStreamInterface;
@@ -98,13 +99,13 @@ class Application
     }
 
     /**
-     * @param KernelAdapter       $kernelAdapter
-     * @param FilesystemInterface $filesystem
-     * @param bool                $forceShutdownReference
+     * @param KernelAdapter        $kernelAdapter
+     * @param ?FilesystemInterface $filesystem
+     * @param bool                 $forceShutdownReference
      */
     public function runServer(
         KernelAdapter $kernelAdapter,
-        FilesystemInterface $filesystem,
+        ?FilesystemInterface $filesystem,
         bool &$forceShutdownReference
     ) {
         $socket = new SocketServer(
@@ -308,27 +309,41 @@ class Application
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @param FilesystemInterface    $filesystem
-     * @param string                 $rootPath
-     * @param string                 $resourcePath
+     * @param ServerRequestInterface   $request
+     * @param FilesystemInterface|null $filesystem
+     * @param string                   $rootPath
+     * @param string                   $resourcePath
      *
      * @return PromiseInterface
      */
     public function handleStaticResource(
         ServerRequestInterface $request,
-        FilesystemInterface $filesystem,
+        ?FilesystemInterface $filesystem,
         string $rootPath,
         string $resourcePath
     ): PromiseInterface {
         $from = microtime(true);
-        $file = $filesystem->file($rootPath.$resourcePath);
+        $fileFullPath = $rootPath.$resourcePath;
 
-        return $file
-            ->exists()
-            ->then(function () use ($file) {
-                return $file->getContents();
-            })
+        if (is_null($filesystem)) {
+            try {
+                $content = file_get_contents($fileFullPath);
+                $content = false === $content
+                    ? reject(new Exception('File not found'))
+                    : resolve(file_get_contents($fileFullPath));
+            } catch (Exception $exception) {
+                $content = reject($exception);
+            }
+        } else {
+            $file = $filesystem->file($rootPath.$resourcePath);
+            $content = $file
+                ->exists()
+                ->then(function () use ($file) {
+                    return $file->getContents();
+                });
+        }
+
+        return $content
             ->then(function (string $content) use ($rootPath, $resourcePath, $from, $request) {
                 $mimeType = $this
                     ->mimeTypeChecker
