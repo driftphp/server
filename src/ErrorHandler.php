@@ -33,8 +33,10 @@ class ErrorHandler
      */
     public static function errorToException($code, $message)
     {
-        if (0 !== error_reporting()) {
-            throw new \Exception($message, $code);
+        if (!(error_reporting() & $err_no)) {
+            return; // Silenced
         }
+
+        throw new \Exception($message, $code);
     }
 }
