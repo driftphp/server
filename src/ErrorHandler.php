@@ -29,11 +29,14 @@ class ErrorHandler
     }
 
     /**
-     * Errors to Exceptions.
+     * @param $code
+     * @param $message
+     *
+     * @throws \Exception
      */
     public static function errorToException($code, $message)
     {
-        if (!(error_reporting() & $err_no)) {
+        if (!(error_reporting() & $code)) {
             return; // Silenced
         }
 
