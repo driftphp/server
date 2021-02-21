@@ -32,8 +32,8 @@
         "drift/http-kernel": "0.1.*, >=0.1.15",
         "laminas/laminas-diactoros": "^2",
         "vimeo/psalm": "^4",
-        "ext-fileinfo": "^7.4 || ^8.0",
-        "ext-curl": "^7.4 || ^8.0"
+        "ext-fileinfo": "*",
+        "ext-curl": "*"
     },
     "suggest": {
         "react/filesystem": "*",
