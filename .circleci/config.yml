@@ -63,7 +63,7 @@ jobs:
           command: |
             rm -Rf var/*
             composer update -n --prefer-dist
-            php vendor/bin/phpunit --testsuite=no-watcher --exclude-group=without-filesystem-message
+            php vendor/bin/phpunit --testsuite=no-optional-deps --exclude-group=without-filesystem-message
 
 workflows:
   version: 2

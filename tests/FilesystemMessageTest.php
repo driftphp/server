@@ -15,13 +15,10 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class FilesystemMessageTest.
  */
-class FilesystemMessageTest extends TestCase
+class FilesystemMessageTest extends BaseTest
 {
     /**
      * Test non blocking server.
@@ -30,20 +27,9 @@ class FilesystemMessageTest extends TestCase
      */
     public function testAttentionFilesystemMessageAppears()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi']);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
             'react/filesystem',
             $process->getOutput()
@@ -59,20 +45,9 @@ class FilesystemMessageTest extends TestCase
      */
     public function testAttentionFilesystemMessageNotAppears()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi']);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $this->assertStringNotContainsString(
             'react/filesystem',
             $process->getOutput()

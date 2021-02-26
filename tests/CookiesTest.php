@@ -15,32 +15,17 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class CookiesTest.
  */
-class CookiesTest extends TestCase
+class CookiesTest extends BaseTest
 {
     /**
      * Test cookies are passed.
      */
     public function testCookies()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(300000);
-
+        list($process, $port) = $this->buildServer();
         list($content, $headers) = Utils::curl("http://127.0.0.1:$port/cookies", [], [], 'cookie1=val1');
         $content = json_decode($content, true);
         $this->assertEquals('val1', $content['cookies']['cookie1']);
@@ -51,20 +36,7 @@ class CookiesTest extends TestCase
      */
     public function testCookiesDisabled()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--no-cookies',
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(300000);
-
+        list($process, $port) = $this->buildServer(['--no-cookies']);
         list($content, $headers) = Utils::curl("http://127.0.0.1:$port/cookies", [], [], 'cookie1=val1');
         $content = json_decode($content, true);
         $this->assertEmpty($content['cookies']);

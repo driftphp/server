@@ -15,7 +15,7 @@
             <directory>./tests</directory>
         </testsuite>
 
-        <testsuite name="no-watcher">
+        <testsuite name="no-optional-deps">
             <directory>./tests</directory>
             <exclude>./tests/WatcherTest.php</exclude>
             <exclude>./tests/ExchangesTest.php</exclude>

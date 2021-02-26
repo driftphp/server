@@ -15,37 +15,24 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class UploadingFileTest.
  */
-class UploadingFileTest extends TestCase
+class UploadingFileTest extends BaseTest
 {
     /**
      * Test default adapter static folder.
      */
     public function testRegular()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(300000);
+        list($process, $port, $initialOutput) = $this->buildServer();
 
         list($content, $headers) = Utils::curl("http://127.0.0.1:$port/file", [], ['somefile.txt']);
+        $initialOutput = $this->waitForChange($process, $initialOutput);
         $content = json_decode($content, true);
         list($content2, $headers2) = Utils::curl("http://127.0.0.1:$port/file", [], ['somefile.txt', 'anotherfile.txt']);
         $content2 = json_decode($content2, true);
-        usleep(300000);
+        $this->waitForChange($process, $initialOutput);
 
         $this->assertEquals(file_get_contents(__DIR__.'/somefile.txt'), $content['files']['somefile'][1]);
         $this->assertEquals(file_get_contents(__DIR__.'/somefile.txt'), $content2['files']['somefile'][1]);
@@ -70,18 +57,7 @@ class UploadingFileTest extends TestCase
      */
     public function testEmptyFile()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(300000);
+        list($process, $port, $initialOutput) = $this->buildServer();
 
         $content = exec('curl -s -F "file1=@/dev/null;filename=" http://127.0.0.1:'.$port.'/file');
         $content = json_decode($content, true);
@@ -94,19 +70,7 @@ class UploadingFileTest extends TestCase
      */
     public function testDisableFileUploads()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--no-file-uploads',
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(300000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-file-uploads']);
         list($content, $headers) = Utils::curl("http://127.0.0.1:$port/file", [], ['somefile.txt']);
         $content = json_decode($content, true);
         $this->assertEmpty($content['files']);

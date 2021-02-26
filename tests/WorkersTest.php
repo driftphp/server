@@ -15,32 +15,17 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class workersTest.
  */
-class WorkersTest extends TestCase
+class WorkersTest extends BaseTest
 {
     public function testOneWorker()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--workers=1',
-        ]);
-
-        $process->start();
-        sleep(2);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi', '--workers=1']);
         Utils::curl("http://127.0.0.1:$port/text");
-        sleep(1);
+        $output = $this->waitForChange($process, $initialOutput);
 
-        $output = $process->getOutput();
         $this->assertStringContainsString('Workers: 1', $output);
         $this->assertStringContainsString('200 GET', $output);
         $this->assertStringNotContainsString('[00] ', $output);
@@ -52,21 +37,10 @@ class WorkersTest extends TestCase
 
     public function testNoWorkerDefault()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        sleep(2);
+        list($process, $port, $initialOutput) = $this->buildServer();
         Utils::curl("http://127.0.0.1:$port/text");
-        sleep(1);
+        $output = $this->waitForChange($process, $initialOutput);
 
-        $output = $process->getOutput();
         $this->assertStringContainsString('Workers: 1', $output);
         $this->assertStringContainsString('200 GET', $output);
         $this->assertStringNotContainsString('[00] ', $output);
@@ -78,18 +52,9 @@ class WorkersTest extends TestCase
 
     public function testSeveralWorkers()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--workers=2',
-        ]);
-
-        $process->start();
-        sleep(2);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi', '--workers=2']);
+        Utils::curl("http://127.0.0.1:$port/text");
+        $this->waitForChange($process, $initialOutput);
         Utils::curl("http://127.0.0.1:$port/text");
         Utils::curl("http://127.0.0.1:$port/text");
         Utils::curl("http://127.0.0.1:$port/text");
@@ -115,18 +80,9 @@ class WorkersTest extends TestCase
     {
         $numberOfProcs = \intval(shell_exec('nproc'));
         $numberOfRequests = $numberOfProcs * 10;
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--workers=-1',
-        ]);
-
-        $process->start();
-        sleep(2);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi', '--workers=-1']);
+        Utils::curl("http://127.0.0.1:$port/text");
+        $this->waitForChange($process, $initialOutput);
 
         for ($i = 0; $i < $numberOfRequests; ++$i) {
             Utils::curl("http://127.0.0.1:$port/text");
