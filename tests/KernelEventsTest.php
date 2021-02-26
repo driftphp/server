@@ -15,31 +15,17 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class KernelEventsTest.
  */
-class KernelEventsTest extends TestCase
+class KernelEventsTest extends BaseTest
 {
     /**
      * Test cookies are passed.
      */
     public function testPreload()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(300000);
+        list($process) = $this->buildServer(['--ansi']);
         $this->assertStringContainsString('Kernel preloaded', $process->getOutput());
         $this->assertStringContainsString('[Preloaded]', $process->getOutput());
         $this->assertFalse($process->isTerminated());
@@ -50,18 +36,7 @@ class KernelEventsTest extends TestCase
      */
     public function testShutdown()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-        ]);
-
-        $process->start();
-        sleep(1);
+        list($process) = $this->buildServer(['--ansi']);
         $this->assertFalse($process->isTerminated());
 
         $process->signal(SIGTERM);
@@ -76,19 +51,7 @@ class KernelEventsTest extends TestCase
      */
     public function testShutdownIsForced()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--allowed-loop-stops=10',
-        ]);
-
-        $process->start();
-        usleep(300000);
+        list($process) = $this->buildServer(['--ansi', '--allowed-loop-stops=10']);
         $this->assertFalse($process->isTerminated());
         $this->assertStringContainsString('Allowed number of loop stops: 10', $process->getOutput());
 

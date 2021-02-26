@@ -16,12 +16,11 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use Drift\Console\TimeFormatter;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Class TimeFormatterTest.
  */
-class TimeFormatterTest extends TestCase
+class TimeFormatterTest extends BaseTest
 {
     /**
      * Test format time.

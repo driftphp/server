@@ -15,13 +15,10 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class CompressionTest.
  */
-class CompressionTest extends TestCase
+class CompressionTest extends BaseTest
 {
     /**
      * Test default adapter static folder.
@@ -44,21 +41,11 @@ class CompressionTest extends TestCase
      */
     private function assertEncodingType(string $encodingType, callable $decompressCallback)
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer();
         $response = Utils::curl("http://127.0.0.1:$port/text", [
             "Accept-Encoding: $encodingType",
         ]);
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $text = $decompressCallback($response[0]);
 
         $this->assertEquals(
@@ -90,17 +77,7 @@ class CompressionTest extends TestCase
      */
     public function assertEncodedPSR7(string $encodingType, callable $decompressCallback)
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port) = $this->buildServer();
         $response = Utils::curl("http://127.0.0.1:$port/psr", [
             "Accept-Encoding: $encodingType",
         ]);
@@ -129,17 +106,7 @@ class CompressionTest extends TestCase
      */
     public function assertStream(string $encodingType, callable $decompressCallback)
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer();
         $opts = [
             'http' => [
                 'method' => 'GET',
@@ -148,7 +115,7 @@ class CompressionTest extends TestCase
         ];
         $context = stream_context_create($opts);
         $stream = fopen("http://127.0.0.1:$port/psr-stream", 'r', false, $context);
-        usleep(100000);
+        $this->waitForChange($process, $initialOutput);
         $content = stream_get_contents($stream, 100, 0);
         $this->assertEquals('PHP stream...', $decompressCallback($content));
         $process->stop();
@@ -172,21 +139,11 @@ class CompressionTest extends TestCase
      */
     public function assertStaticFile(string $encodingType, callable $decompressCallback)
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer();
         $response = Utils::curl("http://127.0.0.1:$port/tests/public/app.js", [
             "Accept-Encoding: $encodingType",
         ]);
-        usleep(100000);
+        $this->waitForChange($process, $initialOutput);
         $fileContent = $decompressCallback($response[0]);
         $this->assertEquals('$(\'lol\');', $fileContent);
         $process->stop();

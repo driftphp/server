@@ -16,16 +16,13 @@ declare(strict_types=1);
 namespace Drift\Server\Tests;
 
 use function Clue\React\Block\await;
-use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Factory;
 use React\Stream\ThroughStream;
-use Symfony\Component\Process\Process;
 
 /**
  * Class StreamedRequestTest.
  */
-class StreamedRequestTest extends TestCase
+class StreamedRequestTest extends BaseTest
 {
     /**
      * Test basic PSR response.
@@ -34,17 +31,7 @@ class StreamedRequestTest extends TestCase
     {
         $loop = Factory::create();
 
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port) = $this->buildServer();
 
         $stream = new ThroughStream();
         $promise = Utils::callWithStreamedBody($loop, "http://127.0.0.1:$port/streamed-body", $stream)

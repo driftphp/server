@@ -15,40 +15,24 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
 /**
  * Class WatcherTest.
  */
-class WatcherTest extends TestCase
+class WatcherTest extends BaseTest
 {
     /**
      * Test default adapter static folder.
      */
     public function testRegular()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'watch',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--ansi',
-        ]);
-
-        $process->start();
+        list($process, $port) = $this->buildWatcher(['--no-ansi']);
         sleep(2);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         $output = $process->getOutput();
         $this->assertStringContainsString('Workers: 1', $output);
-        $this->assertNotFalse(
-            strpos(
-                $output,
-                '[32;1m200[39;22m GET'
-            )
-        );
+        $this->assertStringContainsString('200 GET', $output);
         $process->stop();
 
         $processKill = new Process(['pkill', '-f', "0.0.0.0:$port", '-c']);
@@ -62,60 +46,30 @@ class WatcherTest extends TestCase
      */
     public function testFileWatching()
     {
-        $port = rand(2000, 9999);
         $changesMessage = 'restarting due to changes';
         file_put_contents(__DIR__.'/sandbox/a.file1', '');
         file_put_contents(__DIR__.'/sandbox2/ignore/b.file1', '');
         file_put_contents(__DIR__.'/sandbox/a.file2', '');
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'watch',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--workers=8',
-        ]);
 
-        $process->start();
-        sleep(2);
-        $output = $process->getOutput();
+        list($process, $port, $output) = $this->buildWatcher(['--no-ansi', '--workers=8']);
+
         $this->assertStringContainsString('Workers: 1', $output);
-        $this->assertFalse(
-            strpos(
-                $output,
-                $changesMessage
-            )
-        );
+        $this->assertStringNotContainsString($changesMessage, $output);
 
         file_put_contents(__DIR__.'/sandbox/a.file2', 'content');
         sleep(2);
         $output = $process->getOutput();
-        $this->assertFalse(
-            strpos(
-                $output,
-                $changesMessage
-            )
-        );
+        $this->assertStringNotContainsString($changesMessage, $output);
 
         file_put_contents(__DIR__.'/sandbox2/ignore/b.file1', 'content');
         sleep(2);
         $output = $process->getOutput();
-        $this->assertFalse(
-            strpos(
-                $output,
-                $changesMessage
-            )
-        );
+        $this->assertStringNotContainsString($changesMessage, $output);
 
         file_put_contents(__DIR__.'/sandbox/a.file1', 'content');
         sleep(2);
         $output = $process->getOutput();
-        $this->assertNotFalse(
-            strpos(
-                $output,
-                $changesMessage
-            )
-        );
+        $this->assertStringContainsString($changesMessage, $output);
         file_put_contents(__DIR__.'/sandbox/a.file1', '');
         file_put_contents(__DIR__.'/sandbox2/ignore/b.file1', '');
         file_put_contents(__DIR__.'/sandbox/a.file2', '');

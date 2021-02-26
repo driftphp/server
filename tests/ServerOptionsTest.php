@@ -15,38 +15,26 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class ServerOptionsTest.
  */
-class ServerOptionsTest extends TestCase
+class ServerOptionsTest extends BaseTest
 {
     /**
      * Test different options.
      */
     public function testMultipleOptionsAreWorking()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
+        list($process, $port, $initialOutput) = $this->buildServer([
             '--concurrent-requests=2',
-            '--ansi',
             '--request-body-buffer=64',
         ]);
 
-        $process->start();
-        usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '[32;1m200[39;22m GET',
+            '200 GET',
             $process->getOutput()
         );
 
@@ -58,20 +46,12 @@ class ServerOptionsTest extends TestCase
      */
     public function test0Concurrency()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
+        list($process, $port, $initialOutput) = $this->buildServer([
             '--concurrent-requests=0',
         ]);
 
-        $process->start();
-        usleep(500000);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
             '500 EXC',
@@ -83,24 +63,17 @@ class ServerOptionsTest extends TestCase
 
     /**
      * Test body size limited.
+     *
+     * @group lala
      */
     public function testBodySizeLimited()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
+        list($process, $port, $initialOutput) = $this->buildServer([
             '--request-body-buffer=1',
         ]);
 
-        $process->start();
-        usleep(500000);
-        list($body, $headers) = Utils::curl("http://127.0.0.1:$port/body", [], [], '', json_encode(array_fill(0, 1000, 'Holis')));
-        usleep(500000);
-
+        list($body, $headers, $statusCode) = Utils::curl("http://127.0.0.1:$port/body", [], [], '', json_encode(array_fill(0, 1000, 'Holis')));
+        $this->waitForChange($process, $initialOutput);
         $body = json_decode($body, true);
         $this->assertEmpty($body['body']);
 
@@ -112,20 +85,12 @@ class ServerOptionsTest extends TestCase
      */
     public function testBodySizeOk()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
+        list($process, $port, $initialOutput) = $this->buildServer([
             '--request-body-buffer=1000',
         ]);
 
-        $process->start();
-        usleep(500000);
         list($body, $headers) = Utils::curl("http://127.0.0.1:$port/body", [], [], '', json_encode(array_fill(0, 1000, 'Holis')));
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
 
         $body = json_decode($body, true);
         $body = json_decode($body['body'], true);

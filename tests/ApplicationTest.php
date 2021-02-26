@@ -15,36 +15,21 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
-
 /**
  * Class ApplicationTest.
  */
-class ApplicationTest extends TestCase
+class ApplicationTest extends BaseTest
 {
     /**
      * Test non blocking server.
      */
     public function testRegular()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi']);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '[32;1m200[39;22m GET',
+            '200 GET',
             $process->getOutput()
         );
 
@@ -61,23 +46,11 @@ class ApplicationTest extends TestCase
      */
     public function testDefaultHost()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi']);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '[32;1m200[39;22m GET',
+            '200 GET',
             $process->getOutput()
         );
 
@@ -94,23 +67,11 @@ class ApplicationTest extends TestCase
      */
     public function testEmptyHost()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            ":$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi']);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '[32;1m200[39;22m GET',
+            '200 GET',
             $process->getOutput()
         );
 
@@ -127,21 +88,9 @@ class ApplicationTest extends TestCase
      */
     public function testSilentServer()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--quiet',
-            '--dev',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--quiet']);
         Utils::curl("http://127.0.0.1:$port?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
 
         $this->assertEquals(
             '[Preloaded]',
@@ -156,24 +105,12 @@ class ApplicationTest extends TestCase
      */
     public function testRouteNotFound()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
-        Utils::curl("http://127.0.0.1:$port/another/route?code=200");
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi']);
+        Utils::curl("http://127.0.0.1:$port/another/route");
+        $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '[31;1m404[39;22m GET',
+            '404 GET',
             $process->getOutput()
         );
 
@@ -183,30 +120,15 @@ class ApplicationTest extends TestCase
     /**
      * Test non blocking server.
      */
-    public function testNonAnsi()
+    public function testAnsi()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-            '--dev',
-            '--no-ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--ansi']);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        Utils::curl("http://127.0.0.1:$port/query?code=404");
+        $this->waitForChange($process, $initialOutput);
 
-        $this->assertNotFalse(
-            strpos(
-                $process->getOutput(),
-                '200 GET'
-            )
-        );
+        $this->assertStringContainsString('[32;1m200[39;22m GET', $process->getOutput());
+        $this->assertStringContainsString('[31;1m404[39;22m GET', $process->getOutput());
 
         $process->stop();
     }
@@ -216,19 +138,9 @@ class ApplicationTest extends TestCase
      */
     public function testAnotherPSR7Implementation()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeLaminasKernel::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi'], FakeLaminasKernel::class);
         $response = Utils::curl("http://127.0.0.1:$port/");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
             '200 GET',
@@ -248,20 +160,9 @@ class ApplicationTest extends TestCase
      */
     public function testServerValues()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port) = $this->buildServer(['--no-ansi']);
         list($_, $_, $code) = Utils::curl("http://127.0.0.1:$port/check-srv-vars?port=$port");
         $this->assertEquals(200, $code);
-        usleep(500000);
 
         $process->stop();
     }
@@ -271,17 +172,7 @@ class ApplicationTest extends TestCase
      */
     public function testBasicAuthHeaders()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeAdapter::class,
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port) = $this->buildServer(['--no-ansi']);
         list($content) = Utils::curl("http://127.0.0.1:$port/auth", [
             'authorization: basic '.base64_encode('my_key:my_value'),
         ]);
@@ -289,7 +180,6 @@ class ApplicationTest extends TestCase
         $headers = json_decode($content, true);
         $this->assertEquals('my_key', $headers['user']);
         $this->assertEquals('my_value', $headers['password']);
-        usleep(500000);
 
         $process->stop();
     }
@@ -299,23 +189,11 @@ class ApplicationTest extends TestCase
      */
     public function testSymfonyAdapter()
     {
-        $port = rand(2000, 9999);
-        $process = new Process([
-            'php',
-            dirname(__FILE__).'/../bin/server',
-            'run',
-            "0.0.0.0:$port",
-            '--adapter='.FakeSymfonyAdapter::class,
-            '--dev',
-            '--ansi',
-        ]);
-
-        $process->start();
-        usleep(500000);
+        list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi'], FakeSymfonyAdapter::class);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
-        usleep(500000);
+        $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '[32;1m200[39;22m GET',
+            '200 GET',
             $process->getOutput()
         );
 
