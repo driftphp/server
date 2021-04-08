@@ -15,8 +15,6 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
-use Drift\Console\OutputPrinter;
-
 /**
  * Class ConsoleServerMessage.
  */
@@ -50,7 +48,7 @@ final class ConsoleServerMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
-        if ($outputPrinter->isQuiet()) {
+        if (!$outputPrinter->shouldPrintImportantOutput()) {
             return;
         }
 

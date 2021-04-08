@@ -28,9 +28,9 @@ final class ServerContext
 {
     private string $environment;
     private bool $quiet;
+    private bool $almostQuiet;
     private ?array $staticFolder;
     private bool $debug;
-    private bool $printHeader;
     private bool $disableCookies;
     private bool $disableFileUploads;
     private string $adapter;
@@ -57,8 +57,8 @@ final class ServerContext
             ? 'dev'
             : $input->getOption('env'));
         $serverContext->quiet = \boolval($input->getOption('quiet'));
+        $serverContext->almostQuiet = \boolval($input->getOption('almost-quiet'));
         $serverContext->debug = \boolval($input->getOption('debug'));
-        $serverContext->printHeader = !$input->getOption('no-header');
         $serverContext->disableCookies = (bool) $input->getOption('no-cookies');
         $serverContext->disableFileUploads = (bool) $input->getOption('no-file-uploads');
 
@@ -146,6 +146,30 @@ final class ServerContext
     }
 
     /**
+     * @return bool
+     */
+    public function isAlmostQuiet(): bool
+    {
+        return $this->almostQuiet;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldPrintRegularOutput(): bool
+    {
+        return !$this->quiet && !$this->almostQuiet;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldPrintImportantOutput(): bool
+    {
+        return !$this->quiet;
+    }
+
+    /**
      * @return array|null
      */
     public function getStaticFolder(): ? array
@@ -175,14 +199,6 @@ final class ServerContext
     public function isDebug(): bool
     {
         return $this->debug;
-    }
-
-    /**
-     * @return bool
-     */
-    public function printHeader(): bool
-    {
-        return $this->printHeader;
     }
 
     /**

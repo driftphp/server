@@ -84,16 +84,51 @@ class ApplicationTest extends BaseTest
     }
 
     /**
-     * Test silent.
+     * Test quiet.
      */
-    public function testSilentServer()
+    public function testQuietServer()
     {
         list($process, $port, $initialOutput) = $this->buildServer(['--quiet']);
         Utils::curl("http://127.0.0.1:$port?code=200");
+        Utils::curl("http://127.0.0.1:$port?code=300");
+        Utils::curl("http://127.0.0.1:$port?code=400");
         $this->waitForChange($process, $initialOutput);
-
         $this->assertEquals(
             '[Preloaded]',
+            $process->getOutput()
+        );
+
+        $process->stop();
+    }
+
+    /**
+     * Test almost quiet.
+     */
+    public function testAlmostQuietServer()
+    {
+        list($process, $port, $initialOutput) = $this->buildServer(['--almost-quiet']);
+        Utils::curl("http://127.0.0.1:$port?code=200");
+        Utils::curl("http://127.0.0.1:$port?code=300");
+        Utils::curl("http://127.0.0.1:$port?code=400");
+        $this->waitForChange($process, $initialOutput);
+
+        $this->assertStringContainsString(
+            'EventLoop',
+            $process->getOutput()
+        );
+
+        $this->assertStringNotContainsString(
+            '200 GET',
+            $process->getOutput()
+        );
+
+        $this->assertStringNotContainsString(
+            '300 GET',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            '400 GET',
             $process->getOutput()
         );
 
@@ -135,6 +170,8 @@ class ApplicationTest extends BaseTest
 
     /**
      * Test another psr7 implementation.
+     *
+     * @group lol
      */
     public function testAnotherPSR7Implementation()
     {

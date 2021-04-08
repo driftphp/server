@@ -17,7 +17,6 @@ namespace Drift\Server;
 
 use function Clue\React\Block\await;
 use Clue\React\Zlib\Compressor;
-use Drift\Console\OutputPrinter;
 use Drift\Console\TimeFormatter;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Context\ServerContext;

@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
-use Drift\Console\OutputPrinter;
+use Drift\Server\OutputPrinter;
 
 /**
  * Class FakeEventBusSubscriber.

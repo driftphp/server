@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
-use Drift\Console\OutputPrinter;
 use Drift\Server\Context\ServerContext;
 use React\Filesystem\Filesystem;
 
@@ -36,10 +35,6 @@ class ServerHeaderPrinter
         OutputPrinter $outputPrinter,
         string $bootstrapPath
     ) {
-        if ($serverContext->isQuiet()) {
-            return;
-        }
-
         $outputPrinter->printLine();
         $outputPrinter->printHeaderLine();
         $outputPrinter->printHeaderLine('ReactPHP HTTP Server for DriftPHP');

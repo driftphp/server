@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
-use Drift\Console\OutputPrinter;
 use Psr\Http\Message\ResponseInterface;
 
 /**
