@@ -15,13 +15,13 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
-use Drift\Console\OutputPrinter;
 use Drift\EventBus\Bus\EventBus;
 use Drift\EventLoop\EventLoopUtils;
 use Drift\Server\Console\Style\Muted;
 use Drift\Server\Console\Style\Purple;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
+use Drift\Server\OutputPrinter;
 use Drift\Server\ServerHeaderPrinter;
 use Exception;
 use React\EventLoop\Factory as EventLoopFactory;
@@ -63,6 +63,7 @@ abstract class ServerCommand extends Command
             ->addArgument('path', InputArgument::REQUIRED, 'The server will start listening to this address')
             ->addOption('env', null, InputOption::VALUE_OPTIONAL, 'Environment', 'prod')
             ->addOption('dev', null, InputOption::VALUE_NONE, 'Dev environment')
+            ->addOption('almost-quiet', null, InputOption::VALUE_NONE, 'Quiet unless it\'s important. Shows errors and the server header')
             ->addOption('static-folder', null, InputOption::VALUE_OPTIONAL, 'Static folder path', '')
             ->addOption('no-static-folder', null, InputOption::VALUE_NONE, 'Disable static folder')
             ->addOption('debug', null, InputOption::VALUE_NONE, 'Enable debug')
@@ -112,10 +113,10 @@ abstract class ServerCommand extends Command
         }
 
         $this->configureServerContext($serverContext);
-        $outputPrinter = $this->createOutputPrinter($output, $serverContext->isQuiet());
+        $outputPrinter = $this->createOutputPrinter($output, $serverContext->isQuiet(), $serverContext->isAlmostQuiet());
 
         $loop = EventLoopFactory::create();
-        if ($serverContext->printHeader()) {
+        if ($serverContext->shouldPrintImportantOutput()) {
             ServerHeaderPrinter::print(
                 $serverContext,
                 $outputPrinter,
@@ -171,18 +172,20 @@ abstract class ServerCommand extends Command
      *
      * @param OutputInterface $output
      * @param bool            $isQuiet
+     * @param bool            $isAlmostQuiet
      *
      * @return OutputPrinter
      */
     protected function createOutputPrinter(
         OutputInterface $output,
-        bool $isQuiet
+        bool $isQuiet,
+        bool $isAlmostQuiet
     ): OutputPrinter {
         $outputFormatter = $output->getFormatter();
         $outputFormatter->setStyle('muted', new Muted());
         $outputFormatter->setStyle('purple', new Purple());
 
-        return new OutputPrinter($output, $isQuiet);
+        return new OutputPrinter($output, $isQuiet, $isAlmostQuiet);
     }
 
     /**

@@ -30,6 +30,7 @@ class WatcherTest extends BaseTest
         list($process, $port) = $this->buildWatcher(['--no-ansi']);
         sleep(2);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
+        usleep(300000);
         $output = $process->getOutput();
         $this->assertStringContainsString('Workers: 1', $output);
         $this->assertStringContainsString('200 GET', $output);

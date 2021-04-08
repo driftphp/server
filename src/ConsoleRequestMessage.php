@@ -15,8 +15,6 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
-use Drift\Console\OutputPrinter;
-
 /**
  * Class ConsoleRequestMessage.
  */
@@ -58,7 +56,11 @@ final class ConsoleRequestMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
-        if ($outputPrinter->isQuiet()) {
+        $hasError = \intval($this->code) >= 400;
+        if (
+            !$outputPrinter->shouldPrintRegularOutput() &&
+            (!$outputPrinter->shouldPrintImportantOutput() || !$hasError)
+        ) {
             return;
         }
 
@@ -66,7 +68,7 @@ final class ConsoleRequestMessage implements Printable
         $color = 'green';
         if ($this->code >= 300 && $this->code < 400) {
             $color = 'yellow';
-        } elseif ($this->code >= 400) {
+        } elseif ($hasError) {
             $color = 'red';
         }
 

@@ -15,12 +15,12 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
-use Drift\Console\OutputPrinter;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Application;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Mime\MimeTypeChecker;
+use Drift\Server\OutputPrinter;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\Filesystem;
 use Throwable;

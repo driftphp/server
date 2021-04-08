@@ -114,7 +114,7 @@ class FakeKernel extends AsyncKernel
         $code = \intval($request->query->get('code', '200'));
         $pathInfo = $request->getPathInfo();
 
-        if (400 === $code) {
+        if (in_array($code, [400, 403])) {
             throw new \Exception('Bad Request');
         }
 
