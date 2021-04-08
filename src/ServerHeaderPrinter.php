@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Drift\Console\OutputPrinter;
 use Drift\Server\Context\ServerContext;
 use React\Filesystem\Filesystem;
 

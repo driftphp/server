@@ -15,10 +15,10 @@ declare(strict_types=1);
 
 namespace Drift\Server\Adapter;
 
+use Drift\Console\OutputPrinter;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\KernelException;
 use Drift\Server\Mime\MimeTypeChecker;
-use Drift\Server\OutputPrinter;
 use Drift\Server\Watcher\ObservableKernel;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
