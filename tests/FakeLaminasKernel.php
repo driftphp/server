@@ -15,11 +15,11 @@ declare(strict_types=1);
 
 namespace Drift\Server\Tests;
 
+use Drift\Console\OutputPrinter;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Exception\KernelException;
 use Drift\Server\Mime\MimeTypeChecker;
-use Drift\Server\OutputPrinter;
 use Laminas\Diactoros\Response as LaminasResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

@@ -15,13 +15,13 @@ declare(strict_types=1);
 
 namespace Drift\Server\Console;
 
+use Drift\Console\OutputPrinter;
 use Drift\EventBus\Bus\EventBus;
 use Drift\EventLoop\EventLoopUtils;
 use Drift\Server\Console\Style\Muted;
 use Drift\Server\Console\Style\Purple;
 use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
-use Drift\Server\OutputPrinter;
 use Drift\Server\ServerHeaderPrinter;
 use Exception;
 use React\EventLoop\Factory as EventLoopFactory;
