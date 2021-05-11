@@ -212,6 +212,13 @@ class Application
             ->applyResponseEncoding($response, $request->getHeaderLine('Accept-encoding'))
             ->then(function (ResponseInterface $response) use ($request, $from) {
                 $to = microtime(true);
+                $responseMessage = '';
+                if ($response->hasHeader('x-server-message')) {
+                    $responseMessage = $response->getHeader('x-server-message');
+                    $responseMessage = ($responseMessage[0] ?? '') ? \strval($responseMessage[0]) : '';
+                    $response = $response->withoutHeader('x-server-message');
+                }
+
                 $serverResponse =
                     new ServerResponseWithMessage(
                         $response,
@@ -220,7 +227,7 @@ class Application
                             $request->getUri()->getPath(),
                             $request->getMethod(),
                             $response->getStatusCode(),
-                            '',
+                            $responseMessage,
                             TimeFormatter::formatTime($to - $from)
                         )
                     );

@@ -128,6 +128,11 @@ your application
 php vendor/bin/server run 0.0.0.0:8000 --adapter='My\Namespace\Adapter"
 ```
 
+### Custom response output
+
+You can internally use the `x-server-message` header for custom server messages.
+The server will remove this server value before returning the response content.
+
 ## Workers
 
 This server creates a single worker by default. A simple PHP thread that will 
