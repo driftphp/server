@@ -278,6 +278,10 @@ class Application
         string $compression
     ): PromiseInterface {
         $body = $response->getBody();
+        if ($response->hasHeader('Content-Encoding')) {
+            return resolve($response);
+        }
+
         $response = $response->withHeader('Content-Encoding', $compression);
 
         if ($body instanceof ReadableStreamInterface) {
