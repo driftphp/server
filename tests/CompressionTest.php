@@ -86,6 +86,20 @@ class CompressionTest extends BaseTest
     }
 
     /**
+     * @group lol
+     */
+    public function testAlreadyEncodedContent()
+    {
+        list($process, $port) = $this->buildServer();
+        $response = Utils::curl("http://127.0.0.1:$port/gzip", [
+            "Accept-Encoding: gzip",
+        ]);
+
+        $this->assertEquals('ReactPHP Response', gzdecode($response[0]));
+        $process->stop();
+    }
+
+    /**
      * Test default adapter static folder.
      */
     public function testStream()

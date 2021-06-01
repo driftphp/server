@@ -181,6 +181,12 @@ class FakeKernel extends AsyncKernel
             ], $code);
         }
 
+        if ('/gzip' === $pathInfo) {
+            return new Response($code, [
+                'Content-Encoding' => 'gzip'
+            ], gzencode('ReactPHP Response'));
+        }
+
         if ('/auth' === $pathInfo) {
             return new JsonResponse([
                 'user' => $request->headers->get('PHP_AUTH_USER'),
