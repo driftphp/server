@@ -42,6 +42,7 @@ final class ServerContext
     private int $requestBodyBuffer;
     private int $allowedLoopStops;
     private int $workers;
+    private bool $closeConnections;
 
     /**
      * @param InputInterface $input
@@ -113,6 +114,7 @@ final class ServerContext
         $serverContext->limitConcurrentRequests = intval($input->getOption('concurrent-requests'));
         $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
 
+        $serverContext->closeConnections = boolval($input->getOption('close-connections'));
         $serverContext->allowedLoopStops = intval($input->getOption('allowed-loop-stops'));
         $serverContext->workers = \intval($input->getOption('workers'));
         if (-1 === $serverContext->workers) {
@@ -308,6 +310,14 @@ final class ServerContext
     public function cleanWorkers()
     {
         $this->workers = 1;
+    }
+
+    /**
+     * @return bool
+     */
+    public function mustCloseConnections(): bool
+    {
+        return $this->closeConnections;
     }
 
     /**

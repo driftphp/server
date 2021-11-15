@@ -56,7 +56,6 @@ final class RunServerCommand extends ServerCommand
             $outputPrinter,
             $mimeTypeChecker,
             $rootPath,
-            $this->bootstrapPath
         );
 
         $kernelAdapterNamespace = $serverContext->getAdapter();
