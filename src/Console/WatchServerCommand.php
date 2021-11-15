@@ -69,8 +69,7 @@ final class WatchServerCommand extends ServerCommand
             $serverContext,
             $outputPrinter,
             $mimeTypeChecker,
-            $rootPath,
-            $this->bootstrapPath
+            $rootPath
         );
 
         $argv = $this->argv;

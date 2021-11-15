@@ -24,7 +24,7 @@ use Drift\Server\ConsoleServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
 use Exception;
-use React\EventLoop\Factory as EventLoopFactory;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -76,7 +76,8 @@ abstract class ServerCommand extends Command
             ->addOption('allowed-loop-stops', null, InputOption::VALUE_OPTIONAL, 'Number of allowed loop stops', 0)
             ->addOption('workers', null, InputOption::VALUE_OPTIONAL,
                 'Number of workers. Use -1 to get as many workers as physical thread available for your system. Maximum of 128 workers. Option disabled for watch command.', 1
-            );
+            )
+            ->addOption('close-connections', null, InputOption::VALUE_NONE, 'Close all connections by adding "Connection: Close" header each time.');
 
         /*
          * If we have the EventBus loaded, we can add listeners as well
@@ -115,7 +116,7 @@ abstract class ServerCommand extends Command
         $this->configureServerContext($serverContext);
         $outputPrinter = $this->createOutputPrinter($output, $serverContext->isQuiet(), $serverContext->isAlmostQuiet());
 
-        $loop = EventLoopFactory::create();
+        $loop = Loop::get();
         if ($serverContext->shouldPrintImportantOutput()) {
             ServerHeaderPrinter::print(
                 $serverContext,

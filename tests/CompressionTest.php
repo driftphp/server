@@ -92,7 +92,7 @@ class CompressionTest extends BaseTest
     {
         list($process, $port) = $this->buildServer();
         $response = Utils::curl("http://127.0.0.1:$port/gzip", [
-            "Accept-Encoding: gzip",
+            'Accept-Encoding: gzip',
         ]);
 
         $this->assertEquals('ReactPHP Response', gzdecode($response[0]));

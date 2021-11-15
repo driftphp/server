@@ -183,7 +183,7 @@ class FakeKernel extends AsyncKernel
 
         if ('/gzip' === $pathInfo) {
             return new Response($code, [
-                'Content-Encoding' => 'gzip'
+                'Content-Encoding' => 'gzip',
             ], gzencode('ReactPHP Response'));
         }
 

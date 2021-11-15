@@ -31,15 +31,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use React\EventLoop\LoopInterface;
 use React\Filesystem\FilesystemInterface;
+use React\Http\HttpServer;
 use React\Http\Message\Response as ReactResponse;
 use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
 use React\Http\Middleware\StreamingRequestMiddleware;
-use React\Http\Server as HttpServer;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 use function React\Promise\reject;
 use function React\Promise\resolve;
-use React\Socket\Server as SocketServer;
+use React\Socket\SocketServer;
 use React\Stream\ReadableStreamInterface;
 use React\Stream\ThroughStream;
 use Throwable;
@@ -52,7 +52,6 @@ class Application
     private LoopInterface $loop;
     private ServerContext $serverContext;
     private string $rootPath;
-    private string $bootstrapPath;
     private string $kernelAdapter;
     private OutputPrinter $outputPrinter;
     private MimeTypeChecker $mimeTypeChecker;
@@ -63,7 +62,6 @@ class Application
      * @param OutputPrinter   $outputPrinter
      * @param MimeTypeChecker $mimeTypeChecker
      * @param string          $rootPath
-     * @param string          $bootstrapPath
      *
      * @throws Exception
      */
@@ -72,14 +70,12 @@ class Application
         ServerContext $serverContext,
         OutputPrinter $outputPrinter,
         MimeTypeChecker $mimeTypeChecker,
-        string $rootPath,
-        string $bootstrapPath
+        string $rootPath
     ) {
         $this->loop = $loop;
         $this->serverContext = $serverContext;
         $this->outputPrinter = $outputPrinter;
         $this->rootPath = $rootPath;
-        $this->bootstrapPath = $bootstrapPath;
         $this->mimeTypeChecker = $mimeTypeChecker;
 
         ErrorHandler::handle();
@@ -111,8 +107,8 @@ class Application
         $socket = new SocketServer(
             $this->serverContext->getHost().':'.
             $this->serverContext->getPort(),
-            $this->loop,
-            ['tcp' => ['so_reuseport' => ($this->serverContext->getWorkers() > 1)]]
+            ['tcp' => ['so_reuseport' => ($this->serverContext->getWorkers() > 1)]],
+            $this->loop
         );
 
         $http = new HttpServer(
@@ -217,6 +213,10 @@ class Application
                     $responseMessage = $response->getHeader('x-server-message');
                     $responseMessage = ($responseMessage[0] ?? '') ? \strval($responseMessage[0]) : '';
                     $response = $response->withoutHeader('x-server-message');
+                }
+
+                if ($this->serverContext->mustCloseConnections()) {
+                    $response = $response->withHeader('Connection', 'close');
                 }
 
                 $serverResponse =
