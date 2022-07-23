@@ -186,6 +186,12 @@ class Application
             await($kernelAdapter->shutdown(), $loop);
         };
 
+        if ($this->serverContext->getGcCollectsInSeconds() > 0) {
+            $this->loop->addPeriodicTimer($this->serverContext->getGcCollectsInSeconds(), function () {
+                gc_collect_cycles();
+            });
+        }
+
         $this->loop->addSignal(SIGTERM, $signalHandler);
         $this->loop->addSignal(SIGINT, $signalHandler);
     }
