@@ -20,7 +20,7 @@ use Drift\Console\OutputPrinter;
 /**
  * Class ConsoleRequestMessage.
  */
-final class ConsoleRequestMessage implements Printable
+final class ConsoleRequestMessage extends ConsoleMessage
 {
     private string $url;
     private string $method;
@@ -58,7 +58,7 @@ final class ConsoleRequestMessage implements Printable
      */
     public function print(OutputPrinter $outputPrinter)
     {
-        $hasError = \intval($this->code) >= 400;
+        $hasError = $this->code >= 400;
         if (
             !$outputPrinter->shouldPrintRegularOutput() &&
             (!$outputPrinter->shouldPrintImportantOutput() || !$hasError)
@@ -74,12 +74,12 @@ final class ConsoleRequestMessage implements Printable
             $color = 'red';
         }
 
+        $performance = $this->styledPerformance($this->elapsedTime);
         $forkNumber = isset($GLOBALS['number_of_process'])
             ? "<fg=white>[{$GLOBALS['number_of_process']}] </>"
             : '';
         $outputPrinter->print("$forkNumber<fg=$color;options=bold>{$this->code}</>");
-        $outputPrinter->print(" $method $this->url ");
-        $outputPrinter->print('(<muted>'.$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000)).' MB</muted>)');
+        $outputPrinter->print(" $performance $method $this->url ");
         if ($this->code >= 400) {
             $outputPrinter->print(' - <muted>'.$this->messageInMessage($this->message).'</muted>');
         }

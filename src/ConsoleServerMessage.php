@@ -20,7 +20,7 @@ use Drift\Console\OutputPrinter;
 /**
  * Class ConsoleServerMessage.
  */
-final class ConsoleServerMessage implements Printable
+final class ConsoleServerMessage extends ConsoleMessage
 {
     private string $message;
     private string $elapsedTime;
@@ -59,13 +59,13 @@ final class ConsoleServerMessage implements Printable
             $color = 'green';
         }
 
+        $performance = $this->styledPerformance($this->elapsedTime);
         $forkNumber = isset($GLOBALS['number_of_process'])
             ? "<fg=white>[{$GLOBALS['number_of_process']}] </>"
             : '';
         $outputPrinter->print("$forkNumber<fg=$color;options=bold>SRV</>");
         $outputPrinter->print(' ');
-        $outputPrinter->print('(<muted>'.$this->elapsedTime.' | '.((int) (memory_get_usage() / 1000000)).' MB</muted>)');
-        $outputPrinter->print(' - <muted>'.$this->message.'</muted>');
+        $outputPrinter->print(" $performance {$this->message}</muted>");
         $outputPrinter->printLine();
     }
 }

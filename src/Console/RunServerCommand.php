@@ -18,7 +18,7 @@ namespace Drift\Server\Console;
 use Drift\Console\OutputPrinter;
 use Drift\Server\Adapter\KernelAdapter;
 use Drift\Server\Application;
-use Drift\Server\ConsoleServerMessage;
+use Drift\Server\ConsoleMasterServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\Mime\MimeTypeChecker;
 use React\EventLoop\LoopInterface;
@@ -68,14 +68,15 @@ final class RunServerCommand extends ServerCommand
             $filesystem
         )
             ->then(function (KernelAdapter $kernelAdapter) use ($application, $outputPrinter, $serverContext, $filesystem, &$forceShutdownReference) {
-                (new ConsoleServerMessage('Kernel built.', '~', true))->print($outputPrinter);
-                (new ConsoleServerMessage('Kernel preloaded.', '~', true))->print($outputPrinter);
-                (new ConsoleServerMessage('Kernel ready to accept requests.', '~', true))->print($outputPrinter);
+                (new ConsoleMasterServerMessage('Kernel built.', true))->print($outputPrinter);
+                (new ConsoleMasterServerMessage('Kernel preloaded.', true))->print($outputPrinter);
+                (new ConsoleMasterServerMessage('Kernel ready to accept requests.', true))->print($outputPrinter);
 
                 if ($serverContext->hasExchanges()) {
-                    (new ConsoleServerMessage('Kernel connected to exchanges.', '~', true))->print($outputPrinter);
+                    (new ConsoleMasterServerMessage('Kernel connected to exchanges.', true))->print($outputPrinter);
                 }
 
+                (new ConsoleMasterServerMessage('...', true))->print($outputPrinter);
                 $applicationCallback = function () use ($application, $kernelAdapter, $filesystem, &$forceShutdownReference) {
                     $application->runServer(
                         $kernelAdapter,
@@ -90,9 +91,10 @@ final class RunServerCommand extends ServerCommand
                     $this->forkApplication($serverContext->getWorkers(), $applicationCallback, $outputPrinter);
                 }
             }, function (Throwable $e) use ($outputPrinter) {
-                (new ConsoleServerMessage($e->getMessage(), '~', false))->print($outputPrinter);
-                (new ConsoleServerMessage('The server will shut down.', '~', false))->print($outputPrinter);
-                (new ConsoleServerMessage('Bye!', '~', false))->print($outputPrinter);
+                (new ConsoleMasterServerMessage('...', false))->print($outputPrinter);
+                (new ConsoleMasterServerMessage($e->getMessage(), false))->print($outputPrinter);
+                (new ConsoleMasterServerMessage('The server will shut down.', false))->print($outputPrinter);
+                (new ConsoleMasterServerMessage('Bye!', false))->print($outputPrinter);
             });
     }
 
@@ -117,7 +119,7 @@ final class RunServerCommand extends ServerCommand
 
             case 0:
                 $GLOBALS['number_of_process'] = str_pad(\strval($numberOfFork), 2, '0', STR_PAD_LEFT);
-                (new ConsoleServerMessage("Worker #$numberOfFork starting", '~', true))->print($outputPrinter);
+                (new ConsoleMasterServerMessage("Worker #$numberOfFork starting", true))->print($outputPrinter);
                 $callable();
                 break;
 

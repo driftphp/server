@@ -27,7 +27,8 @@ class WorkersTest extends BaseTest
         $output = $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString('Workers: 1', $output);
-        $this->assertStringContainsString('200 GET', $output);
+        $this->assertStringContainsString('200', $output);
+        $this->assertStringContainsString(' GET ', $output);
         $this->assertStringNotContainsString('[00] ', $output);
         $this->assertStringNotContainsString('[01] ', $output);
         $this->assertStringNotContainsString('[02] ', $output);
@@ -42,7 +43,8 @@ class WorkersTest extends BaseTest
         $output = $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString('Workers: 1', $output);
-        $this->assertStringContainsString('200 GET', $output);
+        $this->assertStringContainsString('200', $output);
+        $this->assertStringContainsString(' GET ', $output);
         $this->assertStringNotContainsString('[00] ', $output);
         $this->assertStringNotContainsString('[01] ', $output);
         $this->assertStringNotContainsString('[02] ', $output);

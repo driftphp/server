@@ -33,7 +33,8 @@ class WatcherTest extends BaseTest
         usleep(300000);
         $output = $process->getOutput();
         $this->assertStringContainsString('Workers: 1', $output);
-        $this->assertStringContainsString('200 GET', $output);
+        $this->assertStringContainsString('200', $output);
+        $this->assertStringContainsString('GET', $output);
         $process->stop();
 
         $processKill = new Process(['pkill', '-f', "0.0.0.0:$port", '-c']);

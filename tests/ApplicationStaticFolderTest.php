@@ -40,7 +40,12 @@ class ApplicationStaticFolderTest extends BaseTest
         $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '[01;95m200[0m GET',
+            '[01;95m200[0m',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            ' GET ',
             $process->getOutput()
         );
 
