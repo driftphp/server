@@ -74,6 +74,7 @@ abstract class ServerCommand extends Command
             ->addOption('request-body-buffer', null, InputOption::VALUE_OPTIONAL, 'Limit of the buffer used for the Request body. In KiB.', 1024)
             ->addOption('adapter', null, InputOption::VALUE_OPTIONAL, 'Server Adapter. Can be a namespace or a shortcut. Available shortcuts [drift, symfony]', 'drift')
             ->addOption('allowed-loop-stops', null, InputOption::VALUE_OPTIONAL, 'Number of allowed loop stops', 0)
+            ->addOption('gc-collect-cycles', null, InputOption::VALUE_OPTIONAL, 'Seconds between each force GC collect execution. 0 for disabled.', 0)
             ->addOption('workers', null, InputOption::VALUE_OPTIONAL,
                 'Number of workers. Use -1 to get as many workers as physical thread available for your system. Maximum of 128 workers. Option disabled for watch command.', 1
             )

@@ -44,6 +44,8 @@ final class ServerContext
     private int $workers;
     private bool $closeConnections;
 
+    private int $gcCollectsInSeconds;
+
     /**
      * @param InputInterface $input
      *
@@ -114,6 +116,7 @@ final class ServerContext
         $serverContext->limitConcurrentRequests = intval($input->getOption('concurrent-requests'));
         $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
 
+        $serverContext->gcCollectsInSeconds = intval($input->getOption('gc-collect-cycles'));
         $serverContext->closeConnections = boolval($input->getOption('close-connections'));
         $serverContext->allowedLoopStops = intval($input->getOption('allowed-loop-stops'));
         $serverContext->workers = \intval($input->getOption('workers'));
@@ -318,6 +321,14 @@ final class ServerContext
     public function mustCloseConnections(): bool
     {
         return $this->closeConnections;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGcCollectsInSeconds(): int
+    {
+        return $this->gcCollectsInSeconds;
     }
 
     /**
