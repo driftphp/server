@@ -18,25 +18,23 @@ namespace Drift\Server;
 use Drift\Console\OutputPrinter;
 
 /**
- * Class ConsoleStaticMessage.
+ * Class ConsoleMasterServerMessage.
  */
-final class ConsoleStaticMessage extends ConsoleMessage
+final class ConsoleMasterServerMessage implements Printable
 {
-    private string $url;
-    private string $elapsedTime;
+    private string $message;
+    private bool $ok;
 
     /**
-     * ConsoleStaticMessage constructor.
-     *
-     * @param string $url
-     * @param string $elapsedTime
+     * @param string $message
+     * @param bool   $ok
      */
     public function __construct(
-        string $url,
-        string $elapsedTime
+        string $message,
+        bool $ok
     ) {
-        $this->url = $url;
-        $this->elapsedTime = $elapsedTime;
+        $this->message = $message;
+        $this->ok = $ok;
     }
 
     /**
@@ -46,18 +44,21 @@ final class ConsoleStaticMessage extends ConsoleMessage
      */
     public function print(OutputPrinter $outputPrinter)
     {
-        if (!$outputPrinter->shouldPrintRegularOutput()) {
+        if (!$outputPrinter->shouldPrintImportantOutput()) {
             return;
         }
 
-        $method = str_pad('GET', 6, ' ');
+        $color = 'red';
+        if ($this->ok) {
+            $color = 'green';
+        }
 
-        $performance = $this->styledPerformance($this->elapsedTime);
         $forkNumber = isset($GLOBALS['number_of_process'])
             ? "<fg=white>[{$GLOBALS['number_of_process']}] </>"
             : '';
-        $outputPrinter->print("$forkNumber<purple>200</purple>");
-        $outputPrinter->print(" $performance $method $this->url ");
+        $outputPrinter->print("$forkNumber<fg=$color;options=bold>SRV</>");
+        $outputPrinter->print(' ');
+        $outputPrinter->print('<muted>'.$this->message.'</muted>');
         $outputPrinter->printLine();
     }
 }

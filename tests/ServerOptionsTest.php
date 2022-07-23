@@ -34,7 +34,12 @@ class ServerOptionsTest extends BaseTest
         $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '200 GET',
+            '200',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            ' GET ',
             $process->getOutput()
         );
 
@@ -54,7 +59,12 @@ class ServerOptionsTest extends BaseTest
         $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '500 EXC',
+            '500',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            'EXC',
             $process->getOutput()
         );
 

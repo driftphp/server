@@ -29,7 +29,12 @@ class ApplicationTest extends BaseTest
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '200 GET',
+            '200',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            ' GET ',
             $process->getOutput()
         );
 
@@ -50,7 +55,12 @@ class ApplicationTest extends BaseTest
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '200 GET',
+            '200',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            ' GET ',
             $process->getOutput()
         );
 
@@ -71,7 +81,12 @@ class ApplicationTest extends BaseTest
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         $this->waitForChange($process, $initialOutput);
         $this->assertStringContainsString(
-            '200 GET',
+            '200',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            ' GET ',
             $process->getOutput()
         );
 
@@ -118,17 +133,22 @@ class ApplicationTest extends BaseTest
         );
 
         $this->assertStringNotContainsString(
-            '200 GET',
+            '200',
             $process->getOutput()
         );
 
         $this->assertStringNotContainsString(
-            '300 GET',
+            '300',
             $process->getOutput()
         );
 
         $this->assertStringContainsString(
-            '400 GET',
+            ' GET ',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            '400',
             $process->getOutput()
         );
 
@@ -136,7 +156,7 @@ class ApplicationTest extends BaseTest
     }
 
     /**
-     * Test route not found.
+     * Test route not found
      */
     public function testRouteNotFound()
     {
@@ -145,7 +165,12 @@ class ApplicationTest extends BaseTest
         $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '404 GET',
+            ' GET ',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            '404',
             $process->getOutput()
         );
 
@@ -162,8 +187,8 @@ class ApplicationTest extends BaseTest
         Utils::curl("http://127.0.0.1:$port/query?code=404");
         $this->waitForChange($process, $initialOutput);
 
-        $this->assertStringContainsString('[32;1m200[39;22m GET', $process->getOutput());
-        $this->assertStringContainsString('[31;1m404[39;22m GET', $process->getOutput());
+        $this->assertStringContainsString('[32;1m200[39;22m', $process->getOutput());
+        $this->assertStringContainsString('[31;1m404[39;22m', $process->getOutput());
 
         $process->stop();
     }
@@ -180,7 +205,12 @@ class ApplicationTest extends BaseTest
         $this->waitForChange($process, $initialOutput);
 
         $this->assertStringContainsString(
-            '200 GET',
+            ' GET ',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            '200',
             $process->getOutput()
         );
 
@@ -229,8 +259,14 @@ class ApplicationTest extends BaseTest
         list($process, $port, $initialOutput) = $this->buildServer(['--no-ansi'], FakeSymfonyAdapter::class);
         Utils::curl("http://127.0.0.1:$port/query?code=200");
         $this->waitForChange($process, $initialOutput);
+
         $this->assertStringContainsString(
-            '200 GET',
+            ' GET ',
+            $process->getOutput()
+        );
+
+        $this->assertStringContainsString(
+            '200',
             $process->getOutput()
         );
 

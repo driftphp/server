@@ -20,13 +20,14 @@ use Drift\EventBus\Bus\EventBus;
 use Drift\EventLoop\EventLoopUtils;
 use Drift\Server\Console\Style\Muted;
 use Drift\Server\Console\Style\Purple;
-use Drift\Server\ConsoleServerMessage;
+use Drift\Server\ConsoleMasterServerMessage;
 use Drift\Server\Context\ServerContext;
 use Drift\Server\ServerHeaderPrinter;
 use Exception;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -134,21 +135,22 @@ abstract class ServerCommand extends Command
             $forceShutdownReference
         );
 
-        (new ConsoleServerMessage('EventLoop is running.', '~', true))->print($outputPrinter);
+        (new ConsoleMasterServerMessage('EventLoop is running.', true))->print($outputPrinter);
         EventLoopUtils::runLoop($loop, (\intval($input->getOption('allowed-loop-stops')) + 1), function (int $timesMissing) use ($outputPrinter, &$forceShutdownReference) {
             if ($forceShutdownReference) {
-                (new ConsoleServerMessage(
-                    sprintf('Loop forced to stop.'), '~', false)
+                (new ConsoleMasterServerMessage(
+                    sprintf('Loop forced to stop.'), false)
                 )->print($outputPrinter);
             } else {
-                (new ConsoleServerMessage(
-                    sprintf('Rerunning EventLoop. %d retries missing', $timesMissing), '~', false)
+                (new ConsoleMasterServerMessage(
+                    sprintf('Rerunning EventLoop. %d retries missing', $timesMissing), false)
                 )->print($outputPrinter);
             }
         }, $forceShutdownReference);
-        (new ConsoleServerMessage('EventLoop stopped.', '~', false))->print($outputPrinter);
-        (new ConsoleServerMessage('Closing the server.', '~', false))->print($outputPrinter);
-        (new ConsoleServerMessage('Bye bye!.', '~', false))->print($outputPrinter);
+        (new ConsoleMasterServerMessage('...', false))->print($outputPrinter);
+        (new ConsoleMasterServerMessage('EventLoop stopped.', false))->print($outputPrinter);
+        (new ConsoleMasterServerMessage('Closing the server.', false))->print($outputPrinter);
+        (new ConsoleMasterServerMessage('Bye bye!.', false))->print($outputPrinter);
 
         return 0;
     }
@@ -186,6 +188,7 @@ abstract class ServerCommand extends Command
         $outputFormatter = $output->getFormatter();
         $outputFormatter->setStyle('muted', new Muted());
         $outputFormatter->setStyle('purple', new Purple());
+        $outputFormatter->setStyle('performance', new OutputFormatterStyle('gray'));
 
         return new OutputPrinter($output, $isQuiet, $isAlmostQuiet);
     }
