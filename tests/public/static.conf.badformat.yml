@@ -1,0 +1,4 @@
+app.*:
+  cache-control:
+    - format1
+    - format2
