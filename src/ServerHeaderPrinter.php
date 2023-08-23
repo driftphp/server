@@ -45,11 +45,22 @@ class ServerHeaderPrinter
         $outputPrinter->printHeaderLine("Port: {$serverContext->getPort()}");
         $outputPrinter->printHeaderLine("Environment: {$serverContext->getEnvironment()}");
         $outputPrinter->printHeaderLine('Debug: '.($serverContext->isDebug() ? 'enabled' : 'disabled'));
-        $outputPrinter->printHeaderLine('Static Folder: '.$serverContext->getStaticFolderAsString());
+        $outputPrinter->printHeaderLine('Static folder: '.$serverContext->getStaticFolderAsString());
         if (!class_exists(Filesystem::class)) {
-            $outputPrinter->printHeaderLine('<purple>Static Folder: Attention! You should install the dependency `react/filesystem` to serve static content in a non-blocking way.</purple>');
-            $outputPrinter->printHeaderLine('<purple>Static Folder: Serving the content with blocking PHP functions.</purple>');
+            $outputPrinter->printHeaderLine('<purple>Static folder: Attention! You should install the dependency `react/filesystem` to serve static content in a non-blocking way.</purple>');
+            $outputPrinter->printHeaderLine('<purple>Static folder: Serving the content with blocking PHP functions.</purple>');
         }
+
+        if (!is_null($serverContext->getCacheFilePath())) {
+            if ($serverContext->cacheFilePathExists()) {
+                $outputPrinter->printHeaderLine('Static cache file: '.realpath($serverContext->getCacheFilePath()));
+            } else {
+                $outputPrinter->printHeaderLine('<purple>Static cache file: Attention! File '.realpath($serverContext->getCacheFilePath()).' not found</purple>');
+            }
+        } else {
+            $outputPrinter->printHeaderLine('Static cache file: disabled');
+        }
+
         $outputPrinter->printHeaderLine("Adapter: {$serverContext->getAdapter()}");
         $outputPrinter->printHeaderLine("Workers: {$serverContext->getWorkers()}");
         $outputPrinter->printHeaderLine('Exchanges subscribed: '.($serverContext->hasExchanges()
@@ -58,6 +69,7 @@ class ServerHeaderPrinter
         ));
         $outputPrinter->printHeaderLine('Loaded bootstrap file: '.realpath($bootstrapPath));
         $outputPrinter->printHeaderLine('Allowed number of loop stops: '.$serverContext->getAllowedLoopStops());
+
         $outputPrinter->printHeaderLine();
         $outputPrinter->printLine();
     }

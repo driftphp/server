@@ -28,7 +28,7 @@ class ApplicationStaticFolderTest extends BaseTest
         list($process, $port) = $this->buildServer(['--ansi']);
 
         $this->assertStringContainsString(
-            'Static Folder: /tests/public/',
+            'Static folder: /tests/public/',
             $process->getOutput()
         );
 
@@ -65,7 +65,7 @@ class ApplicationStaticFolderTest extends BaseTest
         list($process, $port, $initialOutput) = $this->buildServer(['--no-static-folder']);
 
         $this->assertStringContainsString(
-            'Static Folder: disabled',
+            'Static folder: disabled',
             $process->getOutput()
         );
 
@@ -84,12 +84,12 @@ class ApplicationStaticFolderTest extends BaseTest
         list($process, $port) = $this->buildServer(['--static-folder=/tests/anotherpublic/']);
 
         $this->assertStringContainsString(
-            'Static Folder: /tests/anotherpublic/',
+            'Static folder: /tests/anotherpublic/',
             $process->getOutput()
         );
 
         $this->assertStringNotContainsString(
-            'Static Folder: /tests/public/',
+            'Static folder: /tests/public/',
             $process->getOutput()
         );
 
@@ -108,17 +108,17 @@ class ApplicationStaticFolderTest extends BaseTest
         list($process, $port) = $this->buildServer(['--static-folder=/rewritten-public/:/tests/public/']);
 
         $this->assertStringNotContainsString(
-            'Static Folder: /tests/anotherpublic/',
+            'Static folder: /tests/anotherpublic/',
             $process->getOutput()
         );
 
         $this->assertStringNotContainsString(
-            'Static Folder: /tests/public/',
+            'Static folder: /tests/public/',
             $process->getOutput()
         );
 
         $this->assertStringNotContainsString(
-            'Static Folder: /rewritten-public/ resolves to /tests/anotherpublic/',
+            'Static folder: /rewritten-public/ resolves to /tests/anotherpublic/',
             $process->getOutput()
         );
 

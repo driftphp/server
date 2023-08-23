@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Drift\Server;
 
+use Symfony\Component\Yaml\Yaml;
 use function Clue\React\Block\await;
 use Clue\React\Zlib\Compressor;
 use Drift\Console\OutputPrinter;
@@ -55,6 +56,7 @@ class Application
     private string $kernelAdapter;
     private OutputPrinter $outputPrinter;
     private MimeTypeChecker $mimeTypeChecker;
+    private array $staticCacheMap = [];
 
     /**
      * @param LoopInterface   $loop
@@ -84,6 +86,18 @@ class Application
          * @var KernelAdapter
          */
         $this->kernelAdapter = $serverContext->getAdapter();
+
+        // Try to load static cache map
+        if (
+            !is_null($serverContext->getCacheFilePath()) &&
+            file_exists($serverContext->getCacheFilePath())
+        ) {
+            $data = file_get_contents($serverContext->getCacheFilePath());
+            $data = Yaml::parse($data);
+            if (is_array($data)) {
+                $this->staticCacheMap = $data;
+            }
+        }
     }
 
     /**
@@ -366,9 +380,11 @@ class Application
                     ->mimeTypeChecker
                     ->getMimeType($resourcePath);
 
+                $cacheHeaders = $this->matchStaticCacheByPath($resourcePath);
+
                 $response = new ReactResponse(
                     200,
-                    ['Content-Type' => $mimeType],
+                    array_merge(['Content-Type' => $mimeType], $cacheHeaders),
                     $content
                 );
 
@@ -406,6 +422,21 @@ class Application
                     )
                 );
             });
+    }
+
+    /**
+     * @param string $path
+     * @return array
+     */
+    private function matchStaticCacheByPath(string $path) : array
+    {
+        foreach ($this->staticCacheMap as $cachePath => $data) {
+            if (preg_match("~$cachePath~", $path) === 1) {
+                return $data;
+            }
+        }
+
+        return [];
     }
 
     /**

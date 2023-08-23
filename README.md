@@ -197,6 +197,30 @@ In this example, a file named `app.js` located under `/internal/public/path/`
 folder will be accessible at `http://localhost:8000/public/app.js`. By default,
 this feature is disabled.
 
+### Static server cache
+
+You can define your static folder cache by adding a YAML file wherever you want and
+referencing it when starting the server.
+
+```bash
+php vendor/bin/server watch 0.0.0.0:8000 --static-cache=/my/path/static.cache.yml
+```
+
+In this file you can define specific headers for all your static resources (in fact,
+not only cache ones). You can define as well regular expressions for matching them.
+
+```yaml
+/public/js/.*:
+  Cache-Control: max-age=31536000
+/public/css/app.js:
+  Content-Type: application/javascript
+/public/images/logo.png:
+  Other-Header: Other-Value
+```
+
+By default, this feature is disabled and no extra headers will be added into your static
+resources.
+
 ### Important
 
 By default, this package will not install the `react/filesystem` package. This

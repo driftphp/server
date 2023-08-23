@@ -45,6 +45,7 @@ final class ServerContext
     private bool $closeConnections;
 
     private int $gcCollectsInSeconds;
+    private ?string $cacheFilePath;
 
     /**
      * @param InputInterface $input
@@ -115,6 +116,7 @@ final class ServerContext
         $serverContext->exchanges = self::buildQueueArray($input);
         $serverContext->limitConcurrentRequests = intval($input->getOption('concurrent-requests'));
         $serverContext->requestBodyBuffer = intval($input->getOption('request-body-buffer'));
+        $serverContext->cacheFilePath = $input->getOption('static-cache');
 
         $serverContext->gcCollectsInSeconds = intval($input->getOption('gc-collect-cycles'));
         $serverContext->closeConnections = boolval($input->getOption('close-connections'));
@@ -329,6 +331,26 @@ final class ServerContext
     public function getGcCollectsInSeconds(): int
     {
         return $this->gcCollectsInSeconds;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCacheFilePath():? string
+    {
+        return $this->cacheFilePath;
+    }
+
+    /**
+     * @return bool
+     */
+    public function cacheFilePathExists() : bool
+    {
+        if (is_null($this->cacheFilePath)) {
+            return false;
+        }
+
+        return file_exists($this->cacheFilePath);
     }
 
     /**

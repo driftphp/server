@@ -1,0 +1,4 @@
+app.*:
+  cache-control: 63
+anotherfile.js:
+  myheader: value

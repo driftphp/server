@@ -79,7 +79,8 @@ abstract class ServerCommand extends Command
             ->addOption('workers', null, InputOption::VALUE_OPTIONAL,
                 'Number of workers. Use -1 to get as many workers as physical thread available for your system. Maximum of 128 workers. Option disabled for watch command.', 1
             )
-            ->addOption('close-connections', null, InputOption::VALUE_NONE, 'Close all connections by adding "Connection: Close" header each time.');
+            ->addOption('close-connections', null, InputOption::VALUE_NONE, 'Close all connections by adding "Connection: Close" header each time.')
+            ->addOption('static-cache', null, InputOption::VALUE_OPTIONAL);
 
         /*
          * If we have the EventBus loaded, we can add listeners as well
