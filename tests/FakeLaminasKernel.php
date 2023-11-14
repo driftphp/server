@@ -83,7 +83,7 @@ class FakeLaminasKernel implements KernelAdapter
      */
     public function shutDown(): PromiseInterface
     {
-        return resolve();
+        return resolve(null);
     }
 
     /**

@@ -125,7 +125,7 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
      */
     protected function preload(): PromiseInterface
     {
-        return resolve();
+        return resolve(null);
     }
 
     /**
@@ -293,7 +293,7 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
                         ->file($tmpFilename)
                         ->putContents($content)
             )
-            : resolve();
+            : resolve(null);
 
         return $promise
             ->then(function () use ($file, $tmpFilename, $filename) {
@@ -316,6 +316,12 @@ abstract class SymfonyKernelBasedAdapter implements KernelAdapter
     {
         return array_map(function (SymfonyUploadedFile $file) {
             $filePath = $file->getPath().'/'.$file->getFilename();
+            if (
+                $file->getError() !== 0 ||
+                $filePath === '/'
+            ) {
+                return resolve(null);
+            }
 
             return (is_null($this->filesystem))
                 ? resolve(unlink($filePath))
