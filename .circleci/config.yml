@@ -66,6 +66,33 @@ jobs:
             composer update -n --prefer-dist
             php vendor/bin/phpunit --testsuite=no-optional-deps --exclude-group=without-filesystem-message
 
+  test-php81:
+    docker:
+      - image: cimg/php:8.1
+
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Run tests / Symfony 5^0
+          command: |
+            rm -Rf var/*
+            composer update -n --prefer-dist
+            php vendor/bin/phpunit --testsuite=no-optional-deps --exclude-group=without-filesystem-message
+
+  test-php82:
+    docker:
+      - image: cimg/php:8.2
+
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Run tests / Symfony 5^0
+          command: |
+            rm -Rf var/*
+            composer update -n --prefer-dist
+            php vendor/bin/phpunit --testsuite=no-optional-deps --exclude-group=without-filesystem-message
 workflows:
   version: 2
   test:
@@ -73,3 +100,5 @@ workflows:
       - test-php74
       - test-php74-with-filesystem
       - test-php80
+      - test-php81
+      - test-php82
